@@ -1,0 +1,85 @@
+{{ if .IsInternal }}.PHONY: build test test-coverage lint fmt generate generate-wire generate-mocks \
+	migrate-up migrate-down migrate-status migrate-create deps install-tools \
+	dev dev-standalone infra infra-down dev-down psql
+{{ else }}.PHONY: build test test-coverage lint fmt generate generate-mocks \
+	migrate-up migrate-down migrate-status migrate-create deps install-tools \
+	dev dev-standalone infra infra-down dev-down psql
+{{ end }}
+API_BINARY := bin/api
+{{ if .HasWorker }}WORKER_BINARY := bin/worker
+{{ end }}
+# Default DSN for migrate targets (override with: make migrate-up DATABASE_DSN=<dsn>)
+{{ if .IsInternal }}DATABASE_DSN ?= postgres://internal:dev_password@localhost:5432/internal_main_db?sslmode=disable
+{{ else }}DATABASE_DSN ?= postgres://{{ .ServiceName }}:dev_password@localhost:5432/{{ .ServiceName }}_db?sslmode=disable
+{{ end }}
+
+build:
+	go build -o $(API_BINARY) ./cmd/api
+{{ if .HasWorker }}	go build -o $(WORKER_BINARY) ./cmd/worker
+{{ end }}
+test:
+	go test -race ./...
+
+test-coverage:
+	go test -race -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+
+lint:
+	golangci-lint run
+
+fmt:
+	gofmt -w .
+
+{{ if .IsInternal }}generate: generate-wire generate-mocks
+
+generate-wire:
+	wire ./cmd/api
+{{ if .HasWorker }}	wire ./cmd/worker
+{{ end }}{{ else }}generate: generate-mocks
+
+{{ end }}generate-mocks:
+	go generate ./...
+
+migrate-up:
+	goose -dir migrations postgres "$(DATABASE_DSN)" up
+
+migrate-down:
+	goose -dir migrations postgres "$(DATABASE_DSN)" down
+
+migrate-status:
+	goose -dir migrations postgres "$(DATABASE_DSN)" status
+
+migrate-create:
+	goose -dir migrations create $(name) sql
+
+deps:
+	go mod download && go mod tidy
+
+{{ if .IsInternal }}install-tools:
+	go install github.com/google/wire/cmd/wire@latest
+	go install github.com/pressly/goose/v3/cmd/goose@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install go.uber.org/mock/mockgen@latest
+	go install github.com/onsi/ginkgo/v2/ginkgo@latest
+{{ else }}install-tools:
+	go install github.com/pressly/goose/v3/cmd/goose@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+{{ end }}
+
+dev:
+	docker compose up --build -d
+
+dev-standalone:
+	docker compose -f docker-compose.infra.yml up --build -d
+
+infra:
+	docker compose -f docker-compose.infra.yml up -d postgres{{ if .HasRedis }} redis{{ end }}{{ if .HasRabbitMQ }} rabbitmq{{ end }}
+
+infra-down:
+	docker compose -f docker-compose.infra.yml down
+
+dev-down:
+	docker compose down
+
+psql:
+	psql "$(DATABASE_DSN)"

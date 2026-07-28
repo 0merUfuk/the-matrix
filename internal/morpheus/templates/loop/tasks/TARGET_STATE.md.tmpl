@@ -1,0 +1,36 @@
+# Target State: {{ .ProjectName }}
+
+> Describe the expected directory structure and conventions here.
+> Agents read this at the start of every cycle as their compliance reference.
+> If your project's CLAUDE.md already describes the architecture, you can leave this minimal.
+
+## Source of Truth
+
+Read `CLAUDE.md` for the full project architecture, conventions, and patterns.
+{{ if .Goal }}
+## Goal
+
+{{ .Goal }}
+{{ end }}
+## Expected Structure
+
+<!-- Describe the directory layout agents should produce. Example:
+```
+{{ .ProjectName }}/
+├── src/
+├── tests/
+├── docs/
+└── ...
+```
+-->
+
+## Conventions
+
+<!-- List key conventions agents must follow:
+- File naming
+- Code organization
+- Testing patterns
+- Commit message format
+-->
+
+Refer to `CLAUDE.md` for all project-specific conventions.

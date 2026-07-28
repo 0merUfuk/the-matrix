@@ -1,0 +1,45 @@
+---
+description: Session completion protocol for {{ .ProjectName }}
+---
+
+# Session Protocol — {{ .ProjectName }}
+{{ if eq .TeamSize "solo" }}
+## Solo Developer Protocol
+
+At the end of each session:
+1. Commit all changes
+2. Update `.claude/SERVICE_CONTEXT.md` with what changed
+3. Note any open issues in `.claude/KNOWN_ISSUES.md`
+{{ else if eq .TeamSize "small" }}
+## Small Team Protocol (2-5 developers)
+
+### Start of session
+1. Read `.claude/SERVICE_CONTEXT.md`
+2. Read `.claude/NEXT_STEPS.md`
+
+### During session
+- Track progress in `tasks/` (gitignored)
+
+### End of session
+1. Commit code changes
+2. Update `.claude/SERVICE_CONTEXT.md`
+3. Write `tasks/session-summary.md`
+{{ else }}
+## Mid Team Protocol (5-20 developers)
+
+### Branch-scoped workflow
+- Context files are READ on branches, WRITTEN on main
+- Session state goes to gitignored `tasks/` directory
+- After PR merge: update context files in follow-up PR
+
+### Start of session
+1. Read `.claude/SERVICE_CONTEXT.md`
+2. Read `.claude/NEXT_STEPS.md`
+3. Read `.claude/KNOWN_ISSUES.md`
+4. Read `.claude/DECISIONS.md`
+
+### End of session
+1. Write `tasks/session-summary.md`
+2. Commit all code changes
+3. Include session summary in PR description
+{{ end }}

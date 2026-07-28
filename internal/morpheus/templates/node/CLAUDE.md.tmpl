@@ -1,0 +1,97 @@
+# {{ .ServiceName }} — Claude Code Instructions
+
+{{ .Description }}
+
+## Tech Stack
+
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Language | Node.js | 20+ |
+| Framework | Express | 4.x |
+| ORM | Prisma | latest |
+| Database | PostgreSQL 16 | shared internal_main_db |
+{{ if .HasRedis }}| Cache | Redis 7 | ioredis |
+{{ end }}{{ if .HasRabbitMQ }}| Queue | RabbitMQ 3.13 | amqplib |
+{{ end }}| Config | Zod + dotenv | latest |
+| Testing | Jest + Supertest | latest |
+| Logging | Pino | latest |
+{{ if or .HasJWT .HasInternalKey }}| Auth | {{ if and .HasJWT .HasInternalKey }}JWT + X-Internal-API-Key{{ else if .HasJWT }}JWT{{ else }}X-Internal-API-Key{{ end }} | jsonwebtoken |
+{{ end }}| Observability | New Relic + Sentry | latest |
+
+## Architecture — 4-Layer (Strict)
+
+```
+src/
+├── routes/                   # Layer 1: HTTP Transport
+│   ├── {{ lower (index .Entities 0) }}.routes.js
+│   └── health.routes.js
+├── controllers/              # Layer 2: Orchestration (coord. services)
+{{ range .Entities }}│   ├── {{ lower . }}.controller.js
+{{ end }}├── services/                 # Layer 3: Business logic
+{{ range .Entities }}│   ├── {{ lower . }}.service.js
+{{ end }}├── repositories/             # Layer 4: Database access (Prisma)
+{{ range .Entities }}│   ├── {{ lower . }}.repository.js
+{{ end }}├── domain/                   # Interfaces + DTOs
+│   └── types.js
+└── infrastructure/           # External adapters
+    ├── database.js           # Prisma client
+{{ if .HasRedis }}    ├── cache.js              # Redis client
+{{ end }}{{ if .HasRabbitMQ }}    └── queue.js              # RabbitMQ connection
+{{ end }}
+```
+
+## Commands
+
+```bash
+npm install
+npm run dev          # Start with nodemon
+npm run build        # TypeScript compile (if using TS)
+npm test             # Jest tests
+npm run lint         # ESLint
+npm run migrate      # prisma migrate dev
+npm run generate     # prisma generate
+```
+
+## Ports
+
+| Process | Port |
+|---------|------|
+| API | {{ .ApiPort }} |
+{{ if .HasWorker }}| Worker | {{ .WorkerPort }} |
+{{ end }}
+
+## Module Path
+
+```
+{{ .ModulePath }}
+```
+
+## Agents
+
+Use `claude --agent <name>` to invoke a specialized agent.
+
+| Agent | Model | Role |
+|-------|-------|------|
+| `developer` | opus | Node.js/Express engineer — implements features, fixes bugs |
+| `tester` | sonnet | QA engineer — writes Jest tests, validates implementations |
+| `reviewer` | sonnet | Adversarial reviewer — read-only code review, quality gate |
+| `strategist` | opus | Product strategist and architecture advisor — research, design decisions, ADRs |
+| `manager` | opus | Orchestrator — breaks tasks, spawns strategist/dev/test/review pipeline |
+
+## Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `/continue` | Resume previous session — reads context, picks up work |
+| `/commit` | Smart commit — runs test/lint, conventional commit format |
+
+---
+
+## Rules
+
+- Pino for ALL logging — no console.log in production code
+- Errors use custom AppError class with HTTP status codes
+- Prisma for ALL database access — no raw SQL
+- Constructor-based DI — no singletons in business logic
+- Files under 300 lines
+- No hardcoded secrets — environment variables only

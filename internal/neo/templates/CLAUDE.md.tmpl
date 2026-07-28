@@ -1,0 +1,78 @@
+**Version**: 1.0
+**Created**: {{ .CreatedDate }}
+**Last Updated**: {{ .CreatedDate }}
+**Authors:** neo-cli
+
+---
+
+# {{ .ProjectName }}
+
+{{ if .IsInternal }}originating project project. {{ end }}Project type: {{ .ProjectType }}. Team size: {{ .TeamSize }}.
+
+---
+
+## Tech Stacks
+
+{{ range .Stacks }}### {{ .Name }} ({{ .Language }})
+
+| Field | Value |
+|-------|-------|
+| Framework | {{ .Framework }} |
+| Architecture | {{ .ArchStyle }} |
+| Testing | {{ .TestingFramework }} |
+| Data layer | {{ .DataLayer }} |
+| Queue | {{ if .HasQueue }}yes{{ else }}no{{ end }} |
+
+{{ end }}
+---
+
+## Agents
+
+Use `claude --agent <name>` to invoke a specialized agent.
+
+| Agent | Model | Role |
+|-------|-------|------|
+| `developer` | opus | Senior engineer — implements features, fixes bugs, writes code |
+| `tester` | sonnet | QA engineer — writes tests, validates implementations, runs checks |
+| `reviewer` | sonnet | Adversarial reviewer — read-only code review, quality gate |
+| `strategist` | opus | Product strategist and architecture advisor — research, design decisions, ADRs |
+| `manager` | opus | Orchestrator — breaks tasks, spawns strategist/dev/test/review pipeline |
+
+---
+
+## Skills
+
+Use `/skill-name` to invoke a skill.
+
+| Skill | Purpose |
+|-------|---------|
+| `/continue` | Resume previous session — reads context, picks up work |
+| `/commit` | Smart commit — pre-flight checks + conventional commit |
+| `/audit` | Verify context files against ground truth |
+| `/doublecheck` | Adversarial verification of implementation correctness |
+| `/fix` | Auto-fix safe items from audit report |
+| `/issue` | Create GitHub issues with conventions |
+
+---
+
+## Key Commands
+
+```bash
+trinity health              # Check ecosystem health
+trinity refresh             # Detect stale knowledge
+neo status                  # Full ecosystem dashboard
+neo update                  # Refresh stale knowledge
+```
+
+---
+
+## Context Files
+
+| File | Purpose |
+|------|---------|
+| `.claude/SERVICE_CONTEXT.md` | Current project state |
+| `.claude/NEXT_STEPS.md` | Prioritized work |
+| `.claude/DECISIONS.md` | Architectural decisions |
+| `.claude/KNOWN_ISSUES.md` | Known problems |
+| `.neo.json` | Project identity (neo config) |
+| `.trinity.json` | Knowledge sync config |

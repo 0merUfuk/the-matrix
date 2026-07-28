@@ -1,0 +1,26 @@
+# Architectural Decisions: {{ .ProjectName }}
+
+> **READ-ONLY for agents.** Humans fill this file with decisions agents must follow.
+> If a decision needs to change, a human must edit this file.
+> If agents encounter a question not covered here, they write to `tasks/decisions-pending.md`.
+
+## Source of Truth
+
+Read `CLAUDE.md` for the project's technology decisions and architecture.
+{{ if .Goal }}
+## Current Goal
+
+{{ .Goal }}
+{{ end }}
+<!-- Add project-specific decisions below. Example:
+
+## D-001: Language and Runtime
+
+**Decision**: Go 1.24
+**Rationale**: Project standard.
+
+## D-002: Testing Framework
+
+**Decision**: Ginkgo v2 + Gomega
+**Rationale**: BDD-style, consistent with team conventions.
+-->

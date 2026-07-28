@@ -1,0 +1,111 @@
+---
+description: >
+  Static application security testing for {{ .ServiceName }} using gosec and semgrep.
+  Ranks findings by severity (impact x exploitability x blast_radius).
+---
+
+# /security-scan -- Static Application Security Testing
+
+## When to Use
+
+- Before merging features that handle user input, file I/O, or external communication
+- As a pre-release security gate alongside `/dep-audit` and `/secret-scan`
+- After refactoring security-sensitive code paths
+- To establish a security baseline on a new codebase
+
+## Invocation
+
+```bash
+/security-scan
+```
+
+---
+
+## Behavior
+
+### Step 1: gosec Scan
+
+```bash
+gosec -fmt json ./...
+```
+
+gosec checks for Go-specific patterns:
+- G101: Hardcoded credentials
+- G201/G202: SQL injection
+- G203: Unescaped HTML in templates
+- G204: Command injection via exec
+- G302: Unsafe file permissions
+- G304: File path traversal
+- G401/G501: Weak cryptographic primitives
+- G402: Insecure TLS configuration
+
+### Step 2: semgrep Scan
+
+```bash
+semgrep --config auto --json .
+# Fallback:
+semgrep --config p/owasp-top-ten --json .
+```
+
+If semgrep is unavailable, proceed with gosec results only.
+
+### Step 3: Merge and Rank
+
+Score each finding:
+
+```
+severity = impact x exploitability x blast_radius
+```
+
+| Factor | 1 | 3 | 5 |
+|--------|---|---|---|
+| **Impact** | Info disclosure | Data modification | Full compromise |
+| **Exploitability** | Physical + auth | Auth, remote | Unauth, remote |
+| **Blast radius** | Single user/file | Single service | Cross-service |
+
+| Score | Severity | Action |
+|-------|----------|--------|
+| 1-10 | Informational | Note |
+| 11-30 | Low | Fix next cycle |
+| 31-60 | Medium | Fix before merge |
+| 61-99 | High | Block merge |
+| 100+ | Critical | Block and escalate |
+
+---
+
+## Output
+
+```markdown
+# Security Scan Report
+
+## Verdict: CLEAN | FINDINGS_FOUND
+
+## Summary
+- gosec: N findings
+- semgrep: N findings
+- Unique after dedup: N
+
+## Critical Findings (score 61+)
+| Score | Rule | File:Line | Description | OWASP |
+|-------|------|-----------|-------------|-------|
+
+## High Findings (score 31-60)
+| Score | Rule | File:Line | Description | OWASP |
+|-------|------|-----------|-------------|-------|
+
+## Medium / Low
+| Score | Rule | File:Line | Description | OWASP |
+|-------|------|-----------|-------------|-------|
+
+## Remediation Priority
+1. [CRITICAL] Fix rule in file:line -- description
+```
+
+---
+
+## Prerequisites
+
+```bash
+go install github.com/securego/gosec/v2/cmd/gosec@latest
+pip install semgrep    # or: brew install semgrep
+```

@@ -1,0 +1,25 @@
+# the-matrix gitleaks configuration
+#
+# Inherits all default gitleaks rules, then narrowly allowlists two
+# security documentation files that contain intentional "UNSAFE:"
+# example secrets (e.g., `sk-1234567890abcdef`). These strings are
+# shown as *bad examples* inside OWASP/security-review docs, not real
+# credentials — but gitleaks' generic-api-key rule flags them on every
+# scan, creating noise in CI and panic for users running gitleaks
+# locally after cloning.
+#
+# Scope is path-based (entire file) rather than line-based so refactors
+# of the docs don't silently re-open the false positives. New files
+# containing real secrets are still caught — the allowlist does not
+# extend beyond the two paths listed below.
+title = "the-matrix gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documentation examples showing UNSAFE secret-handling patterns — these are intentional bad examples, not real secrets"
+paths = [
+  '''^\.claude/skills/owasp-review/SKILL\.md$''',
+  '''^\.claude/agents/security-reviewer\.md$''',
+]

@@ -1,0 +1,34 @@
+# Build output
+bin/
+dist/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tasks (session-local, not committed) — root-only to avoid matching internal/*/templates/*/tasks/
+/tasks/
+
+# morpheus loop (autonomous development infrastructure)
+.autonomous/
+
+# Private/local agent ecosystem state — do not publish in this public portfolio repo
+.claude/
+
+# Strategy output (session-local)
+strategy-output/

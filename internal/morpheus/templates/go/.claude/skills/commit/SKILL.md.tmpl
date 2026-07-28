@@ -1,0 +1,70 @@
+---
+description: Smart commit — runs build gates, stages changes, and creates a conventional commit
+---
+
+## Pre-Commit Status
+
+- Working tree: !`git status --short`
+- Changed files: !`git diff --stat`
+- Staged files: !`git diff --cached --stat`
+- Current branch: !`git branch --show-current`
+
+## Build Gates (mandatory before committing)
+
+Run the following checks. If any fail, fix the issue BEFORE committing:
+
+```bash
+make build    # Must compile
+make test     # All tests must pass
+make lint     # No lint warnings
+```
+
+Do NOT commit if any gate fails. Fix the issue first.
+
+## Commit Protocol
+
+### 1. Stage Changes
+
+Stage only the relevant files. NEVER use `git add .` or `git add -A`.
+
+```bash
+git add <specific-files>
+```
+
+Do NOT stage:
+- `tasks/` — gitignored session files
+- `.autonomous/` — loop configuration
+- `.env` or any secret files
+- `tmp/` or build artifacts
+
+### 2. Write Commit Message
+
+Use conventional commit format with service name scope:
+
+```
+feat({{ .ServiceName }}): add user creation endpoint with validation
+fix({{ .ServiceName }}): correct nil pointer in order service error path
+test({{ .ServiceName }}): add Ginkgo specs for payment repository
+refactor({{ .ServiceName }}): extract shared middleware into separate package
+chore({{ .ServiceName }}): update go.mod dependencies
+```
+
+**Prefix rules:**
+- `feat:` — new feature or capability
+- `fix:` — bug fix
+- `test:` — adding or fixing tests (no production code change)
+- `refactor:` — code restructure (no behavior change)
+- `chore:` — maintenance, dependencies, config
+
+### 3. Commit
+
+```bash
+git commit -m "type({{ .ServiceName }}): concise description of what and why"
+```
+
+### 4. Verify
+
+```bash
+git log --oneline -1    # Confirm the commit was created
+git status --short      # Confirm working tree is clean (or only untracked session files remain)
+```

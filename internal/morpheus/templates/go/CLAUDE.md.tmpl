@@ -1,0 +1,177 @@
+# {{ .ServiceName }} — Claude Code Instructions
+
+{{ .Description }}
+
+## Tech Stack
+
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Language | Go | {{ .GoVersion }} |
+| Router | chi/v5 | latest |
+| ORM | Bun (uptrace/bun) | latest |
+| Database | PostgreSQL 16 | {{ if .IsInternal }}shared internal_main_db{{ else }}{{ .ServiceName }}_db{{ end }} |
+{{ if .HasRedis }}| Cache | Redis 7 | shared |
+{{ end }}{{ if .HasRabbitMQ }}| Queue | RabbitMQ 3.13 | shared |
+{{ end }}| Config | Viper | latest |
+| DI | Google Wire | latest |
+| Testing | Ginkgo/Gomega + gomock | latest |
+| Logging | zerolog | latest |
+{{ if or .HasJWT .HasInternalKey }}| Auth | {{ if and .HasJWT .HasInternalKey }}JWT + X-Internal-API-Key{{ else if .HasJWT }}JWT{{ else }}X-Internal-API-Key{{ end }} | {{ if .IsInternal }}same as generation-service{{ else }}latest{{ end }} |
+{{ end }}| Observability | New Relic + Sentry | latest |
+
+## Architecture — 4-Layer (Strict)
+
+```
+internal/
+├── api/                          # Layer 1: HTTP Transport
+│   ├── handler/                  # Parse request → call orchestrator → return response
+│   ├── middleware/                # Auth, logging, recovery, request ID
+│   └── orchestration/            # Layer 2: Coordinate multiple services
+├── domain/                       # Interfaces + entity structs
+│   ├── interfaces.go             # All service/repo/cache interfaces
+│   ├── entities.go               # {{ join .Entities ", " }} entities
+│   └── mocks/                    # Generated mocks (mockgen)
+├── service/                      # Layer 3: Business logic
+{{ range .Entities }}│   ├── {{ lower . }}_service.go
+{{ end }}├── repository/                   # Layer 4: Database access (Bun ORM)
+{{ range .Entities }}│   ├── {{ lower . }}_repository.go
+{{ end }}└── infrastructure/               # External adapters
+    ├── database/                 # PostgreSQL connection
+{{ if .HasRedis }}    ├── cache/                    # Redis client
+{{ end }}{{ if .HasRabbitMQ }}    └── queue/                    # RabbitMQ client + publishers
+{{ end }}
+```
+
+**Layer Rules:**
+- Handler NEVER calls Repository directly
+- Repository NEVER contains business logic
+- Service NEVER imports `net/http`
+- Orchestrator coordinates services — no direct DB access
+
+## Commands
+
+```bash
+# Build
+make build                    # Build api{{ if .HasWorker }} + worker{{ end }} binaries
+
+# Test
+make test                     # Run all Ginkgo tests with -race
+make test-coverage            # Tests + HTML coverage report
+make lint                     # golangci-lint
+make fmt                      # gofmt
+
+# Development
+make dev                      # Start {{ if .IsInternal }}with shared infra{{ else }}all services{{ end }} (docker compose)
+make dev-standalone           # Self-contained{{ if .IsInternal }} (own postgres, redis){{ end }}
+make dev-down                 # Stop containers
+
+# Code Generation
+make generate                 # Wire + mocks
+make generate-wire            # wire ./cmd/api{{ if .HasWorker }} && wire ./cmd/worker{{ end }}
+make generate-mocks           # go generate ./...
+
+# Database
+make migrate-up               # Run pending migrations
+make migrate-down             # Rollback last migration
+make migrate-create name=xxx  # Create new migration
+
+# Dependencies
+make deps                     # go mod download && go mod tidy
+make install-tools            # Install wire, goose, golangci-lint, mockgen
+```
+
+## Ports
+
+| Binary | Port |
+|--------|------|
+| API | {{ .ApiPort }} |
+{{ if .HasWorker }}| Worker | {{ .WorkerPort }} |
+{{ end }}
+
+## Module Path
+
+```
+{{ .ModulePath }}
+```
+
+## Key Patterns
+
+### Entity Design
+- UUID primary keys (`github.com/google/uuid`)
+- `version` field for optimistic locking
+- `created_at`, `updated_at` timestamps
+- Soft delete via `deleted_at` nullable timestamp
+- Bun struct tags: `bun:"column_name,pk"`, `bun:"type:uuid,default:gen_random_uuid()"`
+
+### Config
+- Viper with `{binary}-{env}.yaml` (e.g., `api-local.yaml`{{ if .HasWorker }}, `worker-local.yaml`{{ end }})
+- Search paths: `./external-configs/{binary}/`, `/etc/{{ .ServiceName }}/{binary}/`
+- Secrets via `${ENV_VAR}` expansion in YAML
+- `mapstructure:"kebab-case"` tags on config structs
+{{ if .HasRabbitMQ }}
+### RabbitMQ Topology
+- Exchange: `{{ .ExchangeName }}` (topic)
+- Queues: {{ range $i, $q := .Queues }}{{ if $i }}, {{ end }}`{{ $q }}`{{ end }}
+{{ end }}{{ if .HasHMAC }}
+### Webhook Signatures
+- HMAC-SHA256 with per-webhook secret
+- Header: `X-Webhook-Signature-256`
+- Payload: raw request body
+{{ end }}{{ if .HasRetry }}
+### Retry Strategy
+- Exponential backoff: 5 retries, 30s base delay, 2× multiplier per attempt
+{{ if eq .DeadLetterMechanism "rabbitmq" }}- Dead-letter: route to RabbitMQ DLQ (`{{ .ExchangeName }}.dlq`) after max retries
+{{ else }}- **No RabbitMQ. No message queue.** Dead-letter = PostgreSQL status: `{{ .RetryEntity }}.status = 'dead_lettered'`
+{{ end }}- Attempt tracking: `attempt` int field on `{{ .RetryEntity }}` entity
+{{ end }}
+
+## Infrastructure — Pre-Scaffolded (Do NOT Recreate)
+
+The following files are already correct and committed. **Do NOT recreate, overwrite, or modify the infrastructure configuration** during the autonomous loop:
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile.api` | Multi-stage build (golang:{{ .GoVersion }}-alpine → alpine:3.20), non-root user, EXPOSE {{ .ApiPort }} |
+{{ if .HasWorker }}| `Dockerfile.worker` | Multi-stage build for worker binary, EXPOSE {{ .WorkerPort }} |
+{{ end }}{{ if .IsInternal }}| `docker-compose.yml` | Shared infra mode — connects to `internal-network` (external), `internal-postgres`, `internal-redis` |
+| `docker-compose.infra.yml` | Standalone mode — own postgres:17, redis:8{{ if .HasRabbitMQ }}, rabbitmq:3.13{{ end }} |
+{{ else }}| `docker-compose.yml` | Self-contained mode — own postgres:17{{ if .HasRedis }}, redis:8{{ end }}{{ if .HasRabbitMQ }}, rabbitmq:3.13{{ end }} on `{{ .ServiceName }}-network` |
+| `docker-compose.infra.yml` | Standalone mode — offset ports (postgres:5433{{ if .HasRedis }}, redis:6380{{ end }}{{ if .HasRabbitMQ }}, rabbitmq:5673{{ end }}) |
+{{ end }}
+| `Makefile` | All standard targets pre-configured |
+| `go.mod` | Module `{{ .ModulePath }}`, pinned to go {{ .GoVersion }}.0 |
+| `external-configs/api/api-local.yaml` | Local dev config — DB host/user/password pre-filled |
+{{ if .HasWorker }}| `external-configs/worker/worker-local.yaml` | Local worker dev config |
+{{ end }}
+If you need to add new environment variables, add them to the `environment:` section in `docker-compose.yml`{{ if .IsInternal }} and `docker-compose.infra.yml`{{ end }}. Do not change network names, image versions, or credentials.
+
+## Agents
+
+Use `claude --agent <name>` to invoke a specialized agent.
+
+| Agent | Model | Role |
+|-------|-------|------|
+| `developer` | opus | Senior Go engineer — implements features, fixes bugs |
+| `tester` | sonnet | QA engineer — writes Ginkgo tests, validates implementations |
+| `reviewer` | sonnet | Adversarial reviewer — read-only code review, quality gate |
+| `strategist` | opus | Product strategist and architecture advisor — research, design decisions, ADRs |
+| `manager` | opus | Orchestrator — breaks tasks, spawns strategist/dev/test/review pipeline |
+
+## Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `/continue` | Resume previous session — reads context, picks up work |
+| `/commit` | Smart commit — runs build/test, conventional commit format |
+
+---
+
+## Rules
+
+- `zerolog` for ALL logging — no `fmt.Println`, no `log` package
+- Errors wrapped: `fmt.Errorf("operation: %w", err)`
+- Interfaces in `internal/domain/interfaces.go` — define before implementing
+- Context propagation: `context.Context` as first parameter
+- Conventional commits: `feat:`, `fix:`, `test:`, `refactor:`, `chore:`
+- Files under 300 lines
+- No hardcoded secrets — always `${ENV_VAR}` in config

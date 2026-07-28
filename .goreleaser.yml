@@ -1,0 +1,120 @@
+version: 2
+
+project_name: the-matrix
+
+builds:
+  - id: neo
+    main: ./cmd/neo
+    binary: neo
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+  - id: morpheus
+    main: ./cmd/morpheus
+    binary: morpheus
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+  - id: oracle
+    main: ./cmd/oracle
+    binary: oracle
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+  - id: trinity
+    main: ./cmd/trinity
+    binary: trinity
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: neo
+    builds: [neo]
+    name_template: "neo_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - id: morpheus
+    builds: [morpheus]
+    name_template: "morpheus_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - id: oracle
+    builds: [oracle]
+    name_template: "oracle_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - id: trinity
+    builds: [trinity]
+    name_template: "trinity_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+brews:
+  - name: neo
+    ids: [neo]
+    skip_upload: auto
+    repository:
+      owner: 0merUfuk
+      name: homebrew-thematrix
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/0merUfuk/the-matrix
+    description: Meta-CLI orchestrator for the-matrix agent ecosystem
+
+  - name: morpheus
+    ids: [morpheus]
+    skip_upload: auto
+    repository:
+      owner: 0merUfuk
+      name: homebrew-thematrix
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/0merUfuk/the-matrix
+    description: Autonomous development infrastructure generator
+
+  - name: oracle
+    ids: [oracle]
+    skip_upload: auto
+    repository:
+      owner: 0merUfuk
+      name: homebrew-thematrix
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/0merUfuk/the-matrix
+    description: Knowledge synthesis engine for any tech stack
+
+  - name: trinity
+    ids: [trinity]
+    skip_upload: auto
+    repository:
+      owner: 0merUfuk
+      name: homebrew-thematrix
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/0merUfuk/the-matrix
+    description: Maintenance runtime for Claude Code agent ecosystems
+
+release:
+  prerelease: auto
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  use: github-native

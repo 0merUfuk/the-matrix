@@ -1,0 +1,65 @@
+---
+description: >
+  On-demand OWASP Top 10:2025 and ASI01-ASI10 security audit for {{ .ServiceName }}.
+  Spawns the security-reviewer agent against the current branch diff.
+---
+
+# /owasp-review -- On-Demand Security Audit
+
+## When to Use
+
+Invoke `/owasp-review` before merging any feature that touches:
+
+- Authentication or authorization logic
+- File I/O or path handling
+- Subprocess execution (`child_process`, shell invocations)
+- External HTTP calls or API integrations
+- Dependency updates (`package.json`, `package-lock.json`)
+- Template rendering with user-controlled input
+- Configuration loading from external sources
+{{- if .IsInternal }}
+- Stripe webhook signature verification
+- JWT token validation or session management
+- RabbitMQ message handling or queue configuration
+{{- end }}
+
+## Invocation
+
+```bash
+/owasp-review
+```
+
+Spawns the `security-reviewer` agent against `git diff main...HEAD`. The agent runs the full 6-step Investigation Protocol and produces a `SECURITY_APPROVED` or `SECURITY_BLOCKED` verdict.
+
+---
+
+## OWASP Top 10:2025 Reference
+
+| ID | Name | What to Check |
+|----|------|---------------|
+| A01 | Broken Access Control | Deny by default. Enforce authorization server-side. Verify object ownership. |
+| A02 | Security Misconfiguration | Harden configs. Disable debug/defaults in production. Use Helmet.js. |
+| A03 | Software Supply Chain Failures | Lock dependency versions. Audit with `npm audit`. |
+| A04 | Cryptographic Failures | TLS 1.2+. `crypto.randomBytes` not `Math.random`. |
+| A05 | Injection | Prisma parameterized queries. No `eval()`. Validate input with Joi/Zod. |
+| A06 | Insecure Design | Threat model critical flows. Rate limit with express-rate-limit. |
+| A07 | Authentication Failures | Secure session management. Rate limit auth endpoints. |
+| A08 | Integrity Failures | Verify upstream integrity. Safe JSON parsing. |
+| A09 | Logging Failures | Log security events. No sensitive data in logs. |
+| A10 | Exception Handling | Fail-closed. Hide internals from users. |
+
+---
+
+## Severity Scoring
+
+```
+severity = impact x exploitability x blast_radius
+```
+
+| Score | Severity | Action |
+|-------|----------|--------|
+| 1-10 | Informational | Note for awareness |
+| 11-30 | Low | Fix in next cycle |
+| 31-60 | Medium | Fix before merge |
+| 61-99 | High | SECURITY_BLOCKED |
+| 100+ | Critical | SECURITY_BLOCKED -- ESCALATE |

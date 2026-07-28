@@ -1,0 +1,172 @@
+{{ if .IsInternal -}}
+services:
+  internal-{{ .ServiceName }}-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: internal-{{ .ServiceName }}-api
+    restart: unless-stopped
+    ports:
+      - "{{ .ApiPort }}:{{ .ApiPort }}"
+    environment:
+      APP_ENV: local
+      APP_PORT: {{ .ApiPort }}
+      DATABASE_HOST: internal-postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: internal
+      DATABASE_PASSWORD: dev_password
+      DATABASE_NAME: internal_main_db
+      DATABASE_SSL_MODE: disable
+{{ if .HasRedis }}      REDIS_ADDR: internal-redis:6379
+{{ end }}{{ if .HasRabbitMQ }}      RABBITMQ_URL: amqp://internal:dev_password@originating-project-rabbitmq:5672/
+{{ end }}    networks:
+      - internal-network
+{{ if .HasWorker }}
+  internal-{{ .ServiceName }}-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: internal-{{ .ServiceName }}-worker
+    restart: unless-stopped
+    ports:
+      - "{{ .WorkerPort }}:{{ .WorkerPort }}"
+    environment:
+      APP_ENV: local
+      DATABASE_HOST: internal-postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: internal
+      DATABASE_PASSWORD: dev_password
+      DATABASE_NAME: internal_main_db
+      DATABASE_SSL_MODE: disable
+{{ if .HasRedis }}      REDIS_ADDR: internal-redis:6379
+{{ end }}{{ if .HasRabbitMQ }}      RABBITMQ_URL: amqp://internal:dev_password@originating-project-rabbitmq:5672/
+{{ end }}    networks:
+      - internal-network
+{{ end }}
+networks:
+  internal-network:
+    external: true
+{{ else -}}
+services:
+  {{ .ServiceName }}-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: {{ .ServiceName }}-api
+    restart: unless-stopped
+    ports:
+      - "{{ .ApiPort }}:{{ .ApiPort }}"
+    environment:
+      APP_ENV: local
+      APP_PORT: {{ .ApiPort }}
+      DATABASE_HOST: {{ .ServiceName }}-postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: {{ .ServiceName }}
+      DATABASE_PASSWORD: dev_password
+      DATABASE_NAME: {{ .ServiceName }}_db
+      DATABASE_SSL_MODE: disable
+{{ if .HasRedis }}      REDIS_ADDR: {{ .ServiceName }}-redis:6379
+{{ end }}{{ if .HasRabbitMQ }}      RABBITMQ_URL: amqp://{{ .ServiceName }}:dev_password@{{ .ServiceName }}-rabbitmq:5672/
+{{ end }}    depends_on:
+      {{ .ServiceName }}-postgres:
+        condition: service_healthy
+{{ if .HasRedis }}      {{ .ServiceName }}-redis:
+        condition: service_healthy
+{{ end }}{{ if .HasRabbitMQ }}      {{ .ServiceName }}-rabbitmq:
+        condition: service_healthy
+{{ end }}    networks:
+      - {{ .ServiceName }}-network
+{{ if .HasWorker }}
+  {{ .ServiceName }}-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: {{ .ServiceName }}-worker
+    restart: unless-stopped
+    ports:
+      - "{{ .WorkerPort }}:{{ .WorkerPort }}"
+    environment:
+      APP_ENV: local
+      DATABASE_HOST: {{ .ServiceName }}-postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: {{ .ServiceName }}
+      DATABASE_PASSWORD: dev_password
+      DATABASE_NAME: {{ .ServiceName }}_db
+      DATABASE_SSL_MODE: disable
+{{ if .HasRedis }}      REDIS_ADDR: {{ .ServiceName }}-redis:6379
+{{ end }}{{ if .HasRabbitMQ }}      RABBITMQ_URL: amqp://{{ .ServiceName }}:dev_password@{{ .ServiceName }}-rabbitmq:5672/
+{{ end }}    depends_on:
+      {{ .ServiceName }}-postgres:
+        condition: service_healthy
+{{ if .HasRedis }}      {{ .ServiceName }}-redis:
+        condition: service_healthy
+{{ end }}{{ if .HasRabbitMQ }}      {{ .ServiceName }}-rabbitmq:
+        condition: service_healthy
+{{ end }}    networks:
+      - {{ .ServiceName }}-network
+{{ end }}
+  {{ .ServiceName }}-postgres:
+    image: postgres:17-alpine
+    container_name: {{ .ServiceName }}-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: {{ .ServiceName }}
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: {{ .ServiceName }}_db
+    volumes:
+      - {{ .ServiceName }}-postgres-data:/var/lib/postgresql/data
+    networks:
+      - {{ .ServiceName }}-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ .ServiceName }} -d {{ .ServiceName }}_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+{{ if .HasRedis }}
+  {{ .ServiceName }}-redis:
+    image: redis:8-alpine
+    container_name: {{ .ServiceName }}-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - {{ .ServiceName }}-redis-data:/data
+    networks:
+      - {{ .ServiceName }}-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+{{ end }}{{ if .HasRabbitMQ }}
+  {{ .ServiceName }}-rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: {{ .ServiceName }}-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: {{ .ServiceName }}
+      RABBITMQ_DEFAULT_PASS: dev_password
+    volumes:
+      - {{ .ServiceName }}-rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - {{ .ServiceName }}-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+{{ end }}
+volumes:
+  {{ .ServiceName }}-postgres-data:
+{{ if .HasRedis }}  {{ .ServiceName }}-redis-data:
+{{ end }}{{ if .HasRabbitMQ }}  {{ .ServiceName }}-rabbitmq-data:
+{{ end }}
+networks:
+  {{ .ServiceName }}-network:
+    driver: bridge
+{{ end -}}

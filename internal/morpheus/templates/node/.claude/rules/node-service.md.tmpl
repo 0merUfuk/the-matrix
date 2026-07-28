@@ -1,0 +1,32 @@
+---
+description: Auto-loaded Node.js service rules for {{ .ServiceName }}
+---
+
+# Node.js Service Rules — {{ .ServiceNamePascal }}
+
+## Architecture (Non-negotiable)
+
+- **4-layer strict**: Routes → Controllers → Services → Repositories
+- Routes ONLY define URL mappings
+- Services NEVER import Express (no req/res)
+- Repositories use Prisma ONLY
+
+## Code Standards
+
+- Pino for ALL logging — no `console.log` in production code
+- AppError class for business errors with HTTP status
+- Constructor-based DI — no module-level singletons in business code
+- Max 300 lines per file
+
+## Build Gates
+
+- `npm test` MUST pass before any commit
+- `npm run lint` MUST pass before any commit
+
+## Conventional Commits
+
+`feat:`, `fix:`, `test:`, `refactor:`, `chore:` — no other prefixes
+
+## Module Path
+
+`{{ .ModulePath }}`

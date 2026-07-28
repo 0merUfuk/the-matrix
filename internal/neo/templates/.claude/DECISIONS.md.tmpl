@@ -1,0 +1,27 @@
+**Version**: 1.0
+**Created**: {{ .CreatedDate }}
+**Last Updated**: {{ .CreatedDate }}
+**Authors:** neo-cli
+
+---
+
+# {{ .ProjectName }} — Architectural Decisions
+
+## D-001: Project Type
+
+**Decision**: {{ .ProjectType }}
+**Team size**: {{ .TeamSize }}
+**Date**: {{ .CreatedDate }}
+
+---
+
+## D-002: Tech Stack{{ range $i, $s := .Stacks }}
+
+### Stack {{ add $i 1 }}: {{ $s.Name }}
+
+**Language**: {{ $s.Language }}
+**Framework**: {{ $s.Framework }}
+**Architecture**: {{ $s.ArchStyle }}
+**Testing**: {{ $s.TestingFramework }}
+**Data layer**: {{ $s.DataLayer }}
+{{ end }}

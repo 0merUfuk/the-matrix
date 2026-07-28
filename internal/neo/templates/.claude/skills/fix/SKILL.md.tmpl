@@ -1,0 +1,186 @@
+---
+description: >
+  Applies safe mechanical fixes from the last /audit report. Corrects context file
+  drift, closes resolved issues, updates stale paths and versions. Never touches
+  application source code or git history.
+argument-hint: "[--dry-run]"
+allowed-tools: Read, Edit, Grep, Glob, Bash(cat:*), Bash(ls:*)
+---
+
+# /fix — Apply Safe Mechanical Fixes from Audit
+
+**Usage**: `/fix` or `/fix $ARGUMENTS`
+
+**Examples**:
+```
+/fix                 # apply all safe fixes from last audit
+/fix --dry-run       # print what would be changed without applying
+```
+
+---
+
+## What This Command Does
+
+Reads `tasks/audit-report.md` (produced by `/audit`) and applies only the safe mechanical fixes: context file corrections, KNOWN_ISSUES.md closures, CLAUDE.md text updates. Never touches application source code, build configuration, or git history.
+
+---
+
+## Strict Boundaries
+
+### What /fix CAN do
+
+- Close resolved entries in `.claude/KNOWN_ISSUES.md` (add resolution date + brief note)
+- Update version numbers in `.claude/SERVICE_CONTEXT.md` where source code says differently
+- Update `CLAUDE.md` text descriptions (project structure, commands, feature lists)
+- Correct stale file path references in `.claude/` context files
+- Update `.claude/NEXT_STEPS.md` — mark completed items, fix stale claims
+
+### What /fix NEVER touches
+
+- Application source code ({{ range $i, $s := .Stacks }}{{ if $i }}, {{ end }}*.{{ if eq $s.Language "go" }}go{{ else if eq $s.Language "nodejs" }}ts/*.js{{ else if eq $s.Language "python" }}py{{ else }}*{{ end }}{{ end }} files)
+- Build configuration (Makefile, package.json scripts, pyproject.toml build settings)
+- Dependency files (go.mod, go.sum, package-lock.json, requirements.txt)
+- CI/CD configuration
+- Git tags or commits — that is a release concern
+- `CHANGELOG.md` — that is a release concern
+- `DECISIONS.md` existing entries — append-only
+- Anything NOT listed in the "Safe to Auto-Fix" section of `tasks/audit-report.md`
+
+---
+
+## Execution Instructions
+
+When this command is invoked, execute the following steps in order.
+
+---
+
+### Step 1 — Check for audit report
+
+Read `tasks/audit-report.md`.
+
+If `tasks/` directory does not exist, stop immediately:
+
+```
+  tasks/ directory not found. Run /audit first — it will create the directory and write the report.
+```
+
+If `tasks/audit-report.md` does not exist, stop immediately:
+
+```
+  No audit report found. Run /audit first.
+```
+
+If the report is older than 24 hours (check the date in the report header), warn:
+
+```
+  Audit report is from {date}. Consider running /audit again for fresh results.
+  Proceed with this report? [Y/n]
+```
+
+---
+
+### Step 2 — Read the "Safe to Auto-Fix" section
+
+Extract the numbered list from the `## Safe to Auto-Fix` section of `tasks/audit-report.md`.
+
+If the section is empty or says "None":
+
+```
+  Nothing to fix. All context files are accurate.
+```
+
+Stop here.
+
+---
+
+### Step 3 — List every change with exact file paths
+
+Before applying anything, print the complete list of what will be changed:
+
+```
+  Will apply {N} fixes:
+
+  1. {file-path}: {description of change}
+  2. {file-path}: {description of change}
+  ...
+
+  Will NOT touch (requires manual action): {N} items
+  See tasks/audit-report.md "Requires Manual Action"
+
+  Proceed? [Y/n]
+```
+
+If `--dry-run` was provided, stop here. Do not apply any changes.
+
+If the user confirms (or `/fix` is invoked non-interactively), proceed to Step 4.
+
+---
+
+### Step 4 — Apply each fix
+
+Apply fixes in the order they appear in the report. For each fix:
+
+1. Read the target file first (never edit blind)
+2. **Check if already applied** — if the file already contains the intended final state, skip and print `already applied: {description}`. Never apply a fix twice.
+3. Apply the change using the Edit tool
+4. Print `fixed: {file-path} — {one-line description}`
+
+**Fix patterns by type**:
+
+**Closing a KNOWN_ISSUES.md entry**:
+- Before applying: check if the target entry already shows resolved — if so, skip
+- Find the `**Status**: Open` line for the given issue ID
+- Replace with `**Status**: Resolved — {date} — {brief resolution note}`
+- Do not delete the entry (it is a historical record)
+
+**Updating SERVICE_CONTEXT.md version**:
+- Find the version field in the relevant section
+- Update to match the version from source code
+
+**Updating a CLAUDE.md section**:
+- Find the relevant section
+- Update to match the actual project state from source
+- Match the formatting of existing entries exactly
+
+**Correcting a stale file path reference**:
+- Find the old path string
+- Replace with the correct path (as specified in the audit report)
+
+---
+
+### Step 5 — Print summary
+
+```
+  Fixed {N} items.
+  {M} items require manual action — see tasks/audit-report.md "Requires Manual Action".
+
+  Tip: Run /audit again to confirm all issues are resolved.
+```
+
+---
+
+## Error Conditions
+
+| Situation | Action |
+|-----------|--------|
+| `tasks/audit-report.md` not found | Stop: "Run /audit first." |
+| A file to edit does not exist | Skip that fix, report: "skipped: {file} not found" |
+| Edit would produce no change (already fixed) | Skip, report: "already applied: {description}" |
+| User answers N at confirmation | Stop: "No changes made." |
+| Fix type is ambiguous (not one of the known patterns) | Skip, report: "skipped: cannot safely apply — add to manual list" |
+
+---
+
+## Quick Reference
+
+```bash
+# The files /fix is allowed to edit
+.claude/KNOWN_ISSUES.md
+.claude/SERVICE_CONTEXT.md
+.claude/NEXT_STEPS.md
+CLAUDE.md
+
+# The files /fix never touches
+# Application source code, build configs, dependency files,
+# CI/CD, CHANGELOG.md, DECISIONS.md existing entries
+```

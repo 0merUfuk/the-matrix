@@ -1,0 +1,38 @@
+---
+description: Smart commit — review changes, run checks, create conventional commit
+---
+
+## Current State
+
+- Staged changes: !`git diff --cached --stat`
+- Unstaged changes: !`git diff --stat`
+- Untracked files: !`git status --short | grep '^??' | head -10`
+
+## Commit Protocol
+
+### 1. Review Changes
+
+Examine all staged and unstaged changes. Understand what was modified and why.
+
+### 2. Stage Files
+
+Stage relevant files by name. Do NOT use `git add .` or `git add -A`.
+
+Never stage:
+- `tasks/` — gitignored session files
+- `.autonomous/` — gitignored loop config
+- `.env`, credentials, secrets
+
+### 3. Commit
+
+Use conventional commit format:
+
+```
+feat({{ .ProjectName }}): add new capability
+fix({{ .ProjectName }}): resolve specific bug
+test({{ .ProjectName }}): add tests for feature
+refactor({{ .ProjectName }}): restructure without behavior change
+chore({{ .ProjectName }}): maintenance task
+```
+
+Keep the subject line under 72 characters. Add a body if the change needs explanation.

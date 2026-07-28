@@ -1,0 +1,48 @@
+---
+description: Auto-loaded Go service rules for {{ .ServiceName }}
+---
+
+{{ if .IsInternal }}# Go Service Rules — {{ .ServiceNamePascal }}
+
+## Architecture (Non-negotiable)
+
+- **4-layer strict**: Handler → Orchestration → Service → Repository
+- Handler NEVER calls Repository directly
+- Service NEVER imports `net/http`
+- Interfaces in `internal/domain/interfaces.go` — define BEFORE implementing
+
+## Code Standards
+
+- `zerolog` for ALL logging — no `fmt.Println`, no `log` package
+- Errors: `fmt.Errorf("operation: %w", err)` — always wrap with context
+- Max 300 lines per file
+- UUID primary keys (`github.com/google/uuid`)
+- Context propagation: `context.Context` as first parameter
+
+## Build Gates
+
+- `make build` MUST pass before any commit
+- `make lint` MUST pass before any commit
+- `make test` MUST pass before marking tasks complete
+
+## Conventional Commits
+
+`feat:`, `fix:`, `test:`, `refactor:`, `chore:` — no other prefixes
+
+## Module Path
+
+`{{ .ModulePath }}`{{ else }}# Go Service Rules — {{ .ServiceNamePascal }}
+
+Follow the conventions established in this project's CLAUDE.md.
+Read .claude/knowledge/ for stack-specific patterns and best practices.
+
+## General Go Rules
+- Wrap errors with context: `fmt.Errorf("operation: %w", err)`
+- Propagate context.Context as first parameter
+- Keep files under 300 lines
+- Keep functions focused and under 50 lines
+- Use conventional commit messages
+
+## Module Path
+
+`{{ .ModulePath }}`{{ end }}

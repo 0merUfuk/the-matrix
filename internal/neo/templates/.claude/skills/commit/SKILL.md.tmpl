@@ -1,0 +1,193 @@
+---
+description: >
+  Smart commit — review staged changes, draft a conventional commit message,
+  and commit with proper formatting.
+allowed-tools: Read, Grep, Glob, Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(git rev-parse:*){{ range .Stacks }}{{ if eq .Language "go" }}, Bash(make build:*), Bash(make test:*), Bash(go vet:*){{ end }}{{ if eq .Language "nodejs" }}, Bash(npm test:*), Bash(npm run:*){{ end }}{{ if eq .Language "python" }}, Bash(pytest:*){{ end }}{{ end }}
+---
+
+# /commit — Smart Commit
+
+**Usage**: `/commit`
+
+## Current State
+
+- Staged changes: !`git diff --cached --stat`
+- Unstaged changes: !`git diff --stat`
+- Untracked files: !`git status --short | head -10`
+- Recent commits: !`git log --oneline -5`
+
+---
+
+## What This Command Does
+
+Reviews all staged and unstaged changes, drafts a conventional commit message, and creates the commit. Follows the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+---
+
+## Execution Instructions
+
+---
+
+### Step 1 — Review all changes
+
+Examine the current git state:
+
+```bash
+git status
+git diff --cached          # staged changes (will be committed)
+git diff                   # unstaged changes (will NOT be committed unless staged)
+```
+
+If there are no staged changes and no unstaged changes:
+```
+Nothing to commit — working tree clean.
+```
+Stop here.
+
+If there are unstaged changes but nothing staged, suggest what to stage:
+```
+No staged changes. Unstaged changes detected in:
+  {file list}
+
+Would you like me to stage these changes? [Y/n]
+```
+
+---
+
+### Step 2 — Analyze the changes
+
+Read the actual diff content to understand what changed and why:
+
+```bash
+git diff --cached          # for staged changes
+git diff                   # for unstaged changes (if staging was approved)
+```
+
+Classify the changes:
+
+| Type | When to use |
+|------|-------------|
+| `feat` | A new feature or capability |
+| `fix` | A bug fix |
+| `refactor` | Code restructuring with no behavior change |
+| `test` | Adding or updating tests |
+| `docs` | Documentation changes only |
+| `chore` | Build, CI, dependency updates, tooling |
+| `style` | Formatting, whitespace, linting (no logic change) |
+| `perf` | Performance improvement |
+
+If changes span multiple types, use the most significant one for the commit message.
+
+---
+
+### Step 3 — Pre-commit verification
+
+Before committing, run relevant checks to ensure the code is in good shape:
+{{ range .Stacks }}
+{{- if eq .Language "go" }}
+
+**{{ .Name }} (Go)**:
+```bash
+go build ./...
+go vet ./...
+go test ./... 2>&1 | tail -5
+```
+{{- end }}
+{{- if eq .Language "nodejs" }}
+
+**{{ .Name }} (Node.js)**:
+```bash
+npm run lint 2>&1 | tail -5    # if lint script exists
+npm test 2>&1 | tail -5        # if test script exists
+```
+{{- end }}
+{{- if eq .Language "python" }}
+
+**{{ .Name }} (Python)**:
+```bash
+pytest -q 2>&1 | tail -5      # if tests exist
+```
+{{- end }}
+{{ end }}
+
+If any check fails, warn the user:
+```
+⚠  Pre-commit check failed:
+    {command}: {failure summary}
+
+Commit anyway? [y/N]
+```
+
+Default is NO — do not commit if checks fail unless the user explicitly approves.
+
+---
+
+### Step 4 — Draft the commit message
+
+Format: `{type}({scope}): {short description}`
+
+Rules:
+- **type**: one of feat, fix, refactor, test, docs, chore, style, perf
+- **scope**: optional — the component, module, or area changed (e.g., `api`, `auth`, `config`)
+- **short description**: imperative mood, lowercase, no period, under 72 characters
+- **body** (optional): add if the "why" is not obvious from the description alone
+
+Examples:
+```
+feat(auth): add JWT refresh token rotation
+fix(api): handle null response from external provider
+refactor(config): extract validation into separate module
+test(worker): add integration tests for retry logic
+chore: update dependencies to latest patch versions
+```
+
+Present the proposed message to the user:
+```
+Proposed commit message:
+
+  {type}({scope}): {description}
+
+  {body, if applicable}
+
+Proceed? [Y/n]
+```
+
+---
+
+### Step 5 — Create the commit
+
+```bash
+git add {files}    # if user approved staging unstaged changes
+git commit -m "{type}({scope}): {description}"
+```
+
+If a body is needed, use a heredoc:
+```bash
+git commit -m "$(cat <<'EOF'
+{type}({scope}): {description}
+
+{body}
+EOF
+)"
+```
+
+---
+
+### Step 6 — Confirm
+
+Print the result:
+```
+Committed: {short hash} {type}({scope}): {description}
+  {N} files changed, {N} insertions(+), {N} deletions(-)
+```
+
+---
+
+## Error Conditions
+
+| Situation | Action |
+|-----------|--------|
+| Nothing to commit | "Working tree clean — nothing to commit." Stop. |
+| Pre-commit hook fails | Show the hook output. Do NOT retry with --no-verify. Fix the issue first. |
+| Merge conflict markers in staged files | "Merge conflict markers found in {file}. Resolve conflicts before committing." Stop. |
+| Staged files include secrets (.env, credentials) | "Sensitive file detected: {file}. Remove from staging before committing." Stop. |

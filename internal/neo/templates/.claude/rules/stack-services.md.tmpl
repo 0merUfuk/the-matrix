@@ -1,0 +1,19 @@
+---
+description: {{ .StackName }} service conventions
+globs:
+  - "**/*.{{ .FileExtension }}"
+---
+
+# {{ .StackName }} Service Rules
+
+## Stack: {{ .Language }} / {{ .Framework }}
+
+- Architecture: {{ .ArchStyle }}
+- Testing: {{ .TestingFramework }}
+- Data layer: {{ .DataLayer }}
+
+## Conventions
+
+- Follow the {{ .ArchStyle }} architecture pattern
+- Write tests using {{ .TestingFramework }}
+- Reference `.claude/knowledge/{{ .StackName }}/` for best practices

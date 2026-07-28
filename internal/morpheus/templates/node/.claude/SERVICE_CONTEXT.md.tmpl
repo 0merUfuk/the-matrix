@@ -1,0 +1,33 @@
+**Version**: 1.0
+**Created**: {{ .CreatedDate }}
+**Last Updated**: {{ .CreatedDate }}
+**Authors:** Autonomous Loop
+
+---
+
+# {{ .ServiceNamePascal }} — Service Context
+
+> **Placeholder** — Run `morpheus finalize` after the autonomous loop completes.
+
+## Status
+
+NOT STARTED — No code written yet. Project freshly scaffolded.
+
+## What's Implemented
+
+- None (loop has not run)
+
+## Tech Stack
+
+- Language: Node.js 20+
+- Module: `{{ .ModulePath }}`
+- API port: {{ .ApiPort }}{{ if .HasWorker }}, Worker port: {{ .WorkerPort }}{{ end }}
+- Entities: {{ join .Entities ", " }}
+
+## Test Coverage
+
+No tests yet.
+
+## What's Missing
+
+Everything — start the autonomous loop: `.autonomous/loop.sh`

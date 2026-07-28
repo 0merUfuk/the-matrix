@@ -1,0 +1,81 @@
+# Target State: {{ .ServiceNamePascal }} (Node.js)
+
+> Expected directory structure. Agents use this as compliance reference.
+
+---
+
+## Expected Directory Tree
+
+```
+{{ .ServiceName }}/
+├── src/
+│   ├── routes/
+{{ range .Entities }}│   │   ├── {{ lower . }}.routes.js
+{{ end }}│   │   └── health.routes.js
+│   ├── controllers/
+{{ range .Entities }}│   │   ├── {{ lower . }}.controller.js
+{{ end }}│   ├── services/
+{{ range .Entities }}│   │   ├── {{ lower . }}.service.js
+{{ end }}│   ├── repositories/
+{{ range .Entities }}│   │   ├── {{ lower . }}.repository.js
+{{ end }}│   ├── domain/
+│   │   └── types.js              # DTOs, error types, interfaces
+│   ├── middleware/
+│   │   ├── auth.js
+│   │   ├── error-handler.js
+│   │   └── logger.js
+│   ├── infrastructure/
+│   │   ├── database.js           # Prisma client singleton
+{{ if .HasRedis }}│   │   ├── cache.js              # Redis (ioredis)
+{{ end }}{{ if .HasRabbitMQ }}│   │   └── queue.js              # amqplib connection
+{{ end }}│   ├── config.js                 # Zod env validation
+│   └── app.js                    # Express app (no listen)
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+│       └── [timestamps]/
+├── tests/
+│   └── integration/
+├── package.json
+├── .env.example
+└── CLAUDE.md
+```
+
+---
+
+## Layer Rules
+
+| Layer | Directory | Rule |
+|-------|-----------|------|
+| Routes | `src/routes/` | URL mapping ONLY → call controller |
+| Controllers | `src/controllers/` | Orchestrate services, no Prisma |
+| Services | `src/services/` | Business logic, no Express, no Prisma |
+| Repositories | `src/repositories/` | Prisma ONLY, no business logic |
+
+---
+
+## Naming Conventions
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Route file | `{entity}.routes.js` | `{{ lower (index .Entities 0) }}.routes.js` |
+| Controller | `{Entity}Controller` class | `{{ index .Entities 0 }}Controller` |
+| Service | `{Entity}Service` class | `{{ index .Entities 0 }}Service` |
+| Repository | `{Entity}Repository` class | `{{ index .Entities 0 }}Repository` |
+| Test file | `__tests__/{entity}.{layer}.test.js` | `__tests__/{{ lower (index .Entities 0) }}.service.test.js` |
+
+---
+
+## API Routes
+
+```
+GET    /health
+GET    /health/live
+GET    /health/ready
+{{ range .Entities }}
+POST   /api/v1/{{ lower . }}s
+GET    /api/v1/{{ lower . }}s
+GET    /api/v1/{{ lower . }}s/:id
+PUT    /api/v1/{{ lower . }}s/:id
+DELETE /api/v1/{{ lower . }}s/:id
+{{ end }}```

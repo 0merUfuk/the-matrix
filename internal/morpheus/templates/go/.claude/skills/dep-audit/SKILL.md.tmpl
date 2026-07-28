@@ -1,0 +1,96 @@
+---
+description: >
+  Audit {{ .ServiceName }} dependencies for known vulnerabilities using govulncheck,
+  go mod verify, and trivy. Merges findings across scanners.
+---
+
+# /dep-audit -- Dependency Vulnerability Audit
+
+## When to Use
+
+- Before releases to verify no known vulnerabilities ship
+- After updating `go.mod` / `go.sum`
+- When triaging a new CVE advisory
+- After adding a new third-party dependency
+
+## Invocation
+
+```bash
+/dep-audit
+```
+
+---
+
+## Behavior
+
+### Step 1: Go Module Integrity
+
+```bash
+go mod verify
+```
+
+A verification failure indicates a tampered or corrupted module -- treat as **CRITICAL**.
+
+### Step 2: Go Vulnerability Check
+
+```bash
+govulncheck ./...
+```
+
+govulncheck checks whether your code actually calls the vulnerable function, not just whether the module is in `go.mod`.
+
+### Step 3: Trivy Filesystem Scan
+
+```bash
+trivy fs . --scanners vuln --severity HIGH,CRITICAL
+```
+
+Trivy catches vulnerabilities that govulncheck may miss (build tools, vendored C libraries).
+
+### Step 4: Merge and Deduplicate
+
+Cross-reference findings from all scanners. Deduplicate by CVE ID.
+
+For each unique vulnerability:
+1. Identify the affected package and version
+2. Check if a fix version is available
+3. Assess whether the vulnerable code path is reachable
+4. Determine severity using the CVSS score
+
+---
+
+## Output
+
+```markdown
+# Dependency Audit Report
+
+## Verdict: CLEAN | VULNERABILITIES_FOUND
+
+## Summary
+- govulncheck: N findings
+- trivy: N findings
+- Unique CVEs after deduplication: N
+
+## Critical / High
+| CVE | Package | Current | Fixed | Scanner | Reachable? |
+|-----|---------|---------|-------|---------|------------|
+
+## Medium / Low
+| CVE | Package | Current | Fixed | Scanner | Reachable? |
+|-----|---------|---------|-------|---------|------------|
+
+## Module Integrity
+- go mod verify: PASS | FAIL
+
+## Remediation
+1. `go get pkg@fixed-version` -- fix CVE-YYYY-NNNNN
+```
+
+---
+
+## Prerequisites
+
+```bash
+go install golang.org/x/vuln/cmd/govulncheck@latest
+brew install trivy
+```

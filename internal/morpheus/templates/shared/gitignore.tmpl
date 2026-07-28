@@ -1,0 +1,35 @@
+# Tasks and autonomous loop state (local developer files, not shared)
+tasks/
+.autonomous/
+
+# Binaries
+{{ .ServiceName }}-api
+{{ .ServiceName }}-worker
+bin/
+
+# Go
+vendor/
+*.test
+*.out
+coverage.html
+wire_gen.go
+
+# Node.js
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

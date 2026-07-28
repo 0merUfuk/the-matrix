@@ -1,0 +1,257 @@
+{{ if .IsInternal -}}
+# Standalone development mode — runs {{ .ServiceName }} with its own local infrastructure.
+# Use this when working without the full monorepo.
+# NOTE: postgres uses port 5433 and redis uses port 6380 to avoid conflicts with
+# the shared infrastructure (5432 / 6379). Adjust if these conflict with
+# another service's standalone mode running at the same time.
+
+services:
+  internal-{{ .ServiceName }}-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: internal-{{ .ServiceName }}-api
+    restart: unless-stopped
+    ports:
+      - "{{ .ApiPort }}:{{ .ApiPort }}"
+    environment:
+      APP_ENV: local
+      APP_PORT: {{ .ApiPort }}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: internal
+      DATABASE_PASSWORD: dev_password
+      DATABASE_NAME: internal_main_db
+      DATABASE_SSL_MODE: disable
+{{ if .HasRedis }}      REDIS_ADDR: redis:6379
+{{ end }}{{ if .HasRabbitMQ }}      RABBITMQ_URL: amqp://internal:dev_password@rabbitmq:5672/
+{{ end }}    depends_on:
+      postgres:
+        condition: service_healthy
+{{ if .HasRedis }}      redis:
+        condition: service_healthy
+{{ end }}{{ if .HasRabbitMQ }}      rabbitmq:
+        condition: service_healthy
+{{ end }}    networks:
+      - {{ .ServiceName }}-network
+{{ if .HasWorker }}
+  internal-{{ .ServiceName }}-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: internal-{{ .ServiceName }}-worker
+    restart: unless-stopped
+    ports:
+      - "{{ .WorkerPort }}:{{ .WorkerPort }}"
+    environment:
+      APP_ENV: local
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: internal
+      DATABASE_PASSWORD: dev_password
+      DATABASE_NAME: internal_main_db
+      DATABASE_SSL_MODE: disable
+{{ if .HasRedis }}      REDIS_ADDR: redis:6379
+{{ end }}{{ if .HasRabbitMQ }}      RABBITMQ_URL: amqp://internal:dev_password@rabbitmq:5672/
+{{ end }}    depends_on:
+      postgres:
+        condition: service_healthy
+{{ if .HasRedis }}      redis:
+        condition: service_healthy
+{{ end }}{{ if .HasRabbitMQ }}      rabbitmq:
+        condition: service_healthy
+{{ end }}    networks:
+      - {{ .ServiceName }}-network
+{{ end }}
+  postgres:
+    image: postgres:17-alpine
+    container_name: {{ .ServiceName }}-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: internal
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: internal_main_db
+    volumes:
+      - {{ .ServiceName }}-postgres-data:/var/lib/postgresql/data
+    networks:
+      - {{ .ServiceName }}-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U internal -d internal_main_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+{{ if .HasRedis }}
+  redis:
+    image: redis:8-alpine
+    container_name: {{ .ServiceName }}-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - {{ .ServiceName }}-redis-data:/data
+    networks:
+      - {{ .ServiceName }}-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+{{ end }}{{ if .HasRabbitMQ }}
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: {{ .ServiceName }}-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: internal
+      RABBITMQ_DEFAULT_PASS: dev_password
+    volumes:
+      - {{ .ServiceName }}-rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - {{ .ServiceName }}-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+{{ end }}
+volumes:
+  {{ .ServiceName }}-postgres-data:
+{{ if .HasRedis }}  {{ .ServiceName }}-redis-data:
+{{ end }}{{ if .HasRabbitMQ }}  {{ .ServiceName }}-rabbitmq-data:
+{{ end }}
+networks:
+  {{ .ServiceName }}-network:
+    driver: bridge
+{{ else -}}
+# Standalone development mode — runs {{ .ServiceName }} with its own local infrastructure.
+# NOTE: postgres uses port 5433 and redis uses port 6380 to avoid conflicts with
+# other services running at the same time.
+
+services:
+  {{ .ServiceName }}-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: {{ .ServiceName }}-api
+    restart: unless-stopped
+    ports:
+      - "{{ .ApiPort }}:{{ .ApiPort }}"
+    environment:
+      APP_ENV: local
+      APP_PORT: {{ .ApiPort }}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: {{ .ServiceName }}
+      DATABASE_PASSWORD: dev_password
+      DATABASE_NAME: {{ .ServiceName }}_db
+      DATABASE_SSL_MODE: disable
+{{ if .HasRedis }}      REDIS_ADDR: redis:6379
+{{ end }}{{ if .HasRabbitMQ }}      RABBITMQ_URL: amqp://{{ .ServiceName }}:dev_password@rabbitmq:5672/
+{{ end }}    depends_on:
+      postgres:
+        condition: service_healthy
+{{ if .HasRedis }}      redis:
+        condition: service_healthy
+{{ end }}{{ if .HasRabbitMQ }}      rabbitmq:
+        condition: service_healthy
+{{ end }}    networks:
+      - {{ .ServiceName }}-network
+{{ if .HasWorker }}
+  {{ .ServiceName }}-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: {{ .ServiceName }}-worker
+    restart: unless-stopped
+    ports:
+      - "{{ .WorkerPort }}:{{ .WorkerPort }}"
+    environment:
+      APP_ENV: local
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: {{ .ServiceName }}
+      DATABASE_PASSWORD: dev_password
+      DATABASE_NAME: {{ .ServiceName }}_db
+      DATABASE_SSL_MODE: disable
+{{ if .HasRedis }}      REDIS_ADDR: redis:6379
+{{ end }}{{ if .HasRabbitMQ }}      RABBITMQ_URL: amqp://{{ .ServiceName }}:dev_password@rabbitmq:5672/
+{{ end }}    depends_on:
+      postgres:
+        condition: service_healthy
+{{ if .HasRedis }}      redis:
+        condition: service_healthy
+{{ end }}{{ if .HasRabbitMQ }}      rabbitmq:
+        condition: service_healthy
+{{ end }}    networks:
+      - {{ .ServiceName }}-network
+{{ end }}
+  postgres:
+    image: postgres:17-alpine
+    container_name: {{ .ServiceName }}-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: {{ .ServiceName }}
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: {{ .ServiceName }}_db
+    volumes:
+      - {{ .ServiceName }}-postgres-data:/var/lib/postgresql/data
+    networks:
+      - {{ .ServiceName }}-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ .ServiceName }} -d {{ .ServiceName }}_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+{{ if .HasRedis }}
+  redis:
+    image: redis:8-alpine
+    container_name: {{ .ServiceName }}-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - {{ .ServiceName }}-redis-data:/data
+    networks:
+      - {{ .ServiceName }}-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+{{ end }}{{ if .HasRabbitMQ }}
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: {{ .ServiceName }}-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: {{ .ServiceName }}
+      RABBITMQ_DEFAULT_PASS: dev_password
+    volumes:
+      - {{ .ServiceName }}-rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - {{ .ServiceName }}-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+{{ end }}
+volumes:
+  {{ .ServiceName }}-postgres-data:
+{{ if .HasRedis }}  {{ .ServiceName }}-redis-data:
+{{ end }}{{ if .HasRabbitMQ }}  {{ .ServiceName }}-rabbitmq-data:
+{{ end }}
+networks:
+  {{ .ServiceName }}-network:
+    driver: bridge
+{{ end -}}

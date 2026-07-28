@@ -1,0 +1,66 @@
+---
+description: >
+  On-demand OWASP Top 10:2025 and ASI01-ASI10 security audit for {{ .ProjectName }}.
+  Spawns the security-reviewer agent against the current branch diff.
+argument-hint: ""
+---
+
+# /owasp-review -- On-Demand Security Audit
+
+## When to Use
+
+Invoke `/owasp-review` before merging any feature that touches:
+
+- Authentication or authorization logic
+- File I/O or path handling
+- Subprocess execution or shell invocations
+- External HTTP calls or API integrations
+- Dependency updates
+- Template rendering with user-controlled input
+- Configuration loading from external sources
+{{- if .IsInternal }}
+- Stripe webhook signature verification
+- JWT token validation or session management
+- RabbitMQ message handling
+{{- end }}
+
+## Invocation
+
+```bash
+/owasp-review
+```
+
+Spawns the `security-reviewer` agent against `git diff main...HEAD`. The agent runs the full 6-step Investigation Protocol and produces a `SECURITY_APPROVED` or `SECURITY_BLOCKED` verdict.
+
+---
+
+## OWASP Top 10:2025 Reference
+
+| ID | Name | What to Check |
+|----|------|---------------|
+| A01 | Broken Access Control | Deny by default. Enforce authorization server-side. |
+| A02 | Security Misconfiguration | Harden configs. Disable debug/defaults in production. |
+| A03 | Software Supply Chain Failures | Lock dependency versions. Audit dependencies. |
+| A04 | Cryptographic Failures | TLS 1.2+. Strong algorithms. Secure random generation. |
+| A05 | Injection | Parameterized queries. No string concatenation in commands. |
+| A06 | Insecure Design | Threat model critical flows. Rate limit. |
+| A07 | Authentication Failures | Secure session management. Rate limit auth endpoints. |
+| A08 | Integrity Failures | Verify upstream integrity. Safe serialization. |
+| A09 | Logging Failures | Log security events. No sensitive data in logs. |
+| A10 | Exception Handling | Fail-closed. Hide internals from users. |
+
+---
+
+## Severity Scoring
+
+```
+severity = impact x exploitability x blast_radius
+```
+
+| Score | Severity | Action |
+|-------|----------|--------|
+| 1-10 | Informational | Note for awareness |
+| 11-30 | Low | Fix in next cycle |
+| 31-60 | Medium | Fix before merge |
+| 61-99 | High | SECURITY_BLOCKED |
+| 100+ | Critical | SECURITY_BLOCKED -- ESCALATE |

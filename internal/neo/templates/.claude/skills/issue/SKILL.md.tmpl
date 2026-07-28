@@ -1,0 +1,306 @@
+---
+description: >
+  Create GitHub Issues with enforced conventions for {{ .ProjectName }}.
+  Applies consistent title format, label taxonomy, and body template.
+  Use for filing bugs, feature requests, tech debt, test gaps, and deferred findings.
+argument-hint: "[type(scope): title | setup-labels]"
+allowed-tools: Read, Grep, Glob, Bash(gh issue:*), Bash(gh label:*), Bash(git log:*), Bash(git diff:*), Bash(git status:*)
+---
+
+# /issue — Create GitHub Issues with Enforced Conventions
+
+**Usage**: `/issue` or `/issue $ARGUMENTS`
+
+## Current State
+
+- Open issues: !`gh issue list --state open --limit 5 2>/dev/null || echo "unable to fetch"`
+- Current branch: !`git branch --show-current`
+
+**Examples**:
+```
+/issue                                                    # interactive — guided prompts
+/issue fix(api): handler returns 500 on empty payload     # quick — title provided, prompts for details
+/issue setup-labels                                        # one-time — creates label taxonomy on GitHub
+```
+
+---
+
+## What This Command Does
+
+Creates consistently-formatted GitHub Issues for {{ .ProjectName }}. Enforces a title convention (conventional commit style), a label taxonomy (priority + type), and a structured body template. Every issue gets the same shape, making triage, filtering, and backlog grooming predictable.
+
+---
+
+## Title Convention
+
+Format: `type(scope): concise description`
+
+Same pattern as commits and PR titles. Imperative mood, lowercase, no period, under 72 chars.
+
+### Types
+
+| Type | Use when |
+|------|----------|
+| `feat` | New feature or capability |
+| `fix` | Bug fix or incorrect behavior |
+| `refactor` | Code restructure (not a fix, not a feature) |
+| `test` | Missing or insufficient test coverage |
+| `docs` | Documentation improvement or correction |
+| `chore` | Maintenance, dependencies, CI/CD, build system |
+| `perf` | Performance improvement |
+
+### Scopes
+
+Use a scope that identifies the affected component or area of the project. Examples:
+{{ range .Stacks }}
+- `{{ .Name }}` — {{ .Language }}/{{ .Framework }} stack
+{{- end }}
+
+Omit scope if it doesn't clarify.
+
+---
+
+## Label Taxonomy
+
+Every issue gets labels from these dimensions. Adapt label names to your repository's conventions.
+
+### Priority (required — exactly 1)
+
+| Label | Color | Use when |
+|-------|-------|----------|
+| `P0-critical` | #B60205 | Blocks release or causes data loss |
+| `P1-high` | #D93F0B | Should fix before next release |
+| `P2-medium` | #FBCA04 | Fix when convenient |
+| `P3-low` | #0E8A16 | Nice to have, no rush |
+
+### Type (required — exactly 1)
+
+| Label | Color | Use when |
+|-------|-------|----------|
+| `bug` | #D73A4A | Something is broken |
+| `feature` | #0075CA | New capability |
+| `tech-debt` | #7057FF | Code quality, robustness, maintainability |
+| `docs` | #0E8A16 | Documentation improvement |
+| `test-gap` | #E99695 | Missing or insufficient test coverage |
+
+---
+
+## Issue Body Template
+
+Every issue body MUST follow this exact structure:
+
+```markdown
+## Context
+
+<!-- One paragraph: where was this found, why does it matter -->
+
+## Current Behavior
+
+<!-- What happens today (or what's missing) -->
+
+## Expected Behavior
+
+<!-- What should happen instead -->
+
+## Files
+
+<!-- Bulleted list of affected files with line numbers if relevant -->
+- `path/to/file:42` — description
+
+## Acceptance Criteria
+
+<!-- Checkable items — when is this done? -->
+- [ ] criterion 1
+- [ ] criterion 2
+
+## Found By
+
+<!-- How this was discovered -->
+<!-- Options: PR review (#N), /audit, /doublecheck, manual testing, user report -->
+```
+
+---
+
+## Execution Instructions
+
+When this command is invoked, execute the following steps in order.
+
+---
+
+### Step 1 — Parse Arguments
+
+Parse `$ARGUMENTS`:
+- If `setup-labels`: jump to the Setup Labels section
+- If a title is provided (e.g., `fix(api): handler returns 500`): use it as the title, proceed to Step 3
+- If empty: proceed to Step 2 (interactive mode)
+
+---
+
+### Step 2 — Interactive Mode
+
+Prompt the user for:
+1. **Type**: one of feat, fix, refactor, test, docs, chore, perf
+2. **Scope**: component or area (or omit)
+3. **Title description**: concise imperative description
+4. Construct the full title: `type(scope): description`
+
+---
+
+### Step 3 — Determine Labels
+
+From the title:
+- **Type label**: Map the title type to label (feat->feature, fix->bug, refactor->tech-debt, test->test-gap, docs->docs, chore->tech-debt, perf->tech-debt)
+- **Priority**: Ask the user to choose: P0-critical, P1-high, P2-medium, P3-low
+
+---
+
+### Step 4 — Gather Body Content
+
+Ask the user for each section of the body template. For each section, provide a one-line prompt explaining what to write. If the user provides minimal input, expand it into a well-structured paragraph.
+
+For "Found By" — if this was called during a PR review or audit, auto-detect from context (current branch name, recent PR number).
+
+---
+
+### Step 5 — Preview (MANDATORY)
+
+Present the complete issue before creating it:
+
+```
+ISSUE PREVIEW
+
+Title: fix(api): handler returns 500 on empty payload
+Labels: P2-medium, bug
+
+Body:
+## Context
+...
+
+## Current Behavior
+...
+
+## Expected Behavior
+...
+
+## Files
+...
+
+## Acceptance Criteria
+...
+
+## Found By
+...
+
+Create? (yes / edit / cancel)
+```
+
+Wait for explicit user approval. If "edit" — accept corrections before continuing.
+
+---
+
+### Step 6 — Create Issue
+
+```bash
+gh issue create \
+  --title "fix(api): handler returns 500 on empty payload" \
+  --label "P2-medium" --label "bug" \
+  --body "$(cat <<'EOF'
+## Context
+...
+
+## Current Behavior
+...
+
+## Expected Behavior
+...
+
+## Files
+...
+
+## Acceptance Criteria
+...
+
+## Found By
+...
+EOF
+)"
+```
+
+---
+
+### Step 7 — Confirm
+
+Print the final report:
+
+```
+ISSUE CREATED
+
+#N: fix(api): handler returns 500 on empty payload
+URL: https://github.com/...
+Labels: P2-medium, bug
+```
+
+---
+
+## Setup Labels
+
+When `/issue setup-labels` is invoked, create the label taxonomy on GitHub. First delete any default labels that conflict, then create all labels from the taxonomy above.
+
+```bash
+# Create priority labels
+gh label create "P0-critical" --color "B60205" --description "Blocks release or causes data loss" --force
+gh label create "P1-high" --color "D93F0B" --description "Should fix before next release" --force
+gh label create "P2-medium" --color "FBCA04" --description "Fix when convenient" --force
+gh label create "P3-low" --color "0E8A16" --description "Nice to have, no rush" --force
+
+# Create type labels
+gh label create "bug" --color "D73A4A" --description "Something is broken" --force
+gh label create "feature" --color "0075CA" --description "New capability" --force
+gh label create "tech-debt" --color "7057FF" --description "Code quality, robustness, maintainability" --force
+gh label create "docs" --color "0E8A16" --description "Documentation improvement" --force
+gh label create "test-gap" --color "E99695" --description "Missing or insufficient test coverage" --force
+```
+
+> **Note**: Using `--force` updates existing labels instead of failing. Safe to run multiple times.
+
+---
+
+## What NEVER to Do
+
+- Never create an issue without showing the preview first
+- Never skip labels — every issue gets at least 1 priority + 1 type label
+- Never create duplicate issues — search first with `gh issue list --search "query"`
+- Never write vague titles — "fix bug" or "update docs" are not acceptable
+- Never skip the body template sections — all 6 sections are required
+
+---
+
+## Error Conditions
+
+| Situation | Action |
+|-----------|--------|
+| `gh` not authenticated | Stop: "Run `gh auth login` first." |
+| Label doesn't exist | Run `gh label create` to create it, then retry |
+| Duplicate issue found | Show the existing issue, ask user to confirm they want a new one |
+| User answers "cancel" at preview | Stop: "No issue created." |
+| Title exceeds 72 characters | Shorten before creating |
+| Missing scope and can't infer | Ask user to provide one |
+
+---
+
+## Quick Reference
+
+```bash
+# Search before creating (avoid duplicates)
+gh issue list --search "handler 500" --state open
+
+# Create with labels
+gh issue create \
+  --title "type(scope): description" \
+  --label "P2-medium" --label "bug" \
+  --body "body text"
+
+# List open issues by label
+gh issue list --label "P3-low" --state open
+gh issue list --label "bug" --state open
+```

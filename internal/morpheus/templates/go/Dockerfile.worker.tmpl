@@ -1,0 +1,31 @@
+# Build stage
+FROM golang:{{ .GoVersion }}-alpine AS builder
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /bin/worker ./cmd/worker
+
+# Runtime stage
+FROM alpine:3.20
+
+RUN apk --no-cache add ca-certificates tzdata && \
+    addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+COPY --from=builder /bin/worker .
+
+USER appuser
+
+ENV TZ=Europe/Istanbul
+
+EXPOSE {{ .WorkerPort }}
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost:{{ .WorkerPort }}/health || exit 1
+
+CMD ["./worker"]

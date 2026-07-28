@@ -1,0 +1,42 @@
+#!/bin/bash
+set -euo pipefail
+
+# ─── Finalizer — Post-Loop Context Population ─────────────────────
+# Runs after reviewer APPROVED verdict to populate .claude/ with real content.
+# Usage: .autonomous/finalizer.sh  (or via `morpheus finalize`)
+# ──────────────────────────────────────────────────────────────────
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Unset CLAUDECODE to prevent nested session errors
+unset CLAUDECODE 2>/dev/null || true
+
+CYCLES_DIR="${PROJECT_DIR}/tasks/cycles"
+FINALIZER_PROMPT="${SCRIPT_DIR}/prompts/finalizer.md"
+
+# Check completion status — reviewer must have approved
+if ! ls "${CYCLES_DIR}"/cycle-*-review.md &>/dev/null || \
+   ! grep -q "^## Verdict:.*APPROVED" "${CYCLES_DIR}"/cycle-*-review.md 2>/dev/null; then
+  echo "ERROR: Loop has not completed. No reviewer APPROVED verdict found in tasks/cycles/."
+  exit 1
+fi
+
+if [ ! -f "${FINALIZER_PROMPT}" ]; then
+  echo "ERROR: .autonomous/prompts/finalizer.md not found."
+  exit 1
+fi
+
+echo "Running finalizer agent for {{ .ServiceName }}..."
+echo ""
+
+cd "${PROJECT_DIR}"
+
+claude -p "$(cat "${FINALIZER_PROMPT}")" \
+  --allowedTools "Read,Write,Edit,Glob,Grep,Bash(make build),Bash(make test),Bash(ls *),Bash(cat *),Bash(git log *),Bash(git diff *),Bash(git show *)" \
+  --max-turns 15 \
+  --model claude-sonnet-4-6 \
+  --no-session-persistence
+
+echo ""
+echo "Finalizer complete. Review .claude/ for updated context files."

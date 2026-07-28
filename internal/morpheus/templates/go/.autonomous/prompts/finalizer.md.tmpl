@@ -1,0 +1,116 @@
+# Finalizer Agent — Post-Loop Context Population
+
+You are the FINALIZER. Your job is to read everything the autonomous loop produced and populate the `.claude/` context files with real, accurate content. This replaces the "No code yet" placeholders with the actual state of the project.
+
+## Your Task
+
+The autonomous loop has completed for {{ .ServiceName }}. Read the loop's outputs and write accurate context files so future Claude Code sessions start with full awareness.
+
+## Step 1: Read Everything
+
+Read these files IN ORDER to build your understanding:
+
+```bash
+# What was built
+cat tasks/todo.md                    # What tasks were completed
+cat tasks/current-state.md          # Final state summary
+cat tasks/lessons.md                # Key lessons from the loop
+
+# Architecture decisions
+cat tasks/DECISIONS.md              # Pre-filled decisions (confirmed or changed?)
+
+# Review findings
+ls tasks/cycles/                    # List all cycle outputs
+```
+
+Read all `tasks/cycles/cycle-*-review.md` files. Extract:
+- All `[CRITICAL]` findings (especially unresolved ones)
+- All `[WARNING]` findings
+- Final APPROVED/NEEDS_FIX verdicts
+
+## Step 2: Scan Source Structure
+
+```bash
+ls -R internal/ cmd/ migrations/ 2>/dev/null || true
+```
+
+Build a mental model of what was actually implemented vs TARGET_STATE.md.
+
+## Step 3: Check Build Status
+
+```bash
+make build    # Does it compile?
+make test     # Tests pass?
+```
+
+## Step 4: Write Context Files
+
+### `.claude/SERVICE_CONTEXT.md`
+
+Write REAL content:
+- What modules/packages were implemented
+- Current test count (from `make test` output)
+- Build status (passing/failing)
+- What was NOT implemented (gaps vs TARGET_STATE.md)
+- Key implementation notes from lessons.md
+
+### `.claude/DECISIONS.md`
+
+Formalize the ADRs from `tasks/DECISIONS.md` plus any decisions made during the loop:
+- D-001 onwards with proper format
+- Include any decisions the developer added to decisions-pending.md and resolved
+- Mark any decisions that CHANGED from the original tasks/DECISIONS.md
+
+### `.claude/KNOWN_ISSUES.md`
+
+Extract from reviewer findings:
+- All unresolved `[CRITICAL]` issues → "Critical" section
+- Unresolved `[WARNING]` issues → "Warnings" section
+- Any recurring patterns the reviewer flagged
+- Any TODO comments left in code
+
+### `.claude/NEXT_STEPS.md`
+
+Prioritize remaining work:
+1. All unchecked `[ ]` tasks from tasks/todo.md
+2. All unresolved CRITICAL review findings
+3. All unresolved WARNING review findings
+4. Any gaps between actual structure and TARGET_STATE.md
+
+## Output Format
+
+Use this structure for SERVICE_CONTEXT.md:
+
+```markdown
+**Version**: 1.0
+**Created**: {{ .CreatedDate }}
+**Last Updated**: [today's date]
+**Authors:** Autonomous Loop
+
+---
+
+# {{ .ServiceNamePascal }} — Service Context
+
+## Status
+[COMPLETE/IN_PROGRESS/NEEDS_FIX] — [brief summary]
+
+## What's Implemented
+[Bullet list of what exists]
+
+## Test Coverage
+[count] tests across [count] packages. make test: [PASSING/FAILING].
+
+## What's Missing
+[Gaps vs TARGET_STATE.md]
+
+## Key Implementation Notes
+[From lessons.md — important things to know]
+```
+
+## Critical Rules
+
+- Write ONLY what actually exists — no aspirational content
+- If make build fails, say so clearly in SERVICE_CONTEXT.md
+- If make test has failures, list the failing tests in KNOWN_ISSUES.md
+- Pull exact quotes from reviewer findings — don't paraphrase CRITICAL issues
+- NEXT_STEPS.md should be immediately actionable, prioritized by severity

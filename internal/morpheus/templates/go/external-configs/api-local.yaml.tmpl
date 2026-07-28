@@ -1,0 +1,33 @@
+app:
+  env: local
+  port: {{ .ApiPort }}
+
+database:
+  host: localhost
+  port: 5432
+{{ if .IsInternal }}  user: internal
+  password: dev_password
+  name: internal_main_db
+{{ else }}  user: "${DATABASE_USER:{{ .ServiceName }}}"
+  password: "${DATABASE_PASSWORD:dev_password}"
+  name: "${DATABASE_NAME:{{ .ServiceName }}_db}"
+{{ end }}  ssl-mode: disable
+{{ if .HasRedis }}
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+  max-retries: 3
+  dial-timeout: 5
+  read-timeout: 3
+  write-timeout: 3
+  pool-size: 10
+{{ end }}{{ if .HasRabbitMQ }}
+rabbitmq:
+{{ if .IsInternal }}  url: "amqp://internal:dev_password@localhost:5672/"
+{{ else }}  url: "${RABBITMQ_URL:amqp://{{ .ServiceName }}:dev_password@localhost:5672/}"
+{{ end }}{{ end }}{{ if or .HasJWT .HasInternalKey }}
+auth:
+  jwt-secret: "${JWT_SECRET}"
+  internal-api-key: "${INTERNAL_API_KEY}"
+{{ end }}

@@ -1,0 +1,105 @@
+---
+description: >
+  Scan {{ .ServiceName }} codebase and git history for leaked secrets using gitleaks.
+  Detects API keys, tokens, passwords, and platform-specific credential patterns.
+---
+
+# /secret-scan -- Detect Leaked Secrets
+
+## When to Use
+
+- Before any PR that adds configuration or credential handling
+- After onboarding a new dependency that requires API keys
+- Before releases as a security gate
+- When `.env` files, config templates, or CI/CD workflows are modified
+
+## Invocation
+
+```bash
+/secret-scan
+```
+
+---
+
+## Behavior
+
+### Step 1: Scan Working Directory
+
+```bash
+gitleaks detect --source . --verbose
+```
+
+### Step 2: Scan Git History
+
+```bash
+gitleaks detect --source . --log-opts="--all" --verbose
+```
+
+### Step 3: Generic Pattern Search
+
+```bash
+# AWS credentials
+grep -rn 'AKIA[0-9A-Z]\{16\}' --include='*.go' --include='*.json' --include='*.yaml' .
+
+# Generic high-value tokens
+grep -rn 'ghp_\|gho_\|github_pat_\|glpat-\|xoxb-\|xoxp-' --include='*.go' --include='*.json' --include='*.yaml' .
+
+# Private keys
+grep -rn 'BEGIN RSA PRIVATE KEY\|BEGIN EC PRIVATE KEY\|BEGIN PRIVATE KEY' .
+```
+{{ if .IsInternal }}
+
+**originating project-specific patterns:**
+```bash
+# Stripe secrets in Go source or config
+grep -rn 'sk_live_\|sk_test_\|whsec_' --include='*.go' --include='*.yaml' .
+
+# JWT signing secrets
+grep -rn 'JWT_SECRET\|jwt_secret\|signing_key' --include='*.go' --include='*.yaml' .
+{{ if .HasRabbitMQ }}
+
+# RabbitMQ credentials
+grep -rn 'amqp://.*:.*@' --include='*.go' --include='*.yaml' .
+{{ end }}
+```
+{{ end }}
+
+### Step 4: Verify .gitignore Coverage
+
+```bash
+for f in .env .env.local .env.production credentials.json; do
+  git check-ignore "$f" 2>/dev/null || echo "WARNING: $f is NOT gitignored"
+done
+```
+
+---
+
+## Output
+
+```markdown
+# Secret Scan Report
+
+## Verdict: CLEAN | SECRETS_FOUND
+
+## Working Directory Findings
+- **[CRITICAL]** `file:line` -- Description
+
+## Git History Findings
+- **[CRITICAL]** `commit:file:line` -- Description
+
+## Remediation
+1. Rotate exposed credentials immediately
+2. Add file to .gitignore
+3. Use git-filter-repo to purge from history if needed
+```
+
+All confirmed secret leaks are **CRITICAL**.
+
+---
+
+## Prerequisites
+
+```bash
+brew install gitleaks    # macOS
+# or: go install github.com/gitleaks/gitleaks/v8@latest
+```

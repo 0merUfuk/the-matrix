@@ -1,0 +1,94 @@
+---
+description: >
+  Audit {{ .ServiceName }} dependencies for known vulnerabilities using npm audit
+  and trivy. Merges findings across scanners.
+---
+
+# /dep-audit -- Dependency Vulnerability Audit
+
+## When to Use
+
+- Before releases to verify no known vulnerabilities ship
+- After updating `package.json` / `package-lock.json`
+- When triaging a new CVE advisory
+- After adding a new third-party dependency
+
+## Invocation
+
+```bash
+/dep-audit
+```
+
+---
+
+## Behavior
+
+### Step 1: npm Audit
+
+```bash
+npm audit
+```
+
+Review each advisory. Distinguish between production and devDependency vulnerabilities -- production vulnerabilities are higher priority.
+
+### Step 2: Trivy Filesystem Scan
+
+```bash
+trivy fs . --scanners vuln --severity HIGH,CRITICAL
+```
+
+Trivy catches vulnerabilities that npm audit may miss (transitive dependencies, non-npm packages).
+
+### Step 3: Check for Outdated Packages
+
+```bash
+npm outdated
+```
+
+Outdated packages with known CVEs are a supply chain risk (OWASP A03).
+
+### Step 4: Merge and Deduplicate
+
+Cross-reference findings from all scanners. Deduplicate by CVE ID.
+
+For each unique vulnerability:
+1. Identify the affected package and version
+2. Check if a fix version is available
+3. Assess whether the vulnerable code path is reachable
+4. Determine severity using the CVSS score
+
+---
+
+## Output
+
+```markdown
+# Dependency Audit Report
+
+## Verdict: CLEAN | VULNERABILITIES_FOUND
+
+## Summary
+- npm audit: N findings
+- trivy: N findings
+- Unique CVEs after deduplication: N
+
+## Critical / High
+| CVE | Package | Current | Fixed | Scanner | Reachable? |
+|-----|---------|---------|-------|---------|------------|
+
+## Medium / Low
+| CVE | Package | Current | Fixed | Scanner | Reachable? |
+|-----|---------|---------|-------|---------|------------|
+
+## Remediation
+1. `npm audit fix` -- fix N npm advisories
+2. `npm install pkg@fixed-version` -- fix CVE-YYYY-NNNNN
+```
+
+---
+
+## Prerequisites
+
+```bash
+brew install trivy    # macOS
+# npm audit is built into Node.js
+```
