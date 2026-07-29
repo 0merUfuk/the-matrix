@@ -10,8 +10,8 @@ import (
 	huh "charm.land/huh/v2"
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
-	"github.com/0merUfuk/the-matrix/internal/oracle"
 	"github.com/0merUfuk/the-matrix/internal/registry"
+	"github.com/0merUfuk/the-matrix/internal/validation"
 	"github.com/0merUfuk/the-matrix/internal/wizard"
 )
 
@@ -278,7 +278,7 @@ func checkRegistryForStacks(profile *ProjectProfile, outputDir string) map[strin
 		targetDir := filepath.Join(outputDir, ".claude", "knowledge", stack.Name)
 
 		validateFn := func(filename, content string) error {
-			errs := oracle.ValidateInjectDoc(filename, content)
+			errs := validation.ValidateInjectDoc(filename, content)
 			if len(errs) > 0 {
 				return fmt.Errorf("%s", strings.Join(errs, "; "))
 			}

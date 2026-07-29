@@ -1,4 +1,5 @@
-package oracle
+// Package validation contains shared document validation used by the tools.
+package validation
 
 import (
 	"fmt"

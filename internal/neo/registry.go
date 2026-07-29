@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
-	"github.com/0merUfuk/the-matrix/internal/oracle"
 	"github.com/0merUfuk/the-matrix/internal/registry"
+	"github.com/0merUfuk/the-matrix/internal/validation"
 )
 
 // RunRegistryList fetches the registry index and displays all available packs.
@@ -131,9 +131,9 @@ func RunRegistryInfo(packName string) {
 func RunRegistryPull(packName, targetDir string) {
 	cli.PrintHeader("neo", "registry -- pull")
 
-	// Validation function wraps oracle's ValidateInjectDoc.
+	// Validation function uses the shared knowledge-document validator.
 	validateFn := func(filename, content string) error {
-		errs := oracle.ValidateInjectDoc(filename, content)
+		errs := validation.ValidateInjectDoc(filename, content)
 		if len(errs) > 0 {
 			return fmt.Errorf("%s", strings.Join(errs, "; "))
 		}

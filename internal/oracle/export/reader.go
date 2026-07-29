@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/0merUfuk/the-matrix/internal/config"
-	"github.com/0merUfuk/the-matrix/internal/oracle"
+	"github.com/0merUfuk/the-matrix/internal/validation"
 )
 
 // ReadResult contains the results of reading docs from a directory.
@@ -17,7 +17,7 @@ type ReadResult struct {
 
 // ReadDocs reads all .md files from a directory and returns a ReadResult.
 // Skips _index.md. Uses config.ListMDFiles for consistency with oracle inject.
-// Validates each doc using oracle.ValidateInjectDoc; invalid docs are recorded in Skipped.
+// Validates each doc using the shared knowledge-document validator; invalid docs are recorded in Skipped.
 func ReadDocs(dir string) (ReadResult, error) {
 	mdFiles, err := config.ListMDFiles(dir)
 	if err != nil {
@@ -35,8 +35,8 @@ func ReadDocs(dir string) (ReadResult, error) {
 			return ReadResult{}, err
 		}
 
-		// Validate using oracle's inject validation
-		errs := oracle.ValidateInjectDoc(filename, content)
+		// Validate using the shared inject validation
+		errs := validation.ValidateInjectDoc(filename, content)
 		if len(errs) > 0 {
 			result.Skipped = append(result.Skipped, filename)
 			continue

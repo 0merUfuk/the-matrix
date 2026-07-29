@@ -10,6 +10,7 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	"github.com/0merUfuk/the-matrix/internal/validation"
 	"github.com/charmbracelet/x/term"
 )
 
@@ -78,7 +79,7 @@ func RunInject(opts InjectOpts) {
 			continue
 		}
 
-		errs := ValidateInjectDoc(filename, content)
+		errs := validation.ValidateInjectDoc(filename, content)
 		if len(errs) > 0 {
 			failures = append(failures, failedDoc{Filename: filename, Errors: errs})
 		} else {

@@ -17,6 +17,7 @@ import (
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
 	"github.com/0merUfuk/the-matrix/internal/staleness"
+	"github.com/0merUfuk/the-matrix/internal/validation"
 )
 
 // updateScriptTimeout bounds runUpdateScript so a hung Claude subprocess
@@ -456,7 +457,7 @@ func injectUpdatedDocs(outputDir, knowledgeDir string, topics []string) ([]strin
 			return nil, fmt.Errorf("reading %s: %w", filename, err)
 		}
 
-		errs := ValidateInjectDoc(filename, content)
+		errs := validation.ValidateInjectDoc(filename, content)
 		if len(errs) > 0 {
 			cli.PrintWarning(fmt.Sprintf("Skipping %s (validation failed: %s)", filename, strings.Join(errs, "; ")))
 			continue

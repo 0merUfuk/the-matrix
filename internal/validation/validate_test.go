@@ -1,4 +1,4 @@
-package oracle
+package validation
 
 import (
 	"strings"
