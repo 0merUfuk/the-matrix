@@ -36,6 +36,17 @@ func readLoopSh(t *testing.T) string {
 	return string(data)
 }
 
+func TestLoopExpansion_FinalizerTemplateSecurityApproval(t *testing.T) {
+	content := renderAndRead(t, testProjectContext(), ".autonomous/finalizer.sh")
+
+	if !strings.Contains(content, "cycle-*-security.md") {
+		t.Error("finalizer.sh: must check cycle security files")
+	}
+	if !strings.Contains(content, "SECURITY_APPROVED") {
+		t.Error("finalizer.sh: must require a SECURITY_APPROVED verdict")
+	}
+}
+
 // ─── loop.sh behavioral checks ────────────────────────────────────────────────
 
 // TestLoopSh_CheckSecurityApproved verifies the check_security_approved function in

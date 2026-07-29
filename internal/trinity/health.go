@@ -8,6 +8,7 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	"github.com/0merUfuk/the-matrix/internal/matrixassets"
 	"github.com/0merUfuk/the-matrix/internal/staleness"
 )
 
@@ -220,23 +221,8 @@ func checkTrinityLog(theme *cli.Theme, root string, results *Results) {
 	}
 }
 
-// ExpectedAgents is the canonical list of agents the-matrix ecosystem ships.
-// Keep aligned with `.claude/agents/` and CLAUDE.md "Agent Roster" table.
-var ExpectedAgents = []string{
-	"manager.md", "developer.md", "tester.md", "reviewer.md",
-	"strategist.md", "security-reviewer.md",
-	"architect.md", "product-lead.md", "tech-lead.md", "growth-lead.md",
-	"self-improver.md",
-}
-
-// ExpectedSkills is the canonical list of skills the-matrix ecosystem ships.
-// Keep aligned with `.claude/skills/` and CLAUDE.md skill list.
-var ExpectedSkills = []string{
-	"audit", "commit", "dep-audit", "doublecheck", "fix",
-	"issue", "owasp-review", "provision", "release", "secret-scan",
-	"security-scan", "self-improve", "self-state", "session-learn",
-	"strategy-monthly", "strategy-weekly", "taste-calibration",
-}
+var ExpectedAgents = matrixassets.ExpectedAgents
+var ExpectedSkills = matrixassets.ExpectedSkills
 
 // checkAgentSkillEcosystem verifies expected agents and skills are present.
 func checkAgentSkillEcosystem(theme *cli.Theme, root string, results *Results) {

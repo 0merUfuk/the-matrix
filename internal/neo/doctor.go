@@ -7,6 +7,7 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	"github.com/0merUfuk/the-matrix/internal/matrixassets"
 )
 
 // RunDoctor validates a neo-provisioned ecosystem.
@@ -115,10 +116,7 @@ func RunDoctor(projectDir string) {
 	}
 
 	// ─── 5. Agent & skill ecosystem ───────────────────────────────────────────
-	expectedAgents := []string{
-		"manager.md", "developer.md", "tester.md", "reviewer.md",
-		"strategist.md", "security-reviewer.md",
-	}
+	expectedAgents := matrixassets.ExpectedAgents
 	agentsDir := filepath.Join(claudeDir, "agents")
 	if config.IsDir(agentsDir) {
 		for _, agent := range expectedAgents {
@@ -137,10 +135,7 @@ func RunDoctor(projectDir string) {
 		warn++
 	}
 
-	expectedSkills := []string{
-		"audit", "commit", "continue", "dep-audit", "doublecheck",
-		"fix", "issue", "owasp-review", "secret-scan", "security-scan",
-	}
+	expectedSkills := matrixassets.ExpectedSkills
 	skillsDir := filepath.Join(claudeDir, "skills")
 	if config.IsDir(skillsDir) {
 		for _, skill := range expectedSkills {

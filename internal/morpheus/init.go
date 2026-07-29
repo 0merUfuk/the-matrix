@@ -9,12 +9,14 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	"github.com/0merUfuk/the-matrix/internal/safewrite"
 	"github.com/0merUfuk/the-matrix/internal/wizard"
 )
 
 // InitOpts configures the morpheus init command.
 type InitOpts struct {
 	DryRun      bool
+	Force       bool
 	OutputDir   string
 	ContextPath string // Path to .neo.json for pre-populated context
 	ServiceName string // Override service name when using --context (NEO-06)
@@ -129,7 +131,25 @@ func RunInit(opts InitOpts) {
 
 	// Step 5: Conflict check
 	if config.IsDir(outputDir) {
-		fmt.Printf("  %s\n", cli.Yellow(fmt.Sprintf("Directory %s already exists. Overwriting...", outputDir)))
+		isTTY := term.IsTerminal(os.Stdin.Fd())
+		ok, err := safewrite.ConfirmOverwrite(safewrite.OverwriteOpts{
+			Path:  outputDir,
+			Force: opts.Force,
+			IsTTY: isTTY,
+		})
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Error: %v", err)))
+			os.Exit(1)
+		}
+		if !ok {
+			if isTTY {
+				fmt.Println("\nAborted.")
+				return
+			}
+			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Error: %s already exists and stdin is not a TTY. Re-run with --force to overwrite.", outputDir)))
+			os.Exit(1)
+		}
+		cli.PrintDim(fmt.Sprintf("Overwriting %s...", outputDir))
 		if err := os.RemoveAll(outputDir); err != nil {
 			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Failed to remove existing directory: %v", err)))
 			os.Exit(1)

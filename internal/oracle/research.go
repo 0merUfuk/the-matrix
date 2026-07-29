@@ -8,11 +8,14 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	"github.com/0merUfuk/the-matrix/internal/safewrite"
+	"github.com/charmbracelet/x/term"
 )
 
 // ResearchOpts configures the oracle research command.
 type ResearchOpts struct {
 	DryRun           bool
+	Force            bool
 	OutputDir        string
 	ConfigFile       string
 	GoldStandardsDir string // --gold-standards flag value
@@ -56,21 +59,18 @@ func RunResearch(opts ResearchOpts) {
 	}
 
 	// Step 2: Determine output directory
-	var outputDir string
-	if opts.OutputDir != "" {
-		var err error
-		outputDir, err = filepath.Abs(opts.OutputDir)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Error resolving output path: %v", err)))
-			os.Exit(1)
-		}
-	} else {
-		var err error
-		outputDir, err = filepath.Abs(ctx.OutputPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Error resolving output path: %v", err)))
-			os.Exit(1)
-		}
+	originalOutputDir := opts.OutputDir
+	if originalOutputDir == "" {
+		originalOutputDir = ctx.OutputPath
+	}
+	if originalOutputDir == "" {
+		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red("Error: output directory is required (got empty path)"))
+		os.Exit(1)
+	}
+	outputDir, err := safewrite.ResolveOutputPath(originalOutputDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Error resolving output path: %v", err)))
+		os.Exit(1)
 	}
 
 	// Step 3: Show resolved path (skip confirmation in --config mode)
@@ -100,19 +100,28 @@ func RunResearch(opts ResearchOpts) {
 
 	// Step 5: Conflict check
 	if config.IsDir(outputDir) {
-		if opts.ConfigFile != "" {
-			// Auto-overwrite in config mode
-			if err := os.RemoveAll(outputDir); err != nil {
-				fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Failed to remove existing directory: %v", err)))
-				os.Exit(1)
+		isTTY := term.IsTerminal(os.Stdin.Fd())
+		ok, err := safewrite.ConfirmOverwrite(safewrite.OverwriteOpts{
+			Path:  outputDir,
+			Force: opts.Force,
+			IsTTY: isTTY,
+		})
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Error: %v", err)))
+			os.Exit(1)
+		}
+		if !ok {
+			if isTTY {
+				fmt.Println("\nAborted.")
+				return
 			}
-		} else {
-			fmt.Printf("  %s\n", cli.Yellow(fmt.Sprintf("Directory %s already exists.", outputDir)))
-			fmt.Println("  Overwriting...")
-			if err := os.RemoveAll(outputDir); err != nil {
-				fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Failed to remove existing directory: %v", err)))
-				os.Exit(1)
-			}
+			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Error: %s already exists and stdin is not a TTY. Re-run with --force to overwrite.", outputDir)))
+			os.Exit(1)
+		}
+		cli.PrintDim(fmt.Sprintf("Overwriting %s...", outputDir))
+		if err := os.RemoveAll(outputDir); err != nil {
+			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Failed to remove existing directory: %v", err)))
+			os.Exit(1)
 		}
 	}
 

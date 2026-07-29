@@ -47,6 +47,7 @@ func researchCmd() *cobra.Command {
 	var outputDir string
 	var configFile string
 	var goldStandardsDir string
+	var force bool
 
 	cmd := &cobra.Command{
 		Use:   "research",
@@ -69,6 +70,7 @@ func researchCmd() *cobra.Command {
 			}
 			oracle.RunResearch(oracle.ResearchOpts{
 				DryRun:           dryRun,
+				Force:            force,
 				OutputDir:        outputDir,
 				ConfigFile:       configFile,
 				GoldStandardsDir: goldStandardsDir,
@@ -81,6 +83,7 @@ func researchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&outputDir, "output-dir", "", "Output directory (default: /tmp/oracle-output/{stack-name})")
 	cmd.Flags().StringVar(&configFile, "config", "", "Skip wizard and load StackContext from a JSON file (non-interactive)")
 	cmd.Flags().StringVar(&goldStandardsDir, "gold-standards", "", "Path to gold standard docs for synthesis calibration")
+	cmd.Flags().BoolVar(&force, "force", false, "Overwrite an existing output directory without prompting")
 
 	return cmd
 }

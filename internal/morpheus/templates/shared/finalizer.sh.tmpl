@@ -22,6 +22,13 @@ if ! ls "${CYCLES_DIR}"/cycle-*-review.md &>/dev/null || \
   exit 1
 fi
 
+# Check security approval — same cycle must have SECURITY_APPROVED
+if ! ls "${CYCLES_DIR}"/cycle-*-security.md &>/dev/null || \
+   ! grep -q "^## Verdict:.*SECURITY_APPROVED" "${CYCLES_DIR}"/cycle-*-security.md 2>/dev/null; then
+  echo "ERROR: No security SECURITY_APPROVED verdict found. The latest cycle requires both reviewer and security approval."
+  exit 1
+fi
+
 if [ ! -f "${FINALIZER_PROMPT}" ]; then
   echo "ERROR: .autonomous/prompts/finalizer.md not found."
   exit 1

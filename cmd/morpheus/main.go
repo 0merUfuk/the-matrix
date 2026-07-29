@@ -32,6 +32,7 @@ func main() {
 
 func initCmd() *cobra.Command {
 	var dryRun bool
+	var force bool
 	var outputDir string
 	var contextPath string
 	var serviceName string
@@ -53,6 +54,7 @@ func initCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			morpheus.RunInit(morpheus.InitOpts{
 				DryRun:      dryRun,
+				Force:       force,
 				OutputDir:   outputDir,
 				ContextPath: contextPath,
 				ServiceName: serviceName,
@@ -61,6 +63,7 @@ func initCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Print what would be generated without writing files")
+	cmd.Flags().BoolVar(&force, "force", false, "Overwrite an existing output directory without prompting")
 	cmd.Flags().StringVar(&outputDir, "output-dir", "", "Output directory (defaults to ./{service-name})")
 	cmd.Flags().StringVar(&contextPath, "context", "", "Path to neo project profile (skips project type and tech stack questions)")
 	cmd.Flags().StringVar(&serviceName, "service-name", "", "Override service name (used when context is provided by neo)")
