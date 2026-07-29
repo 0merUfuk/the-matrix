@@ -27,7 +27,7 @@ The-matrix is a CLI-driven, self-refreshing autonomous agent ecosystem for any s
 
 > **Note**: All 4 tools are Go binaries in a single repo (`github.com/0merUfuk/the-matrix`). Node.js predecessors have been removed.
 >
-> **Release/version note**: v1.8.0 is the latest public release. Current `main` contains later repository hygiene, CI, and docs fixes. GoReleaser injects the tag version into release binaries, while the current command source constants and Makefile defaults on `main` remain `1.7.2-dev`; plain source builds use that default unless version ldflags override it.
+> **Release/version note**: v1.8.0 is the latest public release and marks the clean root commit. `main` continues from that public baseline. GoReleaser injects the tag version into release binaries, while the current command source constants and Makefile defaults remain `1.7.2-dev`; plain source builds use that default unless version ldflags override it.
 
 ---
 

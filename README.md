@@ -17,7 +17,7 @@ Most Claude Code setups are hand-crafted, generic, and stale within weeks. The-m
 
 ## Install
 
-> **Current public release**: v1.8.0 (released 2026-07-21). The `main` branch now includes post-release repository hygiene, CI, and docs fixes; no newer tag has been cut.
+> **Current public release**: v1.8.0 (released 2026-07-28). The `v1.8.0` tag marks the clean root commit; `main` continues from that public baseline.
 
 ### Homebrew
 
@@ -73,7 +73,7 @@ See the [Architecture](#architecture) section below for the monorepo layout and 
 
 ## Repository Hygiene
 
-The-matrix still generates `.claude/` directories in projects that use it. This repository's own root `.claude/` directory is different: it is local/private maintainer state, ignored by Git, and absent from fresh public clones. Current `main` has been cleaned forward-only; old commits and the `v1.8.0` tag were not rewritten.
+The-matrix still generates `.claude/` directories in projects that use it. This repository's own root `.claude/` directory is different: it is local/private maintainer state, ignored by Git, and absent from fresh public clones. This repository's public history starts from a clean root commit. Old history was rewritten to remove all former-project references; `v1.8.0` marks the clean root, and `main` continues from it.
 
 ## Key Commands
 
