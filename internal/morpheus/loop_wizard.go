@@ -2,7 +2,6 @@ package morpheus
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/0merUfuk/the-matrix/internal/wizard"
@@ -39,40 +38,24 @@ func RunLoopWizard() (goal string, cc CycleConfig, err error) {
 
 	// Manual override
 	cc = defaultConfig
-	mcStr, err := wizard.AskInput("Max cycles:", strconv.Itoa(cc.MaxCycles), nil)
+	cc.MaxCycles, err = askCycleValue("Max cycles:", cc.MaxCycles)
 	if err != nil {
 		return "", CycleConfig{}, err
-	}
-	cc.MaxCycles, _ = strconv.Atoi(strings.TrimSpace(mcStr))
-	if cc.MaxCycles <= 0 {
-		cc.MaxCycles = defaultConfig.MaxCycles
 	}
 
-	dtStr, err := wizard.AskInput("Developer max turns:", strconv.Itoa(cc.DeveloperMaxTurns), nil)
+	cc.DeveloperMaxTurns, err = askCycleValue("Developer max turns:", cc.DeveloperMaxTurns)
 	if err != nil {
 		return "", CycleConfig{}, err
-	}
-	cc.DeveloperMaxTurns, _ = strconv.Atoi(strings.TrimSpace(dtStr))
-	if cc.DeveloperMaxTurns <= 0 {
-		cc.DeveloperMaxTurns = defaultConfig.DeveloperMaxTurns
 	}
 
-	ttStr, err := wizard.AskInput("Tester max turns:", strconv.Itoa(cc.TesterMaxTurns), nil)
+	cc.TesterMaxTurns, err = askCycleValue("Tester max turns:", cc.TesterMaxTurns)
 	if err != nil {
 		return "", CycleConfig{}, err
-	}
-	cc.TesterMaxTurns, _ = strconv.Atoi(strings.TrimSpace(ttStr))
-	if cc.TesterMaxTurns <= 0 {
-		cc.TesterMaxTurns = defaultConfig.TesterMaxTurns
 	}
 
-	rtStr, err := wizard.AskInput("Reviewer max turns:", strconv.Itoa(cc.ReviewerMaxTurns), nil)
+	cc.ReviewerMaxTurns, err = askCycleValue("Reviewer max turns:", cc.ReviewerMaxTurns)
 	if err != nil {
 		return "", CycleConfig{}, err
-	}
-	cc.ReviewerMaxTurns, _ = strconv.Atoi(strings.TrimSpace(rtStr))
-	if cc.ReviewerMaxTurns <= 0 {
-		cc.ReviewerMaxTurns = defaultConfig.ReviewerMaxTurns
 	}
 
 	return goal, cc, nil

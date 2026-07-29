@@ -269,40 +269,24 @@ func RunInternalWizard() (ProjectContext, error) {
 	} else {
 		// Manual override — propagate errors and guard against non-positive
 		// values so loop.sh is never rendered with zeros.
-		mcStr, err := wizard.AskInput("Max cycles:", strconv.Itoa(cycleConfig.MaxCycles), nil)
+		ctx.MaxCycles, err = askCycleValue("Max cycles:", cycleConfig.MaxCycles)
 		if err != nil {
 			return ctx, fmt.Errorf("reading max cycles: %w", err)
 		}
-		ctx.MaxCycles, _ = strconv.Atoi(strings.TrimSpace(mcStr))
-		if ctx.MaxCycles <= 0 {
-			ctx.MaxCycles = cycleConfig.MaxCycles
-		}
 
-		dtStr, err := wizard.AskInput("Developer max turns:", strconv.Itoa(cycleConfig.DeveloperMaxTurns), nil)
+		ctx.DeveloperMaxTurns, err = askCycleValue("Developer max turns:", cycleConfig.DeveloperMaxTurns)
 		if err != nil {
 			return ctx, fmt.Errorf("reading developer max turns: %w", err)
 		}
-		ctx.DeveloperMaxTurns, _ = strconv.Atoi(strings.TrimSpace(dtStr))
-		if ctx.DeveloperMaxTurns <= 0 {
-			ctx.DeveloperMaxTurns = cycleConfig.DeveloperMaxTurns
-		}
 
-		ttStr, err := wizard.AskInput("Tester max turns:", strconv.Itoa(cycleConfig.TesterMaxTurns), nil)
+		ctx.TesterMaxTurns, err = askCycleValue("Tester max turns:", cycleConfig.TesterMaxTurns)
 		if err != nil {
 			return ctx, fmt.Errorf("reading tester max turns: %w", err)
 		}
-		ctx.TesterMaxTurns, _ = strconv.Atoi(strings.TrimSpace(ttStr))
-		if ctx.TesterMaxTurns <= 0 {
-			ctx.TesterMaxTurns = cycleConfig.TesterMaxTurns
-		}
 
-		rtStr, err := wizard.AskInput("Reviewer max turns:", strconv.Itoa(cycleConfig.ReviewerMaxTurns), nil)
+		ctx.ReviewerMaxTurns, err = askCycleValue("Reviewer max turns:", cycleConfig.ReviewerMaxTurns)
 		if err != nil {
 			return ctx, fmt.Errorf("reading reviewer max turns: %w", err)
-		}
-		ctx.ReviewerMaxTurns, _ = strconv.Atoi(strings.TrimSpace(rtStr))
-		if ctx.ReviewerMaxTurns <= 0 {
-			ctx.ReviewerMaxTurns = cycleConfig.ReviewerMaxTurns
 		}
 	}
 
@@ -523,40 +507,24 @@ func RunInternalWizardWithContext(ctx ProjectContext) (ProjectContext, error) {
 	} else {
 		// Manual override — propagate errors and guard against non-positive
 		// values so loop.sh is never rendered with zeros.
-		mcStr, err := wizard.AskInput("Max cycles:", strconv.Itoa(cycleConfig.MaxCycles), nil)
+		ctx.MaxCycles, err = askCycleValue("Max cycles:", cycleConfig.MaxCycles)
 		if err != nil {
 			return ctx, fmt.Errorf("reading max cycles: %w", err)
 		}
-		ctx.MaxCycles, _ = strconv.Atoi(strings.TrimSpace(mcStr))
-		if ctx.MaxCycles <= 0 {
-			ctx.MaxCycles = cycleConfig.MaxCycles
-		}
 
-		dtStr, err := wizard.AskInput("Developer max turns:", strconv.Itoa(cycleConfig.DeveloperMaxTurns), nil)
+		ctx.DeveloperMaxTurns, err = askCycleValue("Developer max turns:", cycleConfig.DeveloperMaxTurns)
 		if err != nil {
 			return ctx, fmt.Errorf("reading developer max turns: %w", err)
 		}
-		ctx.DeveloperMaxTurns, _ = strconv.Atoi(strings.TrimSpace(dtStr))
-		if ctx.DeveloperMaxTurns <= 0 {
-			ctx.DeveloperMaxTurns = cycleConfig.DeveloperMaxTurns
-		}
 
-		ttStr, err := wizard.AskInput("Tester max turns:", strconv.Itoa(cycleConfig.TesterMaxTurns), nil)
+		ctx.TesterMaxTurns, err = askCycleValue("Tester max turns:", cycleConfig.TesterMaxTurns)
 		if err != nil {
 			return ctx, fmt.Errorf("reading tester max turns: %w", err)
 		}
-		ctx.TesterMaxTurns, _ = strconv.Atoi(strings.TrimSpace(ttStr))
-		if ctx.TesterMaxTurns <= 0 {
-			ctx.TesterMaxTurns = cycleConfig.TesterMaxTurns
-		}
 
-		rtStr, err := wizard.AskInput("Reviewer max turns:", strconv.Itoa(cycleConfig.ReviewerMaxTurns), nil)
+		ctx.ReviewerMaxTurns, err = askCycleValue("Reviewer max turns:", cycleConfig.ReviewerMaxTurns)
 		if err != nil {
 			return ctx, fmt.Errorf("reading reviewer max turns: %w", err)
-		}
-		ctx.ReviewerMaxTurns, _ = strconv.Atoi(strings.TrimSpace(rtStr))
-		if ctx.ReviewerMaxTurns <= 0 {
-			ctx.ReviewerMaxTurns = cycleConfig.ReviewerMaxTurns
 		}
 	}
 

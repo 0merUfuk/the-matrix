@@ -2,13 +2,7 @@ package morpheus
 
 import (
 	"embed"
-	"fmt"
-	"os"
 	"path/filepath"
-	"strings"
-
-	"github.com/0merUfuk/the-matrix/internal/config"
-	"github.com/0merUfuk/the-matrix/internal/tmpl"
 )
 
 //go:embed templates/shared/*
@@ -161,46 +155,7 @@ func BuildMorpheusManifest(ctx *ProjectContext, outputDir string) []ManifestEntr
 	return manifest
 }
 
-// GenerateMorpheusFiles renders all templates and writes files to disk.
+// GenerateMorpheusFiles renders all init templates and writes files to disk.
 func GenerateMorpheusFiles(ctx *ProjectContext, outputDir string) ([]string, error) {
-	manifest := BuildMorpheusManifest(ctx, outputDir)
-	var written []string
-
-	for _, entry := range manifest {
-		if err := config.EnsureDir(filepath.Dir(entry.OutputPath)); err != nil {
-			return nil, fmt.Errorf("creating directory: %w", err)
-		}
-
-		if entry.IsStatic {
-			data, err := morpheusFS.ReadFile("templates/" + entry.TemplatePath)
-			if err != nil {
-				return nil, fmt.Errorf("reading embedded file %s: %w", entry.TemplatePath, err)
-			}
-			if err := os.WriteFile(entry.OutputPath, data, 0755); err != nil {
-				return nil, fmt.Errorf("writing %s: %w", entry.OutputPath, err)
-			}
-		} else {
-			data, err := morpheusFS.ReadFile("templates/" + entry.TemplatePath)
-			if err != nil {
-				return nil, fmt.Errorf("reading template %s: %w", entry.TemplatePath, err)
-			}
-
-			rendered, err := tmpl.Render(entry.TemplatePath, string(data), ctx)
-			if err != nil {
-				return nil, fmt.Errorf("template render failed for %s: %w", entry.TemplatePath, err)
-			}
-
-			if err := os.WriteFile(entry.OutputPath, []byte(rendered), 0644); err != nil {
-				return nil, fmt.Errorf("writing %s: %w", entry.OutputPath, err)
-			}
-
-			if strings.HasSuffix(entry.OutputPath, ".sh") {
-				os.Chmod(entry.OutputPath, 0755)
-			}
-		}
-
-		written = append(written, entry.OutputPath)
-	}
-
-	return written, nil
+	return generateManifestFiles(BuildMorpheusManifest(ctx, outputDir), ctx)
 }

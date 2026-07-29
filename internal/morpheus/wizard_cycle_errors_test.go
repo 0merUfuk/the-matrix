@@ -3,6 +3,7 @@ package morpheus
 import (
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -26,21 +27,34 @@ func TestWizardCycleConfig_PropagatesAskInputErrors(t *testing.T) {
 	}
 	source := string(src)
 
-	// Every AskInput call in the Manual override block must assign to `err`
-	// rather than discarding it. The prior bug pattern `mcStr, _ := wizard.AskInput`
-	// must not appear anywhere in the file.
+	helper, err := os.ReadFile("cycle_wizard.go")
+	if err != nil {
+		t.Fatalf("reading cycle_wizard.go: %v", err)
+	}
+	helperSource := string(helper)
+	combined := source + "\n" + helperSource
+
+	// Every AskInput call in the shared cycle-value helper must propagate its
+	// error rather than discarding it.
 	badPattern := regexp.MustCompile(`, _ := wizard\.AskInput`)
-	if matches := badPattern.FindAllString(source, -1); len(matches) > 0 {
-		t.Errorf("found %d discarded AskInput errors in wizard.go — every call must propagate err:\n%v", len(matches), matches)
+	if matches := badPattern.FindAllString(combined, -1); len(matches) > 0 {
+		t.Errorf("found %d discarded AskInput errors in cycle wizard code: %v", len(matches), matches)
 	}
 
-	// Every Manual override cycle field must have a non-positive guard. We
-	// require at least 8 guards total: 4 fields × 2 wizards (RunInternalWizard
-	// and RunInternalWizardWithContext).
-	guardPattern := regexp.MustCompile(`ctx\.(MaxCycles|DeveloperMaxTurns|TesterMaxTurns|ReviewerMaxTurns) <= 0`)
-	guards := guardPattern.FindAllString(source, -1)
-	if len(guards) < 8 {
-		t.Errorf("expected at least 8 non-positive guards (4 fields × 2 wizards), found %d", len(guards))
+	// All cycle fields use the shared helper, whose single guard preserves the
+	// auto-calculated default for invalid or non-positive input.
+	if !strings.Contains(helperSource, "if value <= 0") {
+		t.Error("cycle_wizard.go is missing the non-positive fallback guard")
+	}
+	if calls := strings.Count(source, "askCycleValue("); calls < 8 {
+		t.Errorf("expected at least 8 shared cycle-value calls in wizard.go, found %d", calls)
+	}
+	loopWizard, err := os.ReadFile("loop_wizard.go")
+	if err != nil {
+		t.Fatalf("reading loop_wizard.go: %v", err)
+	}
+	if calls := strings.Count(string(loopWizard), "askCycleValue("); calls != 4 {
+		t.Errorf("expected 4 shared cycle-value calls in loop_wizard.go, found %d", calls)
 	}
 
 	// The cycle-config error messages must wrap the underlying error with %w so
