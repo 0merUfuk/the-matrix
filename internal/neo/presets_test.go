@@ -54,8 +54,8 @@ func TestListPresets(t *testing.T) {
 	// Should include our 3 built-ins
 	expected := map[string]bool{
 		"internal-go-service": true,
-		"go-service":        true,
-		"nextjs-solo":       true,
+		"go-service":          true,
+		"nextjs-solo":         true,
 	}
 	for _, n := range names {
 		if !expected[n] {

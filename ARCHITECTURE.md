@@ -73,7 +73,10 @@ Step 3: morpheus scaffolds a service
 
 Step 4: autonomous loop builds the service
   bash .autonomous/loop.sh
-  → Developer → Tester → Reviewer → Security-Reviewer cycles
+  → (cycle > 1) Manager reviews and reprioritizes
+  → (if decisions pending) Strategist resolves them
+  → Developer → Tester → Reviewer → Security pipeline
+  → both Reviewer AND Security must approve before finalizing
   → produces production-ready microservice
 
 Step 5: trinity maintains freshness

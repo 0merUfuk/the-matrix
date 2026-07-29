@@ -11,7 +11,7 @@ type PresetDefinition struct {
 	DisplayName string
 	ProjectType string
 	TeamSize    string
-	IsInternal    bool
+	IsInternal  bool
 	Stacks      []StackProfile
 }
 
@@ -21,7 +21,7 @@ var builtinPresets = map[string]PresetDefinition{
 		DisplayName: "originating project Go Microservice",
 		ProjectType: "single-app",
 		TeamSize:    "small",
-		IsInternal:    true,
+		IsInternal:  true,
 		Stacks: []StackProfile{{
 			Name:             "go-internal",
 			Language:         "go",
@@ -36,7 +36,7 @@ var builtinPresets = map[string]PresetDefinition{
 		DisplayName: "Go Microservice",
 		ProjectType: "single-app",
 		TeamSize:    "solo",
-		IsInternal:    false,
+		IsInternal:  false,
 		Stacks: []StackProfile{{
 			Name:             "go-service",
 			Language:         "go",
@@ -51,7 +51,7 @@ var builtinPresets = map[string]PresetDefinition{
 		DisplayName: "Next.js Solo Project",
 		ProjectType: "single-app",
 		TeamSize:    "solo",
-		IsInternal:    false,
+		IsInternal:  false,
 		Stacks: []StackProfile{{
 			Name:             "nextjs",
 			Language:         "nodejs",
@@ -82,7 +82,7 @@ func GetPreset(name string) (ProjectProfile, bool) {
 	return ProjectProfile{
 		ProjectType: def.ProjectType,
 		TeamSize:    def.TeamSize,
-		IsInternal:    def.IsInternal,
+		IsInternal:  def.IsInternal,
 		CreatedDate: time.Now().Format("2006-01-02"),
 		Stacks:      stacks,
 	}, true

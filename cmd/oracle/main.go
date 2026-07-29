@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/0merUfuk/the-matrix/internal/matrixcfg"
 	"github.com/0merUfuk/the-matrix/internal/oracle"
 	"github.com/0merUfuk/the-matrix/internal/oracle/export"
+	"github.com/spf13/cobra"
 )
 
 var version = "1.7.2-dev"

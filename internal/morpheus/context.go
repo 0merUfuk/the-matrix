@@ -14,12 +14,12 @@ import (
 // ContextProfile represents the .neo.json file produced by neo init.
 // Defined here (not imported from neo) to avoid cross-package dependency.
 type ContextProfile struct {
-	ProjectName string         `json:"projectName"`
+	ProjectName string `json:"projectName"`
 	// ProjectType is parsed from .neo.json but not mapped to ProjectContext.ProjectType —
 	// morpheus derives its own ProjectType ("internal" vs "general") from IsInternal instead.
 	// Future: could map to wizard defaults (e.g., "microservice" → default port suggestions).
-	ProjectType string `json:"projectType"`
-	IsInternal    bool           `json:"isInternal"`
+	ProjectType string         `json:"projectType"`
+	IsInternal  bool           `json:"isInternal"`
 	Stacks      []ContextStack `json:"stacks"`
 }
 
@@ -142,7 +142,7 @@ func MapContextToProject(ctx *ContextProfile) *ProjectContext {
 	pc := &ProjectContext{
 		ServiceName:       ctx.ProjectName,
 		ServiceNamePascal: wizard.ToPascalCase(ctx.ProjectName),
-		IsInternal:          ctx.IsInternal,
+		IsInternal:        ctx.IsInternal,
 		CreatedDate:       time.Now().Format("2006-01-02"),
 	}
 

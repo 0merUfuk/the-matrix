@@ -224,7 +224,7 @@ func buildProfileFromDetection(projectPath string, d DetectionResult, e ProjectE
 		ProjectName: filepath.Base(projectPath),
 		ProjectType: d.ProjectType,
 		TeamSize:    "solo", // Cannot detect; sensible default
-		IsInternal:    d.IsInternal,
+		IsInternal:  d.IsInternal,
 		CreatedDate: time.Now().Format("2006-01-02"),
 		OutputPath:  projectPath,
 		Stacks: []StackProfile{{

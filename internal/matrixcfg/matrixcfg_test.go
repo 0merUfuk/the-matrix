@@ -421,4 +421,3 @@ func assertBoolPtr(t *testing.T, field string, got *bool, want bool) {
 		t.Errorf("%s: expected %v, got %v", field, want, *got)
 	}
 }
-

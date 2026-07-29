@@ -704,8 +704,8 @@ func TestDetectHasQueue(t *testing.T) {
 
 func TestDetectIsInternal(t *testing.T) {
 	tests := []struct {
-		name      string
-		files     map[string]string
+		name         string
+		files        map[string]string
 		wantInternal bool
 	}{
 		{
@@ -752,8 +752,8 @@ func TestDetectIsInternal(t *testing.T) {
 			wantInternal: false,
 		},
 		{
-			name:      "empty project returns false",
-			files:     map[string]string{},
+			name:         "empty project returns false",
+			files:        map[string]string{},
 			wantInternal: false,
 		},
 		{
@@ -780,9 +780,9 @@ func TestDetectIsInternal(t *testing.T) {
 
 func TestDetectProjectType(t *testing.T) {
 	tests := []struct {
-		name      string
-		setup     func(t *testing.T) string // returns dir
-		wantType  string
+		name     string
+		setup    func(t *testing.T) string // returns dir
+		wantType string
 	}{
 		{
 			name: "single go.mod at root is single-app",

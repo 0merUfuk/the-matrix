@@ -53,9 +53,9 @@ func TestSearch_TableDriven(t *testing.T) {
 			wantNames: []string{"go-chi", "nodejs-express", "python-fastapi"},
 		},
 		{
-			name:      "nil index returns nil",
-			query:     "go",
-			wantNil:   true,
+			name:    "nil index returns nil",
+			query:   "go",
+			wantNil: true,
 		},
 	}
 
@@ -1363,4 +1363,3 @@ func TestPull_RejectsTraversal(t *testing.T) {
 		t.Errorf("expected 'invalid pack name' error, got: %v", err)
 	}
 }
-

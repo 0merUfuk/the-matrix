@@ -1,13 +1,26 @@
-**Version**: 2.0
+**Version**: 2.1
 **Created**: 2026-03-17
-**Last Updated**: 2026-04-18
+**Last Updated**: 2026-07-29
 **Authors:** Ömer Ufuk
 
 ---
 
 # Agent Ecosystem Handbook
 
-This handbook explains the-matrix's autonomous agent ecosystem: 10 specialized agents and 14 skills that together enable coordinated, multi-agent development workflows for the Go monorepo.
+> **Scope note (v2.1):** This handbook documents the **full maintainer ecosystem**. The
+> public binaries (`neo`, `morpheus`) ship a **subset** of these agents and skills —
+> the rest live in the maintainer's private root `.claude/` directory and are not
+> present in fresh public clones or in the embedded templates.
+>
+> | | Public (embedded in binaries) | Maintainer-private (root `.claude/`) |
+> |---|---|---|
+> | **Agents** | manager, developer, tester, reviewer, strategist, security-reviewer (6) | + architect, product-lead, tech-lead, growth-lead (4) |
+> | **Skills** | audit, commit, continue, dep-audit, doublecheck, fix, issue, owasp-review, secret-scan, security-scan (10) | + release, provision, strategy-weekly, strategy-monthly, session-learn (5) |
+>
+> Sections marked **[private]** below describe agents/skills that are not shipped in
+> the public binaries. A fresh `neo init` or `morpheus init` will not produce them.
+
+This handbook explains the-matrix's autonomous agent ecosystem: 10 specialized agents and 15 skills that together enable coordinated, multi-agent development workflows for the Go monorepo.
 
 ---
 
@@ -54,8 +67,8 @@ The ecosystem has two categories:
 
 | Category | Count | Examples |
 |----------|-------|----------|
-| Agents | 10 | manager, developer, tester, reviewer, strategist, security-reviewer, architect, product-lead, tech-lead, growth-lead |
-| Skills | 14 | audit, commit, dep-audit, doublecheck, fix, issue, owasp-review, provision, release, secret-scan, security-scan, session-learn, strategy-weekly, strategy-monthly |
+| Agents | 10 (6 public + 4 private) | manager, developer, tester, reviewer, strategist, security-reviewer, architect [private], product-lead [private], tech-lead [private], growth-lead [private] |
+| Skills | 15 (10 public + 5 private) | audit, commit, continue, dep-audit, doublecheck, fix, issue, owasp-review, secret-scan, security-scan, release [private], provision [private], strategy-weekly [private], strategy-monthly [private], session-learn [private] |
 
 ### Coordinator Topology
 
@@ -391,7 +404,7 @@ maxTurns: 50
 
 ---
 
-### Architect
+### Architect [private]
 
 **File**: `.claude/agents/architect.md`
 **Model**: opus
@@ -431,7 +444,7 @@ skills:
 
 ---
 
-### Product-Lead
+### Product-Lead [private]
 
 **File**: `.claude/agents/product-lead.md`
 **Model**: opus
@@ -470,7 +483,7 @@ permissionMode: bypassPermissions
 
 ---
 
-### Tech-Lead
+### Tech-Lead [private]
 
 **File**: `.claude/agents/tech-lead.md`
 **Model**: opus
@@ -514,7 +527,7 @@ skills:
 
 ---
 
-### Growth-Lead
+### Growth-Lead [private]
 
 **File**: `.claude/agents/growth-lead.md`
 **Model**: opus
@@ -555,7 +568,7 @@ permissionMode: bypassPermissions
 
 Skills are slash commands defined in `.claude/skills/`. Each skill is a directory containing `SKILL.md` (and optionally supporting files). They execute within the current conversation context.
 
-The ecosystem has 14 skills organized into four groups.
+The ecosystem has 15 skills (10 public + 5 private) organized into four groups.
 
 ### Core Quality Gates
 
@@ -620,7 +633,7 @@ The ecosystem has 14 skills organized into four groups.
 
 ### Release + Workflow
 
-#### /release
+#### /release [private]
 
 **File**: `.claude/skills/release/SKILL.md`
 **Auto-triggerable**: No — user must invoke explicitly.
@@ -722,7 +735,7 @@ Four security skills. All shipped in v1.5.0 (Phase 3b/3c, PR #50). They deploy a
 
 ### Provisioning + Strategy
 
-#### /provision
+#### /provision [private]
 
 **File**: `.claude/skills/provision/SKILL.md`
 **Auto-triggerable**: No — architect invokes explicitly.
@@ -737,7 +750,7 @@ Four security skills. All shipped in v1.5.0 (Phase 3b/3c, PR #50). They deploy a
 
 ---
 
-#### /strategy-weekly
+#### /strategy-weekly [private]
 
 **File**: `.claude/skills/strategy-weekly/SKILL.md`
 **Auto-triggerable**: Yes — manager can invoke when an active sprint has run >7 days without a pulse.
@@ -750,7 +763,7 @@ Four security skills. All shipped in v1.5.0 (Phase 3b/3c, PR #50). They deploy a
 
 ---
 
-#### /strategy-monthly
+#### /strategy-monthly [private]
 
 **File**: `.claude/skills/strategy-monthly/SKILL.md`
 **Auto-triggerable**: Yes — manager invokes at monthly boundaries or when >30 days since last run.
@@ -763,7 +776,7 @@ Four security skills. All shipped in v1.5.0 (Phase 3b/3c, PR #50). They deploy a
 
 ---
 
-#### /session-learn
+#### /session-learn [private]
 
 **File**: `.claude/skills/session-learn/SKILL.md`
 **Auto-triggerable**: No — user invokes at end of session.
@@ -884,7 +897,7 @@ Skills are invoked with `/` in any Claude Code session:
 /fix                      # apply safe fixes from last audit
 
 # Release + workflow
-/release neo              # release a tool
+/release neo              # release a tool [private]
 /commit                   # conventional commits for pending changes
 /issue                    # create a well-formed GitHub Issue
 
@@ -894,7 +907,7 @@ Skills are invoked with `/` in any Claude Code session:
 /dep-audit                # govulncheck + trivy + npm audit
 /security-scan            # gosec + semgrep SAST
 
-# Provisioning + strategy
+# Provisioning + strategy [all private]
 /provision                # architect-only: create/update agent/skill/rule
 /strategy-weekly          # weekly pulse
 /strategy-monthly         # monthly multi-agent assessment

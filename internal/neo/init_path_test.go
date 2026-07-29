@@ -25,7 +25,7 @@ func TestGenerateEcosystem_NeoJSONRecordsOutputPath(t *testing.T) {
 		ProjectName: "my-project",
 		ProjectType: "single-app",
 		TeamSize:    "solo",
-		IsInternal:    false,
+		IsInternal:  false,
 		CreatedDate: "2026-04-19",
 		OutputPath:  dir,
 		Stacks: []StackProfile{

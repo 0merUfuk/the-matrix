@@ -1,4 +1,4 @@
-.PHONY: build build-all clean test lint vet tidy neo morpheus oracle trinity release
+.PHONY: build build-all clean test test-race lint vet fmt fmt-check check tidy neo morpheus oracle trinity release
 
 # Build output directory
 BIN_DIR := bin
@@ -31,13 +31,39 @@ oracle:
 trinity:
 	go build $(LDFLAGS_TRINITY) -o $(BIN_DIR)/trinity ./cmd/trinity
 
-## test: Run all tests
-test:
+## test: Run all tests (with race detection)
+test: test-race
+
+## test-race: Run all tests with -race
+test-race:
 	go test ./... -race
 
 ## vet: Run go vet
 vet:
 	go vet ./...
+
+## fmt: Format all Go source (mutating)
+fmt:
+	gofmt -w .
+
+## fmt-check: Verify all Go source is gofmt-clean (non-mutating, for CI)
+fmt-check:
+	@out=$$(gofmt -l .); \
+	if [ -n "$$out" ]; then \
+		echo "gofmt found unformatted files:"; echo "$$out"; exit 1; \
+	fi
+
+## lint: Run golangci-lint (uses .golangci.yml). Falls back to vet if golangci-lint is not installed.
+lint:
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run ./...; \
+	else \
+		echo "golangci-lint not installed; falling back to go vet"; \
+		go vet ./...; \
+	fi
+
+## check: Run fmt-check + lint + test-race (full pre-push gate)
+check: fmt-check lint test-race
 
 ## tidy: Clean up go.mod
 tidy:

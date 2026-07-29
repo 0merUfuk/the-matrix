@@ -15,7 +15,7 @@ func TestParseMakefileTargets(t *testing.T) {
 		want    []string
 	}{
 		{
-			name: "standard Makefile with dev test build",
+			name:    "standard Makefile with dev test build",
 			content: ".PHONY: dev test build\n\ndev:\n\tgo run ./cmd/...\n\ntest:\n\tgo test ./...\n\nbuild:\n\tgo build ./...\n",
 			want:    []string{"dev", "test", "build"},
 		},
@@ -25,37 +25,37 @@ func TestParseMakefileTargets(t *testing.T) {
 			want:    nil,
 		},
 		{
-			name: "comment lines are skipped",
+			name:    "comment lines are skipped",
 			content: "# This is a comment\nbuild:\n\tgo build\n",
 			want:    []string{"build"},
 		},
 		{
-			name: "recipe lines (tab-prefixed) are skipped",
+			name:    "recipe lines (tab-prefixed) are skipped",
 			content: "build:\n\tgo build ./...\n\techo done\n",
 			want:    []string{"build"},
 		},
 		{
-			name: "dot-prefixed special targets are skipped",
+			name:    "dot-prefixed special targets are skipped",
 			content: ".PHONY: build test\nbuild:\n\tgo build\ntest:\n\tgo test\n",
 			want:    []string{"build", "test"},
 		},
 		{
-			name: "variable assignments are skipped",
+			name:    "variable assignments are skipped",
 			content: "VERSION := 1.0\nBIN_NAME = myapp\nbuild:\n\tgo build\n",
 			want:    []string{"build"},
 		},
 		{
-			name: "target with dependencies",
+			name:    "target with dependencies",
 			content: "build: deps\n\tgo build\ndeps:\n\tgo mod download\n",
 			want:    []string{"build", "deps"},
 		},
 		{
-			name: "duplicate targets appear only once",
+			name:    "duplicate targets appear only once",
 			content: "build:\n\tgo build\nbuild:\n\tgo build -v\n",
 			want:    []string{"build"},
 		},
 		{
-			name: "hyphenated and underscored target names",
+			name:    "hyphenated and underscored target names",
 			content: "dev-standalone:\n\tgo run main.go\nrun_tests:\n\tgo test ./...\n",
 			want:    []string{"dev-standalone", "run_tests"},
 		},
@@ -81,10 +81,10 @@ func TestParseMakefileTargets(t *testing.T) {
 
 func TestExtractBuildCommands(t *testing.T) {
 	tests := []struct {
-		name        string
-		files       map[string]string
-		wantSubset  map[string]string // subset of expected commands
-		wantAbsent  []string          // command names that must NOT be present
+		name       string
+		files      map[string]string
+		wantSubset map[string]string // subset of expected commands
+		wantAbsent []string          // command names that must NOT be present
 	}{
 		{
 			name: "Makefile with dev test build targets",
@@ -178,12 +178,12 @@ func TestExtractBuildCommands_ReturnsMap(t *testing.T) {
 
 func TestExtractCICD(t *testing.T) {
 	tests := []struct {
-		name           string
-		dirs           []string
-		files          map[string]string
-		wantGitHub     bool
-		wantGitLab     bool
-		wantCircleCI   bool
+		name         string
+		dirs         []string
+		files        map[string]string
+		wantGitHub   bool
+		wantGitLab   bool
+		wantCircleCI bool
 	}{
 		{
 			name:         "GitHub Actions .github/workflows dir",
@@ -267,9 +267,9 @@ func TestExtractCICD(t *testing.T) {
 
 func TestExtractExistingAI(t *testing.T) {
 	tests := []struct {
-		name     string
-		files    map[string]string
-		wantBody string // substring that must appear in result
+		name      string
+		files     map[string]string
+		wantBody  string // substring that must appear in result
 		wantEmpty bool
 	}{
 		{
@@ -355,8 +355,8 @@ func TestExtractExistingAI(t *testing.T) {
 
 func TestRunExtraction_FullGoProject(t *testing.T) {
 	dir := makeTempProject(t, map[string]string{
-		"Makefile":     ".PHONY: dev test build\n\ndev:\n\tgo run ./cmd/...\n\ntest:\n\tgo test ./...\n\nbuild:\n\tgo build ./...\n",
-		"CLAUDE.md":    "# My Project\n",
+		"Makefile":       ".PHONY: dev test build\n\ndev:\n\tgo run ./cmd/...\n\ntest:\n\tgo test ./...\n\nbuild:\n\tgo build ./...\n",
+		"CLAUDE.md":      "# My Project\n",
 		".gitlab-ci.yml": "stages:\n  - test\n",
 	})
 	if err := os.MkdirAll(filepath.Join(dir, ".github", "workflows"), 0755); err != nil {

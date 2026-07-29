@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/0merUfuk/the-matrix/internal/neo"
 	"github.com/0merUfuk/the-matrix/internal/registry"
+	"github.com/spf13/cobra"
 )
 
 var version = "1.7.2-dev"

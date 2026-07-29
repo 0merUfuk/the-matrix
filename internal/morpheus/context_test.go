@@ -132,7 +132,7 @@ func TestMapContextToProject_GoStack(t *testing.T) {
 	profile := &ContextProfile{
 		ProjectName: "payment-service",
 		ProjectType: "microservice",
-		IsInternal:    true,
+		IsInternal:  true,
 		Stacks: []ContextStack{
 			{Name: "go-chi", Language: "go", Framework: "chi"},
 		},
@@ -170,7 +170,7 @@ func TestMapContextToProject_NodeStack(t *testing.T) {
 	profile := &ContextProfile{
 		ProjectName: "api-gateway",
 		ProjectType: "service",
-		IsInternal:    false,
+		IsInternal:  false,
 		Stacks: []ContextStack{
 			{Name: "express-api", Language: "nodejs", Framework: "express"},
 		},
@@ -208,7 +208,7 @@ func TestMapContextToProject_UnknownLanguage(t *testing.T) {
 	profile := &ContextProfile{
 		ProjectName: "ml-pipeline",
 		ProjectType: "service",
-		IsInternal:    false,
+		IsInternal:  false,
 		Stacks: []ContextStack{
 			{Name: "python-fastapi", Language: "python", Framework: "fastapi"},
 		},
@@ -298,7 +298,7 @@ func TestMapContextToProject_GoStack_NonInternal(t *testing.T) {
 	profile := &ContextProfile{
 		ProjectName: "my-go-oss",
 		ProjectType: "service",
-		IsInternal:    false,
+		IsInternal:  false,
 		Stacks: []ContextStack{
 			{Name: "go-chi", Language: "go", Framework: "chi"},
 		},
@@ -330,7 +330,7 @@ func TestMapContextToProject_WizardFieldsAreZero(t *testing.T) {
 	profile := &ContextProfile{
 		ProjectName: "my-service",
 		ProjectType: "microservice",
-		IsInternal:    true,
+		IsInternal:  true,
 		Stacks: []ContextStack{
 			{Name: "go-chi", Language: "go", Framework: "chi"},
 		},
@@ -368,7 +368,7 @@ func TestMapContextToProject_CreatedDateFormat(t *testing.T) {
 	// Verifies the date format is YYYY-MM-DD as required by templates.
 	profile := &ContextProfile{
 		ProjectName: "svc",
-		IsInternal:    false,
+		IsInternal:  false,
 		Stacks:      []ContextStack{{Name: "go", Language: "go", Framework: "chi"}},
 	}
 

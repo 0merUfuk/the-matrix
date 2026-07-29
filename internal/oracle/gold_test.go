@@ -265,11 +265,11 @@ func TestGoldStandardRegistrationFiles(t *testing.T) {
 
 	// Priority files should be selected
 	priorityFiles := map[string]bool{
-		"04-error-handling.md":      false,
-		"05-testing.md":             false,
+		"04-error-handling.md":       false,
+		"05-testing.md":              false,
 		"02-layered-architecture.md": false,
-		"00-core-principles.md":     false,
-		"01-project-structure.md":   false,
+		"00-core-principles.md":      false,
+		"01-project-structure.md":    false,
 	}
 	for _, f := range selected {
 		priorityFiles[f] = true

@@ -16,17 +16,17 @@ type ProjectProfile struct {
 	Services []ServiceProfile `json:"services,omitempty"`
 
 	// Context
-	IsInternal    bool   `json:"isInternal"`
+	IsInternal  bool   `json:"isInternal"`
 	CreatedDate string `json:"createdDate"` // YYYY-MM-DD
 	OutputPath  string `json:"outputPath"`  // absolute path to project root
 }
 
 // StackProfile describes a tech stack used in the project.
 type StackProfile struct {
-	Name             string `json:"name"`             // kebab-case (e.g. "go-internal")
-	Language         string `json:"language"`          // "go" | "nodejs" | "python" | "flutter" | ...
-	Framework        string `json:"framework"`         // e.g. "chi v5", "Next.js 15", "FastAPI"
-	ArchStyle        string `json:"archStyle"`         // "layered" | "feature-based" | "flat" | "hybrid"
+	Name             string `json:"name"`      // kebab-case (e.g. "go-internal")
+	Language         string `json:"language"`  // "go" | "nodejs" | "python" | "flutter" | ...
+	Framework        string `json:"framework"` // e.g. "chi v5", "Next.js 15", "FastAPI"
+	ArchStyle        string `json:"archStyle"` // "layered" | "feature-based" | "flat" | "hybrid"
 	TestingFramework string `json:"testingFramework"`
 	HasQueue         bool   `json:"hasQueue"`
 	DataLayer        string `json:"dataLayer"` // ORM name or "none"

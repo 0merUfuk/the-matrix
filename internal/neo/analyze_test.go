@@ -23,7 +23,7 @@ func TestBuildProfileFromDetection_GoProject(t *testing.T) {
 		DataLayer:        "bun",
 		HasQueue:         true,
 		Observability:    []string{"zerolog"},
-		IsInternal:         false,
+		IsInternal:       false,
 		ProjectType:      "single-app",
 	}
 	extraction := ProjectExtract{}
@@ -151,7 +151,7 @@ func TestBuildProfileFromDetection_IsInternalPropagated(t *testing.T) {
 	detection := DetectionResult{
 		Language:    "go",
 		ProjectType: "single-app",
-		IsInternal:    true,
+		IsInternal:  true,
 	}
 	profile := buildProfileFromDetection(dir, detection, ProjectExtract{})
 	if !profile.IsInternal {
@@ -372,7 +372,7 @@ func TestAnalyzePipeline_ExistingClaudeDir_Force(t *testing.T) {
 
 func TestAnalyzePipeline_InternalProject(t *testing.T) {
 	srcDir := makeTempProject(t, map[string]string{
-		"go.mod":   "module example.com/svc\n\ngo 1.21\n",
+		"go.mod":    "module example.com/svc\n\ngo 1.21\n",
 		"CLAUDE.md": "# originating project Service\n\nThis is a originating project microservice.\n",
 	})
 

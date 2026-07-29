@@ -164,11 +164,11 @@ func splitLessonSections(content string) []string {
 // ─── Report Generation ───────────────────────────────────────────────────────
 
 type cycleOutput struct {
-	NumTurns           int                `json:"num_turns"`
-	TotalCostUSD       float64            `json:"total_cost_usd"`
-	DurationMs         int64              `json:"duration_ms"`
-	Subtype            string             `json:"subtype"`
-	PermissionDenials  []permissionDenial `json:"permission_denials"`
+	NumTurns          int                `json:"num_turns"`
+	TotalCostUSD      float64            `json:"total_cost_usd"`
+	DurationMs        int64              `json:"duration_ms"`
+	Subtype           string             `json:"subtype"`
+	PermissionDenials []permissionDenial `json:"permission_denials"`
 }
 
 type permissionDenial struct {

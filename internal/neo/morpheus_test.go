@@ -17,7 +17,7 @@ func multiRepoProfile(services []ServiceProfile) *ProjectProfile {
 			{Name: "go-api", Language: "go"},
 		},
 		Services:    services,
-		IsInternal:    false,
+		IsInternal:  false,
 		CreatedDate: "2026-03-21",
 		OutputPath:  "/tmp/neo-morpheus-test",
 	}
@@ -33,7 +33,7 @@ func singleService() []ServiceProfile {
 // TestRunMorpheusIntegration_NonMultiRepo verifies that a single-app profile
 // is a no-op without inspecting PATH or prompting.
 func TestRunMorpheusIntegration_NonMultiRepo(t *testing.T) {
-	profile := testProfile() // ProjectType = "single-app"
+	profile := testProfile()                                  // ProjectType = "single-app"
 	RunMorpheusIntegration(profile, "/tmp/neo-morpheus-test") // must not panic
 }
 
@@ -46,7 +46,7 @@ func TestRunMorpheusIntegration_NonMultiRepoMonorepo(t *testing.T) {
 		TeamSize:    "solo",
 		Stacks:      []StackProfile{{Name: "go-api", Language: "go"}},
 		Services:    singleService(),
-		IsInternal:    false,
+		IsInternal:  false,
 		CreatedDate: "2026-03-21",
 		OutputPath:  "/tmp/neo-morpheus-test",
 	}

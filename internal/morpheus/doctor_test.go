@@ -210,8 +210,12 @@ func TestCheckDoctor(t *testing.T) {
 				createCoreFiles(t, dir)
 				createInitOnlyFiles(t, dir)
 				// Remove two init-only files
-				if err := os.Remove(filepath.Join(dir, "CLAUDE.md")); err != nil { t.Fatal(err) }
-				if err := os.Remove(filepath.Join(dir, ".claude/SERVICE_CONTEXT.md")); err != nil { t.Fatal(err) }
+				if err := os.Remove(filepath.Join(dir, "CLAUDE.md")); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Remove(filepath.Join(dir, ".claude/SERVICE_CONTEXT.md")); err != nil {
+					t.Fatal(err)
+				}
 				// Make loop.sh non-executable
 				createFile(t, dir, ".autonomous/loop.sh", "#!/bin/bash", 0644)
 				// No tech detection rule
@@ -281,7 +285,9 @@ func TestCheckDoctorMessageDetails(t *testing.T) {
 	t.Run("missing file detail says MISSING", func(t *testing.T) {
 		dir := t.TempDir()
 		createCoreFiles(t, dir)
-		if err := os.Remove(filepath.Join(dir, ".autonomous/config.sh")); err != nil { t.Fatal(err) }
+		if err := os.Remove(filepath.Join(dir, ".autonomous/config.sh")); err != nil {
+			t.Fatal(err)
+		}
 		createFile(t, dir, ".claude/rules/go-service.md", "go rules", 0644)
 
 		result := CheckDoctor(dir)
@@ -375,7 +381,9 @@ func TestCheckDoctorResultConsistency(t *testing.T) {
 			setup: func(t *testing.T, dir string) {
 				createCoreFiles(t, dir)
 				createInitOnlyFiles(t, dir)
-				if err := os.Remove(filepath.Join(dir, "CLAUDE.md")); err != nil { t.Fatal(err) }
+				if err := os.Remove(filepath.Join(dir, "CLAUDE.md")); err != nil {
+					t.Fatal(err)
+				}
 				createFile(t, dir, ".autonomous/loop.sh", "#!/bin/bash", 0644)
 			},
 		},

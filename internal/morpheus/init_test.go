@@ -26,7 +26,7 @@ func TestApplyContextDefaults_FillsWizardFields(t *testing.T) {
 			name: "internal-go",
 			profile: ContextProfile{
 				ProjectName: "billing-api",
-				IsInternal:    true,
+				IsInternal:  true,
 				Stacks:      []ContextStack{{Name: "go-chi", Language: "go", Framework: "chi"}},
 			},
 		},
@@ -34,7 +34,7 @@ func TestApplyContextDefaults_FillsWizardFields(t *testing.T) {
 			name: "general-go",
 			profile: ContextProfile{
 				ProjectName: "my-go-oss",
-				IsInternal:    false,
+				IsInternal:  false,
 				Stacks:      []ContextStack{{Name: "go-chi", Language: "go", Framework: "chi"}},
 			},
 		},
@@ -42,7 +42,7 @@ func TestApplyContextDefaults_FillsWizardFields(t *testing.T) {
 			name: "general-node",
 			profile: ContextProfile{
 				ProjectName: "api-gateway",
-				IsInternal:    false,
+				IsInternal:  false,
 				Stacks:      []ContextStack{{Name: "express-api", Language: "nodejs", Framework: "express"}},
 			},
 		},

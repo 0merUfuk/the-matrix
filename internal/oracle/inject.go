@@ -8,9 +8,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/charmbracelet/x/term"
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	"github.com/charmbracelet/x/term"
 )
 
 // InjectOpts configures the oracle inject command.

@@ -200,7 +200,7 @@ Key design decisions:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feat/my-feature`)
 3. Make your changes and add tests
-4. Run `make test && make vet` to validate
+4. Run `make check` to validate (fmt-check + lint + test-race)
 5. Commit and open a pull request
 
 ## License

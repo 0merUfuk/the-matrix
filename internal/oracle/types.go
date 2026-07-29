@@ -5,9 +5,9 @@ package oracle
 type StackContext struct {
 	StackName         string            `json:"stackName"`
 	FrameworkVersion  string            `json:"frameworkVersion"`
-	AppType           string            `json:"appType"`           // full-stack|api-only|frontend|cli|library
-	ArchStyle         string            `json:"archStyle"`         // layered|feature-based|flat|hybrid
-	StateApproach     string            `json:"stateApproach"`     // server-side|client-state|hybrid|n/a
+	AppType           string            `json:"appType"`       // full-stack|api-only|frontend|cli|library
+	ArchStyle         string            `json:"archStyle"`     // layered|feature-based|flat|hybrid
+	StateApproach     string            `json:"stateApproach"` // server-side|client-state|hybrid|n/a
 	DataLayer         string            `json:"dataLayer"`
 	TestingFramework  string            `json:"testingFramework"`
 	HasQueue          bool              `json:"hasQueue"`
@@ -16,8 +16,8 @@ type StackContext struct {
 	TopicCount        int               `json:"topicCount"`
 	OutputPath        string            `json:"outputPath"`
 	CreatedDate       string            `json:"createdDate"`
-	GoldStandards    map[string]string `json:"-"` // Injected at render time, not from wizard/JSON
-	GoldStandardsDir string            `json:"-"` // Resolved from --gold-standards flag or convention dir
+	GoldStandards     map[string]string `json:"-"` // Injected at render time, not from wizard/JSON
+	GoldStandardsDir  string            `json:"-"` // Resolved from --gold-standards flag or convention dir
 }
 
 // Topic represents a single knowledge topic with display name.

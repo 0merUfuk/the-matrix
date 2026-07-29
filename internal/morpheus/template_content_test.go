@@ -442,18 +442,18 @@ func TestNoInternalToolsOutsideConditionals(t *testing.T) {
 	internalOnlyTerms := []string{
 		"zerolog",
 		"chi/v5",
-		"chi v5",   // display spelling used in developer agent template
+		"chi v5", // display spelling used in developer agent template
 		"wire ./cmd",
 		"Wire DI",
 		"Wire providers",
 		"Ginkgo",
 		"Gomock",
-		"gomock",   // lowercase spelling used in developer agent template
+		"gomock", // lowercase spelling used in developer agent template
 		"Viper",
 		"Bun ORM",
 		"Bun struct",
-		"sk_live_",    // Stripe live secret key prefix
-		"amqp://",     // RabbitMQ connection string with embedded creds
+		"sk_live_", // Stripe live secret key prefix
+		"amqp://",  // RabbitMQ connection string with embedded creds
 	}
 
 	for _, tmplPath := range templatePaths {

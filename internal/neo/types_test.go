@@ -23,7 +23,7 @@ func testProfile() *ProjectProfile {
 				DataLayer:        "Bun ORM",
 			},
 		},
-		IsInternal:    false,
+		IsInternal:  false,
 		CreatedDate: "2026-03-15",
 		OutputPath:  "/tmp/neo-test",
 	}
@@ -277,7 +277,7 @@ func TestGenerateEcosystem_FlutterDartLanguage(t *testing.T) {
 				DataLayer:        "none",
 			},
 		},
-		IsInternal:    false,
+		IsInternal:  false,
 		CreatedDate: "2026-03-18",
 		OutputPath:  dir,
 	}

@@ -4,14 +4,14 @@ import "fmt"
 
 // KnownPorts is the originating project port registry — prevents port conflicts across services.
 var KnownPorts = map[string]int{
-	"internal-app":                    3000,
-	"payment-service":              3001,
-	"notification-service-api":     8080,
-	"notification-service-worker":  8081,
-	"generation-service-api":       8082,
-	"generation-service-worker":    8083,
-	"webhook-service-api":          8084,
-	"webhook-service-worker":       8085,
+	"internal-app":                3000,
+	"payment-service":             3001,
+	"notification-service-api":    8080,
+	"notification-service-worker": 8081,
+	"generation-service-api":      8082,
+	"generation-service-worker":   8083,
+	"webhook-service-api":         8084,
+	"webhook-service-worker":      8085,
 }
 
 // SuggestNextApiPort finds the next available even port >= 8086.

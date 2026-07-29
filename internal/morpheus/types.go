@@ -5,17 +5,17 @@ package morpheus
 // This is a flat structure matching the Node.js implementation.
 type ProjectContext struct {
 	// Identity
-	ServiceName       string   `json:"serviceName"`
-	ServiceNamePascal string   `json:"serviceNamePascal"`
-	Description       string   `json:"description"`
-	ModulePath        string   `json:"modulePath"`
-	ProjectType       string   `json:"projectType"` // "internal" | "general"
-	Tech              string   `json:"tech"`         // "go" | "node"
-	IsGo              bool     `json:"isGo"`
-	IsNode            bool     `json:"isNode"`
-	IsInternal          bool     `json:"isInternal"`
-	GoVersion         string   `json:"goVersion"` // Go version for Dockerfile base image, e.g. "1.24"
-	CreatedDate       string   `json:"createdDate"`
+	ServiceName       string `json:"serviceName"`
+	ServiceNamePascal string `json:"serviceNamePascal"`
+	Description       string `json:"description"`
+	ModulePath        string `json:"modulePath"`
+	ProjectType       string `json:"projectType"` // "internal" | "general"
+	Tech              string `json:"tech"`        // "go" | "node"
+	IsGo              bool   `json:"isGo"`
+	IsNode            bool   `json:"isNode"`
+	IsInternal        bool   `json:"isInternal"`
+	GoVersion         string `json:"goVersion"` // Go version for Dockerfile base image, e.g. "1.24"
+	CreatedDate       string `json:"createdDate"`
 
 	// Ports
 	ApiPort    int  `json:"apiPort"`

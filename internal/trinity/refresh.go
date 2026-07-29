@@ -222,4 +222,3 @@ func findStaleDocs(dirPath string, maxAgeMonths float64, topicFilter []string) [
 
 	return stale
 }
-

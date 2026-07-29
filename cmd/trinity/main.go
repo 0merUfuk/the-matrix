@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/0merUfuk/the-matrix/internal/matrixcfg"
 	"github.com/0merUfuk/the-matrix/internal/trinity"
+	"github.com/spf13/cobra"
 )
 
 var version = "1.7.2-dev"

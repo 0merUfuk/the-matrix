@@ -14,20 +14,20 @@ import (
 // FuncMap returns the shared custom template functions available in all templates.
 func FuncMap() template.FuncMap {
 	return template.FuncMap{
-		"join":     strings.Join,
-		"lower":    strings.ToLower,
-		"upper":    strings.ToUpper,
-		"contains": strings.Contains,
+		"join":      strings.Join,
+		"lower":     strings.ToLower,
+		"upper":     strings.ToUpper,
+		"contains":  strings.Contains,
 		"hasPrefix": strings.HasPrefix,
 		"hasSuffix": strings.HasSuffix,
 		"trimSpace": strings.TrimSpace,
-		"repeat":   strings.Repeat,
-		"toKebab":  toKebab,
-		"toPascal": toPascal,
-		"todayISO": todayISO,
-		"add":      func(a, b int) int { return a + b },
-		"sub":      func(a, b int) int { return a - b },
-		"seq":      seq,
+		"repeat":    strings.Repeat,
+		"toKebab":   toKebab,
+		"toPascal":  toPascal,
+		"todayISO":  todayISO,
+		"add":       func(a, b int) int { return a + b },
+		"sub":       func(a, b int) int { return a - b },
+		"seq":       seq,
 		"default": func(def, val string) string {
 			if val == "" {
 				return def

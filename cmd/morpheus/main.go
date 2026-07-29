@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/0merUfuk/the-matrix/internal/morpheus"
+	"github.com/spf13/cobra"
 )
 
 var version = "1.7.2-dev"

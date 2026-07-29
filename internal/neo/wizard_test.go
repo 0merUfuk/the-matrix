@@ -33,12 +33,15 @@ func TestProjectProfile_EmptyStacksIsValidZeroValue(t *testing.T) {
 // profile programmatically without going through the wizard).
 //
 // Before the fix, code at the equivalent location used:
-//   stackName := profile.Stacks[0].Name   // panics when len == 0
+//
+//	stackName := profile.Stacks[0].Name   // panics when len == 0
+//
 // After the fix:
-//   var stackName string
-//   if len(profile.Stacks) > 0 {
-//       stackName = profile.Stacks[0].Name
-//   }
+//
+//	var stackName string
+//	if len(profile.Stacks) > 0 {
+//	    stackName = profile.Stacks[0].Name
+//	}
 func TestStackNameGuard_EmptyStacksProducesEmptyString(t *testing.T) {
 	// Demonstrate the guard logic directly, mirroring the wizard fix.
 	tests := []struct {
@@ -95,7 +98,7 @@ func TestBuildNeoManifest_EmptyStacks(t *testing.T) {
 		ProjectType: "single-app",
 		TeamSize:    "solo",
 		Stacks:      []StackProfile{}, // empty — triggers the bug path
-		IsInternal:    false,
+		IsInternal:  false,
 		CreatedDate: "2026-03-26",
 		OutputPath:  "/tmp/neo-empty-stacks-test",
 	}
@@ -153,9 +156,9 @@ func TestNewTrinityConfig_EmptyStacksSlice(t *testing.T) {
 // TestGenerateEcosystem_EmptyStacks is an integration-level regression test
 // for the Stacks[0] guard. It calls GenerateEcosystem with an empty-stacks
 // profile and verifies that:
-//   1. No panic occurs.
-//   2. Core ecosystem files are still written.
-//   3. No per-stack rule file is written.
+//  1. No panic occurs.
+//  2. Core ecosystem files are still written.
+//  3. No per-stack rule file is written.
 func TestGenerateEcosystem_EmptyStacks(t *testing.T) {
 	dir := t.TempDir()
 
@@ -164,7 +167,7 @@ func TestGenerateEcosystem_EmptyStacks(t *testing.T) {
 		ProjectType: "single-app",
 		TeamSize:    "solo",
 		Stacks:      []StackProfile{},
-		IsInternal:    false,
+		IsInternal:  false,
 		CreatedDate: "2026-03-26",
 		OutputPath:  dir,
 	}

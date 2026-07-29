@@ -11,14 +11,14 @@ import (
 
 // DetectionResult holds everything detected from scanning a project directory.
 type DetectionResult struct {
-	Language         string   // "go", "nodejs", "python", "flutter", "rust", "ruby"
-	Framework        string   // "chi", "gin", "echo", "express", "fastapi", "django", etc.
-	ArchStyle        string   // "layered", "feature-based", "flat", "hybrid"
-	TestingFramework string   // "ginkgo", "jest", "pytest", "rspec", "go-test"
-	DataLayer        string   // "bun", "gorm", "prisma", "sqlalchemy", "none"
+	Language         string // "go", "nodejs", "python", "flutter", "rust", "ruby"
+	Framework        string // "chi", "gin", "echo", "express", "fastapi", "django", etc.
+	ArchStyle        string // "layered", "feature-based", "flat", "hybrid"
+	TestingFramework string // "ginkgo", "jest", "pytest", "rspec", "go-test"
+	DataLayer        string // "bun", "gorm", "prisma", "sqlalchemy", "none"
 	HasQueue         bool
 	Observability    []string // ["zerolog", "sentry", "newrelic"]
-	IsInternal         bool
+	IsInternal       bool
 	ProjectType      string // "single-app", "monorepo", "multi-repo-microservices"
 }
 
@@ -34,7 +34,7 @@ func RunDetection(projectPath string) DetectionResult {
 		DataLayer:        detectDataLayer(projectPath, lang),
 		HasQueue:         detectHasQueue(projectPath, lang),
 		Observability:    detectObservability(projectPath, lang),
-		IsInternal:         detectIsInternal(projectPath),
+		IsInternal:       detectIsInternal(projectPath),
 		ProjectType:      detectProjectType(projectPath),
 	}
 }
