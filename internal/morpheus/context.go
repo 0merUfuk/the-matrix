@@ -16,7 +16,7 @@ import (
 type ContextProfile struct {
 	ProjectName string `json:"projectName"`
 	// ProjectType is parsed from .neo.json but not mapped to ProjectContext.ProjectType —
-	// morpheus derives its own ProjectType ("internal" vs "general") from IsInternal instead.
+	// morp derives its own ProjectType ("internal" vs "general") from IsInternal instead.
 	// Future: could map to wizard defaults (e.g., "microservice" → default port suggestions).
 	ProjectType string         `json:"projectType"`
 	IsInternal  bool           `json:"isInternal"`
@@ -75,7 +75,7 @@ func LoadContextProfile(path string) (*ContextProfile, error) {
 
 // ApplyContextDefaults fills in the ProjectContext fields normally collected by
 // the delta wizard with sensible non-interactive defaults. Used when
-// `morpheus init --context` is invoked without a TTY (e.g. as a subprocess
+// `morp init --context` is invoked without a TTY (e.g. as a subprocess
 // from `neo init`, in CI, or via scripted automation), so the chain still
 // produces a complete scaffold instead of silently aborting.
 //

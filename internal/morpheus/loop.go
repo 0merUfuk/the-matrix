@@ -11,7 +11,7 @@ import (
 	"github.com/0merUfuk/the-matrix/internal/wizard"
 )
 
-// LoopOpts configures the morpheus loop command.
+// LoopOpts configures the morp loop command.
 type LoopOpts struct {
 	DryRun         bool
 	Path           string
@@ -69,7 +69,7 @@ func NewLoopContext(projectName, goal string, cc CycleConfig) *LoopContext {
 
 // RunLoop sets up an autonomous development loop on an existing project.
 func RunLoop(opts LoopOpts) {
-	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan("morpheus loop — autonomous development loop for any project")))
+	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan("morp loop — autonomous development loop for any project")))
 
 	// 1. Resolve project path
 	projectDir := opts.Path
@@ -89,7 +89,7 @@ func RunLoop(opts LoopOpts) {
 	if !config.FileExists(claudemd) {
 		cli.PrintError("No CLAUDE.md found in " + projectDir)
 		fmt.Println()
-		cli.PrintDim("  morpheus loop requires a CLAUDE.md — it's how agents learn the project.")
+		cli.PrintDim("  morp loop requires a CLAUDE.md — it's how agents learn the project.")
 		cli.PrintDim("  Create one with project rules, tech stack, and build commands.")
 		fmt.Println()
 		os.Exit(1)
@@ -202,7 +202,7 @@ func updateGitignore(projectDir string) {
 	}
 
 	if len(toAdd) > 0 {
-		addition := "\n# morpheus loop (autonomous development infrastructure)\n" + strings.Join(toAdd, "\n") + "\n"
+		addition := "\n# morp loop (autonomous development infrastructure)\n" + strings.Join(toAdd, "\n") + "\n"
 		if err := config.AppendFileString(gitignorePath, addition); err != nil {
 			fmt.Fprintf(os.Stderr, "  warning: failed to update .gitignore: %v\n", err)
 		}
@@ -236,7 +236,7 @@ func printLoopSummary(ctx *LoopContext, projectDir string, fileCount int) {
 		rel = projectDir
 	}
 
-	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Green("✓ morpheus loop complete")))
+	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Green("✓ morp loop complete")))
 	fmt.Printf("  %s\n", cli.Bold(fmt.Sprintf("Project:  %s", ctx.ProjectName)))
 	fmt.Printf("  %s\n", cli.Bold(fmt.Sprintf("Location: %s/", rel)))
 	fmt.Printf("  %s\n", cli.Bold(fmt.Sprintf("Files:    %d + tasks/todo.md", fileCount)))

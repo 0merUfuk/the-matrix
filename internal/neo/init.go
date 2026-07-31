@@ -156,7 +156,7 @@ func RunInit(opts InitOpts) {
 	// Step 6: Print summary
 	printInitSummary(&profile, outputDir, len(written), registryPulled)
 
-	// Step 7: Optionally scaffold services with morpheus
+	// Step 7: Optionally scaffold services with morp
 	RunMorpheusIntegration(&profile, outputDir)
 }
 

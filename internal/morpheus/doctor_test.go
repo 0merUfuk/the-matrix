@@ -64,7 +64,7 @@ func TestCheckDoctor(t *testing.T) {
 		notAService bool
 	}{
 		{
-			name: "not a morpheus service",
+			name: "not a morp service",
 			setup: func(t *testing.T, dir string) {
 				// Empty directory — no .autonomous/loop.sh
 			},

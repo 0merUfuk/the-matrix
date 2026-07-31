@@ -53,7 +53,7 @@ type ManifestEntry struct {
 	IsStatic     bool
 }
 
-// BuildMorpheusManifest returns the file manifest for a morpheus scaffolded service.
+// BuildMorpheusManifest returns the file manifest for a morp scaffolded service.
 func BuildMorpheusManifest(ctx *ProjectContext, outputDir string) []ManifestEntry {
 	o := func(rel string) string { return filepath.Join(outputDir, rel) }
 	techDir := "go"

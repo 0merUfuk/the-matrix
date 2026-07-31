@@ -15,7 +15,7 @@ func nonInternalContext() *ProjectContext {
 	return ctx
 }
 
-// renderAndRead generates all morpheus files to a temp dir and returns the content of the
+// renderAndRead generates all morp files to a temp dir and returns the content of the
 // given relative path. It fails the test immediately if generation or reading fails.
 func renderAndRead(t *testing.T, ctx *ProjectContext, rel string) string {
 	t.Helper()

@@ -102,7 +102,7 @@ func cycleNumber(filename, kind string) (string, bool) {
 func RunFinalize() {
 	cwd, _ := os.Getwd()
 
-	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan("morpheus finalize")))
+	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan("morp finalize")))
 
 	// Guard 1: latest cycle must have both reviewer and security approval
 	if !hasDualApproval(filepath.Join(cwd, "tasks/cycles")) {
@@ -115,7 +115,7 @@ func RunFinalize() {
 	// Guard 2: finalizer.sh must exist
 	finalizerPath := filepath.Join(cwd, ".autonomous/finalizer.sh")
 	if !config.FileExists(finalizerPath) {
-		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red("Missing .autonomous/finalizer.sh — was this project scaffolded with morpheus init?"))
+		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red("Missing .autonomous/finalizer.sh — was this project scaffolded with morp init?"))
 		fmt.Println()
 		os.Exit(1)
 	}

@@ -6,18 +6,18 @@ This document covers the-matrix's system design, tool boundaries, data flow, and
 
 ## Overview
 
-the-matrix is four Go CLIs that provision and maintain autonomous [Claude Code](https://docs.anthropic.com/en/docs/claude-code) agent ecosystems. Each tool has a single responsibility and clean boundaries. Neo provisions the ecosystem and guides the flow; oracle and trinity remain independently invoked commands, while neo invokes morpheus only for multi-repo service scaffolds.
+the-matrix is four Go CLIs that provision and maintain autonomous [Claude Code](https://docs.anthropic.com/en/docs/claude-code) agent ecosystems. Each tool has a single responsibility and clean boundaries. Neo provisions the ecosystem and guides the flow; oracle and trinity remain independently invoked commands, while neo invokes morp only for multi-repo service scaffolds.
 
 ```
 the-matrix (ecosystem name)
 │
 ├── neo          ← meta-CLI: init / analyze / doctor / status / update / registry
 │                  provisions ecosystems, prints oracle/trinity guidance,
-│                  and invokes morpheus only for multi-repo scaffolds
+│                  and invokes morp only for multi-repo scaffolds
 │
-├── oracle       ← independently invoked knowledge synthesis
-├── morpheus     ← service scaffolding + autonomous dev loops; standalone,
+├── morp         ← service scaffolding + autonomous dev loops; standalone,
 │                  or invoked by neo for multi-repo scaffolds
+├── oracle       ← independently invoked knowledge synthesis
 ├── trinity      ← independently invoked maintenance: sync, health, refresh, self-state
 │
 └── sentinel     ← future: ecosystem health monitoring (not yet built)
@@ -43,7 +43,7 @@ Each tool has a distinct operational shape:
 |------|---------|----------|--------------|
 | **neo** | CLI wizard + ecosystem generation | 30–60s | — |
 | **oracle** | 4-cycle research loop with Claude | 3–8 min | Any tool that produces `.claude/knowledge/*.md` |
-| **morpheus** | Template rendering + `claude -p` subprocess | 10–30s | Any scaffolder that produces `.claude/` + `.autonomous/` |
+| **morp** | Template rendering + `claude -p` subprocess | 10–30s | Any scaffolder that produces `.claude/` + `.autonomous/` |
 | **trinity** | File I/O + staleness calculation | <2s | Any tool that syncs knowledge docs |
 
 Oracle's research loop runs for minutes and is embarrassingly parallel. Trinity's sync is sub-second. Mixing them in one binary would create a tool with unclear scope and incompatible operational shapes. The contract between them is the **output directory layout** — not a protocol, not an API.
@@ -66,8 +66,8 @@ Step 2: trinity syncs into agent ecosystem
   trinity sync --from output/go/ --to .claude/knowledge/go-rules/
   → .claude/knowledge/go-rules/*.md (fresh, versioned)
 
-Step 3: morpheus scaffolds a service
-  morpheus init
+Step 3: morp scaffolds a service
+  morp init
   → reads .claude/knowledge/ (gold standards from oracle output)
   → generates service/ with .autonomous/loop.sh + .claude/ + tasks/
 
@@ -87,7 +87,7 @@ Step 5: trinity maintains freshness
 
 Step 6: neo detects and guides
   neo init → provisions the ecosystem and prints oracle/trinity commands
-           → invokes morpheus only for multi-repo service scaffolds
+           → invokes morp only for multi-repo service scaffolds
   neo update → detects staleness and prints suggested refresh commands
   neo doctor → validates ecosystem integrity at any point
 ```
@@ -112,7 +112,7 @@ the-matrix/
 │   ├── staleness/     # Document age calculation
 │   ├── matrixcfg/     # .matrix.yaml unified Config + per-tool options
 │   ├── neo/           # neo implementation + 23 .tmpl files (go:embed)
-│   ├── morpheus/      # morpheus implementation + 93 artifacts (92 .tmpl + loop.sh)
+│   ├── morpheus/      # morp CLI implementation (internal package: morpheus) + 93 artifacts (92 .tmpl + loop.sh)
 │   ├── oracle/        # oracle implementation + export/ + 7 artifacts (5 .tmpl + loop.sh + update.sh)
 │   │   └── export/    # Format adapter pattern: Cursor, Copilot, Windsurf, AGENTS.md
 │   ├── registry/      # Knowledge registry (pack catalog + validation)
@@ -165,7 +165,7 @@ Architecture: format adapter pattern with `init()`-based auto-registration. New 
 
 ### Unified Configuration
 
-`.matrix.yaml` — optional YAML config file at the project root (or `~/.config/the-matrix/config.yaml` globally). Priority chain: CLI flag > config file > hardcoded default. Only oracle and trinity consume config in v1; neo and morpheus will be wired when they gain configurable flags.
+`.matrix.yaml` — optional YAML config file at the project root (or `~/.config/the-matrix/config.yaml` globally). Priority chain: CLI flag > config file > hardcoded default. Only oracle and trinity consume config in v1; neo and morp will be wired when they gain configurable flags.
 
 The configuration contract is public in code and command behavior; deeper ADR notes are maintainer-local.
 
@@ -175,7 +175,7 @@ The configuration contract is public in code and command behavior; deeper ADR no
 
 The-matrix has two related `.claude/` concepts:
 
-1. **Generated target-project ecosystems** — public product output created by `neo` or `morpheus` from embedded templates.
+1. **Generated target-project ecosystems** — public product output created by `neo` or `morp` from embedded templates.
 2. **This repo's maintainer-local ecosystem** — ignored private state in the root `.claude/` directory when present locally. It is not tracked and is absent from fresh public clones.
 
 ### Generated Core Agents

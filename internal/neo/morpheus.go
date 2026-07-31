@@ -26,9 +26,9 @@ func RunMorpheusIntegration(profile *ProjectProfile, outputDir string) {
 		return
 	}
 
-	// Check if morpheus binary is available on PATH.
-	if _, err := exec.LookPath("morpheus"); err != nil {
-		fmt.Printf("\n  %s\n", cli.Dim("morpheus not found. Install it to scaffold services: brew install 0merUfuk/thematrix/morpheus"))
+	// Check if morp binary is available on PATH.
+	if _, err := exec.LookPath("morp"); err != nil {
+		fmt.Printf("\n  %s\n", cli.Dim("morp not found. Install it to scaffold services: brew install 0merUfuk/thematrix/morp"))
 		return
 	}
 
@@ -39,13 +39,13 @@ func RunMorpheusIntegration(profile *ProjectProfile, outputDir string) {
 	}
 	fmt.Println()
 
-	confirm, err := wizard.AskConfirm("Run morpheus init for each service?", true)
+	confirm, err := wizard.AskConfirm("Run morp init for each service?", true)
 	if err != nil {
 		// User interrupted (ctrl-c) — not a fatal error.
 		return
 	}
 	if !confirm {
-		cli.PrintDim("Run 'morpheus init' in each service directory to scaffold manually.")
+		cli.PrintDim("Run 'morp init' in each service directory to scaffold manually.")
 		return
 	}
 
@@ -62,9 +62,9 @@ func RunMorpheusIntegration(profile *ProjectProfile, outputDir string) {
 		svcOutputDir := filepath.Join(outputDir, svc.Name)
 
 		fmt.Printf("\n  %s\n\n",
-			cli.Bold(cli.Cyan(fmt.Sprintf("── morpheus init: %s ──", svc.Name))))
+			cli.Bold(cli.Cyan(fmt.Sprintf("── morp init: %s ──", svc.Name))))
 
-		cmd := exec.Command("morpheus", "init",
+		cmd := exec.Command("morp", "init",
 			"--context", contextPath,
 			"--output-dir", svcOutputDir,
 			"--service-name", svc.Name,

@@ -23,7 +23,7 @@ Most Claude Code setups are hand-crafted, generic, and stale within weeks. The-m
 
 ```bash
 brew tap 0merUfuk/thematrix
-brew install neo morpheus oracle trinity
+brew install neo morp oracle trinity
 ```
 
 Then in any project:
@@ -49,7 +49,7 @@ Requires Go 1.25.8+:
 
 ```bash
 go install github.com/0merUfuk/the-matrix/cmd/neo@latest
-go install github.com/0merUfuk/the-matrix/cmd/morpheus@latest
+go install github.com/0merUfuk/the-matrix/cmd/morp@latest
 go install github.com/0merUfuk/the-matrix/cmd/oracle@latest
 go install github.com/0merUfuk/the-matrix/cmd/trinity@latest
 ```
@@ -59,7 +59,7 @@ go install github.com/0merUfuk/the-matrix/cmd/trinity@latest
 | Tool | What it does for you |
 |------|----------------------|
 | **neo** | One command (`neo init`) to stand up a complete agent ecosystem — agents, skills, rules, and knowledge docs — tailored to your stack. |
-| **morpheus** | Scaffolds new services with an autonomous development loop already wired in, or drops the same loop into an existing repo via `morpheus loop`. |
+| **morp** | Scaffolds new services with an autonomous development loop already wired in, or drops the same loop into an existing repo via `morp loop`. |
 | **oracle** | Researches any tech stack from official docs and maintained repositories, producing 17 durable best-practice knowledge docs your agents can read. |
 | **trinity** | A CLI you invoke periodically — detects stale knowledge docs, syncs fresh oracle output into your project, and flags when re-research is due by printing the commands to run. |
 
@@ -67,7 +67,7 @@ All four compile to standalone binaries with template assets embedded via `go:em
 
 ## System Topology
 
-Neo is the single entry point. It interviews your repo, provisions the `.claude/` ecosystem, and prints the oracle and trinity commands to run for the detected stack — `neo init` invokes morpheus directly for multi-repo scaffolds, but oracle and trinity run as independent commands you trigger when you need them. Each tool is also usable standalone — if you only want knowledge docs, `oracle research` is enough; if you only want the loop added to an existing project, `morpheus loop` does that without neo.
+Neo is the single entry point. It interviews your repo, provisions the `.claude/` ecosystem, and prints the oracle and trinity commands to run for the detected stack — `neo init` invokes `morp` directly for multi-repo scaffolds, but oracle and trinity run as independent commands you trigger when you need them. Each tool is also usable standalone — if you only want knowledge docs, `oracle research` is enough; if you only want the loop added to an existing project, `morp loop` does that without neo.
 
 See the [Architecture](#architecture) section below for the monorepo layout and design decisions.
 
@@ -97,20 +97,20 @@ neo registry list
 neo registry info go-rules
 ```
 
-### morpheus — Scaffold a new service
+### morp — Scaffold a new service
 
 ```bash
 # Interactive wizard to generate a new Go or Node.js service
-morpheus init
+morp init
 
 # Set up autonomous development loop on an existing project
-morpheus loop
+morp loop
 
 # Validate scaffolded output before running autonomous loop
-morpheus doctor
+morp doctor
 
 # Check autonomous loop progress
-morpheus status
+morp status
 ```
 
 ### oracle — Research and synthesize knowledge
@@ -180,7 +180,7 @@ the-matrix/
 │   ├── staleness/ # Document age calculation
 │   ├── matrixcfg/ # .matrix.yaml unified config schema (Config + per-tool options)
 │   ├── neo/       # neo implementation + 23 templates
-│   ├── morpheus/  # morpheus implementation + 93 templates (92 .tmpl + loop.sh)
+│   ├── morpheus/  # morp CLI implementation (internal package: morpheus) + 93 templates (92 .tmpl + loop.sh)
 │   ├── oracle/    # oracle implementation + 7 templates (5 .tmpl + loop.sh + update.sh)
 │   ├── registry/  # knowledge registry (pack catalog + validation)
 │   └── trinity/   # trinity implementation (no templates)

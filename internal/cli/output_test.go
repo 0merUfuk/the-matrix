@@ -421,9 +421,9 @@ func TestBanner_WithDetail(t *testing.T) {
 
 func TestBanner_WithoutDetail(t *testing.T) {
 	th := NewTheme()
-	out := th.Banner("morpheus", "")
-	if !strings.Contains(out, "morpheus") {
-		t.Errorf("Banner output %q does not contain tool name 'morpheus'", out)
+	out := th.Banner("morp", "")
+	if !strings.Contains(out, "morp") {
+		t.Errorf("Banner output %q does not contain tool name 'morp'", out)
 	}
 	if strings.Contains(out, " — ") {
 		t.Errorf("Banner without detail %q should not contain ' — ' separator", out)

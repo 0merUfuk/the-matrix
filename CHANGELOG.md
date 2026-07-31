@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer](https://semver.org/).
 
+## [1.8.2] - 2026-07-31
+
+### Changed
+- **morp**: renamed the CLI binary/command from `morpheus` to `morp` to avoid collision with the `morpheus` systems-biology tool in Homebrew-core. Internal Go package paths (`internal/morpheus`), import paths, YAML config keys (`morpheus:`), and type/function names remain unchanged.
+
 ## [Unreleased]
 
 ### Added

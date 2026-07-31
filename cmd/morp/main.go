@@ -12,7 +12,7 @@ var version = "1.7.2-dev"
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:     "morpheus",
+		Use:     "morp",
 		Short:   "Autonomous development infrastructure generator",
 		Version: version,
 	}
@@ -41,16 +41,16 @@ func initCmd() *cobra.Command {
 		Use:   "init",
 		Short: "Scaffold a new service with complete .claude/ + .autonomous/ setup",
 		Example: `  # Wizard-guided scaffold in the current directory
-  morpheus init
+  morp init
 
   # Scaffold into a specific output directory
-  morpheus init --output-dir ./billing-api
+  morp init --output-dir ./billing-api
 
   # Context-driven init from a neo-generated project profile
-  morpheus init --context .claude/project-context.json --service-name billing-api
+  morp init --context .claude/project-context.json --service-name billing-api
 
   # Preview what would be generated without writing
-  morpheus init --dry-run`,
+  morp init --dry-run`,
 		Run: func(cmd *cobra.Command, args []string) {
 			morpheus.RunInit(morpheus.InitOpts{
 				DryRun:      dryRun,
@@ -86,16 +86,16 @@ func loopCmd() *cobra.Command {
 		Short: "Set up autonomous development loop on an existing project",
 		Long:  "Generates .autonomous/ + tasks/ for any project with a CLAUDE.md. Does NOT scaffold service code.",
 		Example: `  # Wizard-guided loop setup in the current project
-  morpheus loop
+  morp loop
 
   # Set up a loop in a specific project directory
-  morpheus loop --path ~/repos/my-service
+  morp loop --path ~/repos/my-service
 
   # Fully non-interactive run (for CI / automation)
-  morpheus loop --non-interactive --goal "Implement user auth" --max-cycles 10
+  morp loop --non-interactive --goal "Implement user auth" --max-cycles 10
 
   # Tune per-agent turn budgets
-  morpheus loop --non-interactive --goal "Add billing" --dev-turns 40 --test-turns 25 --review-turns 15`,
+  morp loop --non-interactive --goal "Add billing" --dev-turns 40 --test-turns 25 --review-turns 15`,
 		Run: func(cmd *cobra.Command, args []string) {
 			morpheus.RunLoop(morpheus.LoopOpts{
 				DryRun:            dryRun,
@@ -127,7 +127,7 @@ func finalizeCmd() *cobra.Command {
 		Use:   "finalize",
 		Short: "Populate .claude/ context files after loop completes",
 		Example: `  # Post-loop context update in the current project
-  morpheus finalize`,
+  morp finalize`,
 		Run: func(cmd *cobra.Command, args []string) {
 			morpheus.RunFinalize()
 		},
@@ -139,7 +139,7 @@ func doctorCmd() *cobra.Command {
 		Use:   "doctor",
 		Short: "Validate scaffolded service before running loop",
 		Example: `  # Verify the current service is ready for the autonomous loop
-  morpheus doctor`,
+  morp doctor`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cwd, err := os.Getwd()
 			if err != nil {
@@ -156,7 +156,7 @@ func statusCmd() *cobra.Command {
 		Use:   "status",
 		Short: "Show loop progress at a glance",
 		Example: `  # Display loop progress for the current project
-  morpheus status`,
+  morp status`,
 		Run: func(cmd *cobra.Command, args []string) {
 			morpheus.RunStatus()
 		},
@@ -168,7 +168,7 @@ func reportCmd() *cobra.Command {
 		Use:   "report",
 		Short: "Generate post-loop analytics report",
 		Example: `  # Analyze a completed autonomous loop
-  morpheus report`,
+  morp report`,
 		Run: func(cmd *cobra.Command, args []string) {
 			morpheus.RunReport()
 		},

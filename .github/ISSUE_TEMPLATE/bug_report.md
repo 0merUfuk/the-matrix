@@ -1,13 +1,13 @@
 ---
 name: Bug report
-about: Report a bug in one of the 4 tools (neo, morpheus, oracle, trinity)
+about: Report a bug in one of the 4 tools (neo, morp, oracle, trinity)
 title: "[bug] "
 labels: bug
 assignees: ''
 ---
 
 **Which tool?**
-neo / morpheus / oracle / trinity
+neo / morp / oracle / trinity
 
 **Version**
 <!-- Run `<tool> --version` -->

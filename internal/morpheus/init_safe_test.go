@@ -111,15 +111,15 @@ func TestInitSafeRefusesProtectedPathsEvenWithForce(t *testing.T) {
 }
 
 func TestInitSafeCommandWiresForceFlag(t *testing.T) {
-	source, err := os.ReadFile(filepath.Join("..", "..", "cmd", "morpheus", "main.go"))
+	source, err := os.ReadFile(filepath.Join("..", "..", "cmd", "morp", "main.go"))
 	if err != nil {
-		t.Fatalf("read morpheus command: %v", err)
+		t.Fatalf("read morp command: %v", err)
 	}
 	if !strings.Contains(string(source), "BoolVar(&force, \"force\", false") {
-		t.Fatal("morpheus init must expose a --force flag")
+		t.Fatal("morp init must expose a --force flag")
 	}
 	if !regexp.MustCompile(`Force:\s+force`).Match(source) {
-		t.Fatal("morpheus init must wire --force into InitOpts")
+		t.Fatal("morp init must wire --force into InitOpts")
 	}
 }
 

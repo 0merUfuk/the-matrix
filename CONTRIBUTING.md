@@ -39,13 +39,13 @@ If `make build` and `make test` pass, you're ready to contribute.
 Use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-feat(morpheus): add Python/FastAPI wizard support
+feat(morp): add Python/FastAPI wizard support
 fix(trinity): correct staleness threshold for quarterly stacks
 docs(README): update agent roster count
 chore(deps): bump cobra to v1.9.0
 ```
 
-Scope: `neo`, `morpheus`, `oracle`, `trinity`, `cli`, `config`, `tmpl`, `wizard`, `docs`, `deps`, or `ci`.
+Scope: `neo`, `morp`, `oracle`, `trinity`, `cli`, `config`, `tmpl`, `wizard`, `docs`, `deps`, or `ci`.
 
 ## Project Structure
 
@@ -60,7 +60,7 @@ internal/      # Shared packages + per-tool implementations
   staleness/   # Document age calculation
   matrixcfg/   # .matrix.yaml config schema
   neo/         # neo implementation + 23 templates
-  morpheus/    # morpheus implementation + 93 templates
+  morpheus/    # morp CLI implementation (internal package: morpheus) + 93 templates
   oracle/      # oracle implementation + export formats
   registry/    # knowledge registry (pack catalog)
   trinity/     # trinity implementation

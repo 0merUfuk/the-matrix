@@ -15,9 +15,9 @@ builds:
       - amd64
       - arm64
 
-  - id: morpheus
-    main: ./cmd/morpheus
-    binary: morpheus
+  - id: morp
+    main: ./cmd/morp
+    binary: morp
     ldflags:
       - -s -w -X main.version={{.Version}}
     goos:
@@ -55,9 +55,9 @@ archives:
   - id: neo
     builds: [neo]
     name_template: "neo_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-  - id: morpheus
-    builds: [morpheus]
-    name_template: "morpheus_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - id: morp
+    builds: [morp]
+    name_template: "morp_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
   - id: oracle
     builds: [oracle]
     name_template: "oracle_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
@@ -77,8 +77,8 @@ brews:
     homepage: https://github.com/0merUfuk/the-matrix
     description: Meta-CLI orchestrator for the-matrix agent ecosystem
 
-  - name: morpheus
-    ids: [morpheus]
+  - name: morp
+    ids: [morp]
     skip_upload: auto
     repository:
       owner: 0merUfuk

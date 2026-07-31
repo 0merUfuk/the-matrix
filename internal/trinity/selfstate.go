@@ -133,10 +133,10 @@ func defaultFetchers() *fetchers {
 // canonicalToolCommands is the ground-truth command list per tool — kept
 // aligned with CLAUDE.md and cmd/{tool}/main.go cobra registrations.
 var canonicalToolCommands = map[string][]string{
-	"neo":      {"init", "analyze", "doctor", "status", "update", "registry"},
-	"morpheus": {"init", "loop", "doctor", "status", "finalize", "report"},
-	"oracle":   {"research", "status", "inject", "update", "export"},
-	"trinity":  {"health", "sync", "refresh", "self-state"},
+	"neo":     {"init", "analyze", "doctor", "status", "update", "registry"},
+	"morp":    {"init", "loop", "doctor", "status", "finalize", "report"},
+	"oracle":  {"research", "status", "inject", "update", "export"},
+	"trinity": {"health", "sync", "refresh", "self-state"},
 }
 
 // RunSelfState executes the self-state collector.
@@ -296,7 +296,7 @@ func collectMatrix(root string, f *fetchers, errs *[]CollectionError) MatrixBloc
 // literal and pairs it with the canonical command list.
 func collectTools(root string, errs *[]CollectionError) map[string]*ToolBlock {
 	out := make(map[string]*ToolBlock)
-	for _, name := range []string{"neo", "morpheus", "oracle", "trinity"} {
+	for _, name := range []string{"neo", "morp", "oracle", "trinity"} {
 		mainPath := filepath.Join(root, "cmd", name, "main.go")
 		v, err := extractVersion(mainPath)
 		if err != nil {

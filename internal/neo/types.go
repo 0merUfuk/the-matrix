@@ -2,7 +2,7 @@
 package neo
 
 // ProjectProfile is the central data structure — produced by neo's wizard,
-// consumed by all downstream tools (oracle, morpheus, trinity).
+// consumed by all downstream tools (oracle, morp, trinity).
 type ProjectProfile struct {
 	// Identity
 	ProjectName string `json:"projectName"` // kebab-case

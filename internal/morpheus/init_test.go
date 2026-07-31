@@ -8,14 +8,14 @@ import (
 )
 
 // TestApplyContextDefaults_FillsWizardFields is a regression guard for the
-// `morpheus init --context` no-TTY bug (2026-04-28 dogfood test): when neo
-// init invokes `morpheus init --context ...` as a subprocess in a no-TTY
+// `morp init --context` no-TTY bug (2026-04-28 dogfood test): when neo
+// init invokes `morp init --context ...` as a subprocess in a no-TTY
 // environment (CI, scripted automation), the delta wizards (huh-based)
 // silently fail and the previous code-path called os.Exit(0) with "Aborted."
 // — producing no files while looking like the wizard was skipped.
 //
 // ApplyContextDefaults must populate every field the wizard would otherwise
-// prompt for, so the chain `neo init` → `morpheus init --context` produces
+// prompt for, so the chain `neo init` → `morp init --context` produces
 // a complete scaffold end-to-end without a TTY.
 func TestApplyContextDefaults_FillsWizardFields(t *testing.T) {
 	tests := []struct {
@@ -166,7 +166,7 @@ func TestRunInit_ContextFlow_HasNoTTYBranch(t *testing.T) {
 	ttyCheck := regexp.MustCompile(`term\.IsTerminal\(os\.Stdin\.Fd\(\)\)`)
 	if !ttyCheck.MatchString(source) {
 		t.Error("init.go is missing the no-TTY guard `term.IsTerminal(os.Stdin.Fd())` — " +
-			"`morpheus init --context` will silently abort when invoked without a TTY")
+			"`morp init --context` will silently abort when invoked without a TTY")
 	}
 
 	// ApplyContextDefaults must be called inside the --context flow so the

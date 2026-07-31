@@ -17,7 +17,7 @@
 
 ## Affected tool(s)
 
-<!-- Which tools does this touch? neo / morpheus / oracle / trinity / shared -->
+<!-- Which tools does this touch? neo / morp / oracle / trinity / shared -->
 
 ## Breaking changes
 

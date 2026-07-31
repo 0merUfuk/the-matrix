@@ -146,8 +146,8 @@ pipeline. The loop checks `tasks/STOP` after every phase and halts immediately i
 
 ## Setup Steps
 
-1. Run `morpheus init` to scaffold a full service with .claude/ ecosystem
-2. Run `morpheus loop` to add the autonomous loop to your project
+1. Run `morp init` to scaffold a full service with .claude/ ecosystem
+2. Run `morp loop` to add the autonomous loop to your project
 3. Review & refine — check prompts match your tech stack, config has right tools
 4. Fill human files — tasks/todo.md, tasks/TARGET_STATE.md, tasks/DECISIONS.md
 5. Git init + commit — loop needs at least one commit for tagging

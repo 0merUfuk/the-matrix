@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-// BuildLoopManifest returns the file manifest for a morpheus loop setup.
+// BuildLoopManifest returns the file manifest for a morp loop setup.
 // Uses shared templates (loop.sh, tasks/*) and loop-specific templates (config, prompts).
 func BuildLoopManifest(ctx *LoopContext, projectDir string) []ManifestEntry {
 	o := func(rel string) string { return filepath.Join(projectDir, rel) }
@@ -61,7 +61,7 @@ func GenerateLoopFiles(ctx *LoopContext, projectDir string) ([]string, error) {
 func BuildEmptyTodo(projectNamePascal string) string {
 	return fmt.Sprintf(`# Tasks: %s
 
-> Fill in tasks manually, or re-run morpheus loop with a goal to auto-generate.
+> Fill in tasks manually, or re-run morp loop with a goal to auto-generate.
 
 ## Phase 1: Setup
 

@@ -111,7 +111,7 @@ func TestBuildEmptyTodo(t *testing.T) {
 
 func TestGenerateLoopFiles(t *testing.T) {
 	// Create a temp directory for test output
-	tmpDir, err := os.MkdirTemp("", "morpheus-loop-test-*")
+	tmpDir, err := os.MkdirTemp("", "morp-loop-test-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
@@ -226,7 +226,7 @@ func TestGenerateLoopFiles(t *testing.T) {
 }
 
 func TestUpdateGitignore(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "morpheus-gitignore-test-*")
+	tmpDir, err := os.MkdirTemp("", "morp-gitignore-test-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}

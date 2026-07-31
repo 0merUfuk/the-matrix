@@ -19,7 +19,7 @@ func RunStatus() {
 
 	// Guard
 	if !config.FileExists(filepath.Join(cwd, ".autonomous/loop.sh")) {
-		cli.PrintDim("Not a morpheus service. Run morpheus status from a scaffolded service directory.")
+		cli.PrintDim("Not a morp service. Run morp status from a scaffolded service directory.")
 		os.Exit(0)
 	}
 
@@ -33,7 +33,7 @@ func RunStatus() {
 		techLabel = "Node.js"
 	}
 
-	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan(fmt.Sprintf("morpheus status — %s  (%s)", serviceName, techLabel))))
+	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan(fmt.Sprintf("morp status — %s  (%s)", serviceName, techLabel))))
 
 	// Task progress
 	done, remaining := countTasks(cwd)

@@ -21,8 +21,8 @@ func extractReviewerTools(t *testing.T, content string) string {
 	return m[1]
 }
 
-// TestReviewerTools_GoInitTemplate_NoEdit (H-01) verifies that the morpheus Go
-// init template does NOT grant Edit in REVIEWER_TOOLS. Edit is a targeted in-place
+// TestReviewerTools_GoInitTemplate_NoEdit (H-01) verifies that the morp Go
+// init template does not grant Edit in REVIEWER_TOOLS. Edit is a targeted in-place
 // source modification tool; granting it to a read-only reviewer contradicts
 // ecosystem-conventions.md and the documented loop-template design.
 func TestReviewerTools_GoInitTemplate_NoEdit(t *testing.T) {

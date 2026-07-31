@@ -19,8 +19,8 @@ The-matrix is a CLI-driven, self-refreshing autonomous agent ecosystem for any s
 
 | Tool | Entry Point | Latest Public Release | Role |
 |------|-------------|-----------------------|------|
-| `neo` | `cmd/neo` | v1.8.0 | Meta-CLI — provisions ecosystems, prints oracle/trinity guidance, invokes morpheus for multi-repo scaffolds |
-| `morpheus` | `cmd/morpheus` | v1.8.0 | Service scaffolding + autonomous development loops |
+|| `neo` | `cmd/neo` | v1.8.0 | Meta-CLI — provisions ecosystems, prints oracle/trinity guidance, invokes morp for multi-repo scaffolds |
+|| `morp` | `cmd/morp` | v1.8.0 | Service scaffolding + autonomous development loops |
 | `oracle` | `cmd/oracle` | v1.8.0 | Researches any tech stack → best-practice knowledge docs |
 | `trinity` | `cmd/trinity` | v1.8.0 | Maintenance runtime — keeps ecosystems alive and fresh |
 | `sentinel` | *(future)* | — | Ecosystem health monitoring |
@@ -38,11 +38,11 @@ the-matrix (ecosystem name)
 │
 ├── neo          ← meta-CLI: init / analyze / doctor / status / update / registry
 │                  provisions ecosystems and prints oracle/trinity guidance
-│                  invokes morpheus only for multi-repo scaffolds
+│                  invokes morp only for multi-repo scaffolds
 │                  gains intelligence in v2+ (memory, patterns, self-improvement)
 │
 ├── oracle       ← independently invoked knowledge synthesis
-├── morpheus     ← standalone scaffolding + autonomous loops; neo invokes it
+├── morp         ← standalone scaffolding + autonomous loops; neo invokes it
 │                  only for multi-repo service scaffolds
 ├── trinity      ← independently invoked maintenance: sync, health, refresh
 │
@@ -56,8 +56,8 @@ The `.claude/` paths here describe generated target-project ecosystems. They are
 ```
 oracle (independent) → synthesizes stack knowledge → .claude/knowledge/
 trinity (independent) → syncs output and prints refresh guidance
-morpheus (standalone) → scaffolds services and consumes .claude/knowledge/
-neo → provisions/detects, prints oracle/trinity commands, and invokes morpheus
+morp (standalone) → scaffolds services and consumes .claude/knowledge/
+neo → provisions/detects, prints oracle/trinity commands, and invokes morp
       only for multi-repo service scaffolds
 ```
 
@@ -105,7 +105,7 @@ make build
 
 ```bash
 brew tap 0merUfuk/thematrix
-brew install neo morpheus oracle trinity
+brew install neo morp oracle trinity
 ```
 
 ---
@@ -117,7 +117,7 @@ brew install neo morpheus oracle trinity
 make build
 
 # Or build individually
-make neo morpheus oracle trinity
+make neo morp oracle trinity
 
 # Release (tags + pushes, triggers CI → GoReleaser → Homebrew tap)
 make release VERSION=1.2.0 SUMMARY="knowledge registry and preset mode"
@@ -133,13 +133,13 @@ neo registry search      # Filter packs by language/framework
 neo registry info        # Show detailed pack metadata and topic list
 neo registry pull        # Download and validate pack docs to target directory
 
-# morpheus (service scaffolding + autonomous loops)
-morpheus init            # Scaffold a new service (originating project Go/Node.js)
-morpheus loop            # Add autonomous loop to ANY existing project
-morpheus doctor          # Validate scaffolded service before running the loop
-morpheus status          # Loop progress at a glance
-morpheus finalize        # Post-loop .claude/ context updater
-morpheus report          # Autonomous loop analysis
+# morp (service scaffolding + autonomous loops)
+morp init                # Scaffold a new service (originating project Go/Node.js)
+morp loop                # Add autonomous loop to ANY existing project
+morp doctor              # Validate scaffolded service before running the loop
+morp status              # Loop progress at a glance
+morp finalize            # Post-loop .claude/ context updater
+morp report              # Autonomous loop analysis
 
 # oracle (knowledge synthesis)
 oracle research          # Wizard-guided knowledge collection for any stack
@@ -182,7 +182,7 @@ trinity self-state --prune            # Enforce retention (keep last 12 snapshot
 
 ### 1. Plan Mode Default
 
-- Enter plan mode for ANY cross-tool change — effects cascade across morpheus, oracle, trinity, neo
+- Enter plan mode for ANY cross-tool change — effects cascade across morp, oracle, trinity, neo
 - If a tool boundary decision becomes unclear, STOP and re-plan — don't assign work to the wrong tool
 - Use plan mode for `/audit` remediation sequences and release planning
 - In maintainer-private checkouts, local tool action files may exist under `.claude/`; in public clones, track action items in `tasks/` or the issue/PR

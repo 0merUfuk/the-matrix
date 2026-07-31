@@ -67,7 +67,7 @@ func TestRunMorpheusIntegration_NoServices_EmptySlice(t *testing.T) {
 	RunMorpheusIntegration(profile, "/tmp/neo-morpheus-test") // must not panic
 }
 
-// TestRunMorpheusIntegration_MorpheusNotInstalled verifies that when morpheus
+// TestRunMorpheusIntegration_MorpheusNotInstalled verifies that when morp
 // is not on PATH the function prints install guidance and returns without error.
 // We simulate the missing binary by clearing PATH entirely.
 func TestRunMorpheusIntegration_MorpheusNotInstalled(t *testing.T) {
@@ -118,7 +118,7 @@ func TestRunMorpheusIntegration_ProjectTypeTable(t *testing.T) {
 //
 //  1. ProjectType == "multi-repo-microservices"   ✅ (multiRepoProfile)
 //  2. len(profile.Services) > 0                   ✅ (one empty-named service)
-//  3. exec.LookPath("morpheus") succeeds           ✅ (fake binary on PATH)
+//  3. exec.LookPath("morp") succeeds           ✅ (fake binary on PATH)
 //  4. wizard.AskConfirm returns (true, nil)        ✗ — blocked in unit tests
 //
 // Gate 4 is the unit-test boundary: huh's TUI confirm prompt requires a real
@@ -134,13 +134,13 @@ func TestRunMorpheusIntegration_ProjectTypeTable(t *testing.T) {
 // with a PTY (e.g., via expect(1) or a pseudo-terminal library) so that
 // wizard.AskConfirm can receive a "yes" confirmation.
 func TestRunMorpheusIntegration_EmptyServiceName(t *testing.T) {
-	// Place a fake morpheus binary on PATH so exec.LookPath succeeds and
+	// Place a fake morp binary on PATH so exec.LookPath succeeds and
 	// the function advances past gate 3.
 	dir := t.TempDir()
-	fakeMorpheus := filepath.Join(dir, "morpheus")
+	fakeMorp := filepath.Join(dir, "morp")
 	script := "#!/bin/sh\nexit 0\n"
-	if err := os.WriteFile(fakeMorpheus, []byte(script), 0755); err != nil {
-		t.Fatalf("failed to write fake morpheus: %v", err)
+	if err := os.WriteFile(fakeMorp, []byte(script), 0755); err != nil {
+		t.Fatalf("failed to write fake morp: %v", err)
 	}
 	t.Setenv("PATH", dir)
 

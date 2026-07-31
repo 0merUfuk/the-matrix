@@ -43,13 +43,13 @@ func writeTool(t *testing.T, root, tool, ver string) {
 func TestSelfState_VersionExtraction(t *testing.T) {
 	root := t.TempDir()
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 
 	state, _ := collectSelfState(root, stubFetchers())
 
-	for _, name := range []string{"neo", "morpheus", "oracle", "trinity"} {
+	for _, name := range []string{"neo", "morp", "oracle", "trinity"} {
 		tb, ok := state.Tools[name]
 		if !ok || tb == nil {
 			t.Fatalf("tool %s missing or nil", name)
@@ -250,7 +250,7 @@ func TestSelfState_DeltaComputation(t *testing.T) {
 func TestSelfState_JSONSchemaShape(t *testing.T) {
 	root := t.TempDir()
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 
@@ -482,7 +482,7 @@ func TestSelfState_SymlinkFallbackToCopy(t *testing.T) {
 func TestSelfState_QuickMode(t *testing.T) {
 	root := t.TempDir()
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 
@@ -516,7 +516,7 @@ func TestSelfState_QuickMode(t *testing.T) {
 func TestSelfState_DetachedHEAD(t *testing.T) {
 	root := t.TempDir()
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 
@@ -537,7 +537,7 @@ func TestSelfState_DetachedHEAD(t *testing.T) {
 func TestSelfState_SyncedWithRemote(t *testing.T) {
 	root := t.TempDir()
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 
@@ -565,7 +565,7 @@ func TestSelfState_SyncedWithRemote(t *testing.T) {
 func TestSelfState_BehindRemote(t *testing.T) {
 	root := t.TempDir()
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 
@@ -588,7 +588,7 @@ func TestSelfState_BehindRemote(t *testing.T) {
 func TestSelfState_NoUpstream(t *testing.T) {
 	root := t.TempDir()
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 
@@ -623,7 +623,7 @@ func TestSelfState_NoUpstream(t *testing.T) {
 func TestSelfState_NoAgentMemoryDir(t *testing.T) {
 	root := t.TempDir()
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 
@@ -667,7 +667,7 @@ func TestSelfState_MissingToolBinary(t *testing.T) {
 	root := t.TempDir()
 	// Only create 3 of 4 tools — trinity missing.
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 
 	state, errs := collectSelfState(root, stubFetchers())
@@ -707,7 +707,7 @@ func TestSelfState_MalformedPreviousSnapshot(t *testing.T) {
 	}
 
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 
@@ -735,7 +735,7 @@ func TestSelfState_MalformedPreviousSnapshot(t *testing.T) {
 func TestSelfState_GhNotAvailable(t *testing.T) {
 	root := t.TempDir()
 	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morpheus", "1.7.2-dev")
+	writeTool(t, root, "morp", "1.7.2-dev")
 	writeTool(t, root, "oracle", "1.7.2-dev")
 	writeTool(t, root, "trinity", "1.7.2-dev")
 

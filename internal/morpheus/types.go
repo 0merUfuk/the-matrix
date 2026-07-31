@@ -1,4 +1,4 @@
-// Package morpheus implements the morpheus CLI commands: init, finalize, doctor, status, and report.
+// Package morpheus implements the morp CLI commands: init, finalize, doctor, status, and report.
 package morpheus
 
 // ProjectContext is the central data structure — produced by wizards, consumed by all templates and generators.

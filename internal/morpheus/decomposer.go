@@ -145,7 +145,7 @@ func BuildSkeletonTodo(ctx *ProjectContext) string {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("# Tasks: %s\n\n", ctx.ServiceNamePascal))
-	sb.WriteString("> **Note**: Generated from skeleton template. Claude was unavailable. Consider re-running morpheus init or manually expanding these tasks.\n\n")
+	sb.WriteString("> **Note**: Generated from skeleton template. Claude was unavailable. Consider re-running morp init or manually expanding these tasks.\n\n")
 
 	sb.WriteString("## Phase 1: Foundation\n\n")
 	if ctx.IsGo {

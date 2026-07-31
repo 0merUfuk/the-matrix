@@ -1,29 +1,29 @@
-.PHONY: build build-all clean test test-race lint vet fmt fmt-check check tidy neo morpheus oracle trinity release
+.PHONY: build build-all clean test test-race lint vet fmt fmt-check check tidy neo morp oracle trinity release
 
 # Build output directory
 BIN_DIR := bin
 
 # Version injection via ldflags
 NEO_VERSION := 1.7.2-dev
-MORPHEUS_VERSION := 1.7.2-dev
+MORP_VERSION := 1.7.2-dev
 ORACLE_VERSION := 1.7.2-dev
 TRINITY_VERSION := 1.7.2-dev
 
 LDFLAGS_NEO := -ldflags "-X main.version=$(NEO_VERSION)"
-LDFLAGS_MORPHEUS := -ldflags "-X main.version=$(MORPHEUS_VERSION)"
+LDFLAGS_MORP := -ldflags "-X main.version=$(MORP_VERSION)"
 LDFLAGS_ORACLE := -ldflags "-X main.version=$(ORACLE_VERSION)"
 LDFLAGS_TRINITY := -ldflags "-X main.version=$(TRINITY_VERSION)"
 
 ## build: Build all 4 binaries
 build: build-all
 
-build-all: neo morpheus oracle trinity
+build-all: neo morp oracle trinity
 
 neo:
 	go build $(LDFLAGS_NEO) -o $(BIN_DIR)/neo ./cmd/neo
 
-morpheus:
-	go build $(LDFLAGS_MORPHEUS) -o $(BIN_DIR)/morpheus ./cmd/morpheus
+morp:
+	go build $(LDFLAGS_MORP) -o $(BIN_DIR)/morp ./cmd/morp
 
 oracle:
 	go build $(LDFLAGS_ORACLE) -o $(BIN_DIR)/oracle ./cmd/oracle

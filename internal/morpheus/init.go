@@ -13,7 +13,7 @@ import (
 	"github.com/0merUfuk/the-matrix/internal/wizard"
 )
 
-// InitOpts configures the morpheus init command.
+// InitOpts configures the morp init command.
 type InitOpts struct {
 	DryRun      bool
 	Force       bool
@@ -24,7 +24,7 @@ type InitOpts struct {
 
 // RunInit scaffolds a new service with complete .claude/ + .autonomous/ setup.
 func RunInit(opts InitOpts) {
-	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan("morpheus — autonomous development infrastructure generator")))
+	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan("morp — autonomous development infrastructure generator")))
 
 	var ctx ProjectContext
 	var err error
@@ -33,7 +33,7 @@ func RunInit(opts InitOpts) {
 		// Context-driven flow: load .neo.json → skip entry wizard → run delta wizard.
 		// We run the delta wizard (remaining questions neo does not collect: ports,
 		// entities, auth, etc.) rather than skipping all interaction. This is by design:
-		// .neo.json does not capture all ProjectContext fields morpheus requires.
+		// .neo.json does not capture all ProjectContext fields morp requires.
 		// NEO-06 passes --service-name to override the project name with the actual
 		// service name for each service in the loop.
 		profile, loadErr := LoadContextProfile(opts.ContextPath)
@@ -58,7 +58,7 @@ func RunInit(opts InitOpts) {
 		// previous behavior was to call them anyway, capture the huh "no TTY"
 		// error, print "Aborted.", and exit 0 — silently producing no files
 		// while looking like the wizard was skipped. Detect no-TTY here and
-		// fill in defaults instead so the chain `neo init` → `morpheus init
+		// fill in defaults instead so the chain `neo init` → `morp init
 		// --context` actually scaffolds files end-to-end.
 		if !term.IsTerminal(os.Stdin.Fd()) {
 			ctx = *preCtx
@@ -86,7 +86,7 @@ func RunInit(opts InitOpts) {
 
 		// Post-v1 redirect
 		if mode == "post-v1" {
-			cli.PrintDim("Post-v1 mode: run morpheus finalize from your service directory after the loop completes.")
+			cli.PrintDim("Post-v1 mode: run morp finalize from your service directory after the loop completes.")
 			fmt.Println()
 			return
 		}
@@ -190,7 +190,7 @@ func printInitSummary(ctx *ProjectContext, outputDir string, fileCount int) {
 		rel = outputDir
 	}
 
-	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Green("✓ morpheus init complete")))
+	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Green("✓ morp init complete")))
 	fmt.Printf("  %s\n", cli.Bold(fmt.Sprintf("Service:  %s (%s)", ctx.ServiceName, ctx.Tech)))
 	fmt.Printf("  %s\n", cli.Bold(fmt.Sprintf("Location: %s/", rel)))
 	fmt.Printf("  %s\n\n", cli.Bold(fmt.Sprintf("Files:    %d generated", fileCount)))
@@ -198,7 +198,7 @@ func printInitSummary(ctx *ProjectContext, outputDir string, fileCount int) {
 	fmt.Printf("  %s\n\n", cli.Cyan("Next steps:"))
 	cli.PrintWhite(fmt.Sprintf("cd %s", rel))
 	cli.PrintWhite("cat tasks/todo.md               # Review the task list")
-	cli.PrintWhite("morpheus doctor                  # Validate before running loop")
+	cli.PrintWhite("morp doctor                  # Validate before running loop")
 	cli.PrintWhite("bash .autonomous/loop.sh         # Start the autonomous dev loop")
 	fmt.Println()
 

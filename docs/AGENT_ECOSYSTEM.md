@@ -8,7 +8,7 @@
 # Agent Ecosystem Handbook
 
 > **Scope note (v2.1):** This handbook documents the **full maintainer ecosystem**. The
-> public binaries (`neo`, `morpheus`) ship a **subset** of these agents and skills —
+> public binaries (`neo`, `morp`) ship a **subset** of these agents and skills —
 > the rest live in the maintainer's private root `.claude/` directory and are not
 > present in fresh public clones or in the embedded templates.
 >
@@ -18,7 +18,7 @@
 > | **Skills** | audit, commit, continue, dep-audit, doublecheck, fix, issue, owasp-review, secret-scan, security-scan (10) | + release, provision, strategy-weekly, strategy-monthly, session-learn (5) |
 >
 > Sections marked **[private]** below describe agents/skills that are not shipped in
-> the public binaries. A fresh `neo init` or `morpheus init` will not produce them.
+> the public binaries. A fresh `neo init` or `morp init` will not produce them.
 
 This handbook explains the-matrix's autonomous agent ecosystem: 10 specialized agents and 15 skills that together enable coordinated, multi-agent development workflows for the Go monorepo.
 
@@ -369,7 +369,7 @@ maxTurns: 60
 **Model**: sonnet
 **Purpose**: On-demand security vulnerability auditor. Checks code against OWASP Top 10:2025 and ASI01–ASI10 (Agentic Security Intelligence). Read-only — cannot modify any files.
 
-**When to use**: After developer + tester + reviewer pass, whenever changes touch authentication, file I/O, subprocess execution, dependency updates, or agent/CLI code. Also invoked on demand via `/owasp-review` and active in all morpheus loop paths since Phase 3a (PR #47).
+**When to use**: After developer + tester + reviewer pass, whenever changes touch authentication, file I/O, subprocess execution, dependency updates, or agent/CLI code. Also invoked on demand via `/owasp-review` and active in all morp loop paths since Phase 3a (PR #47).
 
 **Invocation**:
 ```bash
@@ -579,7 +579,7 @@ The ecosystem has 15 skills (10 public + 5 private) organized into four groups.
 
 ```bash
 /audit               # audit all 4 tools
-/audit morpheus      # audit morpheus only
+/audit morp         # audit morp only
 ```
 
 **What it does**: Launches 4 parallel Explore subagents that verify every documented claim against ground truth (git, code, filesystem):
@@ -602,7 +602,7 @@ The ecosystem has 15 skills (10 public + 5 private) organized into four groups.
 
 ```bash
 /doublecheck              # verify recent implementation
-/doublecheck morpheus     # verify specific tool
+/doublecheck morp         # verify specific tool
 /doublecheck plan oracle  # attack a plan before implementation
 ```
 
@@ -658,7 +658,7 @@ The ecosystem has 15 skills (10 public + 5 private) organized into four groups.
 /commit session    # treat all changes as one coherent session commit
 ```
 
-**What it does**: Analyzes `git status` + `git diff`, groups changes by logical intent, drafts a conventional commit message per group, and previews the full commit plan before executing. Never commits without approval. Enforces conventional commit format (`type(scope): description`) with scopes matching the monorepo (`neo`, `morpheus`, `oracle`, `trinity`, `cli`, `tmpl`, etc.).
+**What it does**: Analyzes `git status` + `git diff`, groups changes by logical intent, drafts a conventional commit message per group, and previews the full commit plan before executing. Never commits without approval. Enforces conventional commit format (`type(scope): description`) with scopes matching the monorepo (`neo`, `morp`, `oracle`, `trinity`, `cli`, `tmpl`, etc.).
 
 **Key constraints**: Stages files by name (never `git add .`), never amends previous commits, never bypasses hooks, never pushes to remote unless explicitly asked.
 
@@ -679,7 +679,7 @@ The ecosystem has 15 skills (10 public + 5 private) organized into four groups.
 
 ### Security Suite
 
-Four security skills. All shipped in v1.5.0 (Phase 3b/3c, PR #50). They deploy as templates to morpheus/neo output and run on the-matrix itself.
+Four security skills. All shipped in v1.5.0 (Phase 3b/3c, PR #50). They deploy as templates to morp/neo output and run on the-matrix itself.
 
 #### /owasp-review
 
@@ -863,7 +863,7 @@ claude --agent reviewer
 
 # Run an on-demand security audit
 claude --agent security-reviewer
-# "Audit cmd/morpheus/main.go subprocess invocations"
+# "Audit cmd/morp/main.go subprocess invocations"
 
 # Refresh the .claude/ ecosystem after a strategy shift
 claude --agent architect

@@ -32,4 +32,4 @@ jobs:
         run: go test ./... -race -count=1
 
       - name: Build
-        run: go build -o /dev/null ./cmd/neo ./cmd/morpheus ./cmd/oracle ./cmd/trinity
+        run: go build -o /dev/null ./cmd/neo ./cmd/morp ./cmd/oracle ./cmd/trinity

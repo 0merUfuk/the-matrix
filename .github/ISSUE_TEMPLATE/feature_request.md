@@ -7,7 +7,7 @@ assignees: ''
 ---
 
 **Which tool?**
-neo / morpheus / oracle / trinity / cross-tool
+neo / morp / oracle / trinity / cross-tool
 
 **What problem does this solve?**
 <!-- Describe the use case. What can't you do today that you want to do? -->
