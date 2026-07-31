@@ -100,7 +100,7 @@ Step 6: neo detects and guides
 the-matrix/
 ├── cmd/               # CLI entrypoints (one per tool)
 │   ├── neo/
-│   ├── morpheus/
+│   ├── morp/          # morp CLI entrypoint (calls internal/morpheus)
 │   ├── oracle/
 │   └── trinity/
 ├── internal/          # Shared packages + per-tool implementations
