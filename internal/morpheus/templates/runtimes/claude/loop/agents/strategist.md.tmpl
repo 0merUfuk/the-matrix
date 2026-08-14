@@ -1,0 +1,13 @@
+---
+name: strategist
+description: >
+  Product strategist for {{ .ProjectName }}. Use for research, competitive analysis,
+  feature design, and technical decision-making. Read-only — cannot modify files.
+tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__MCP_DOCKER__fetch, mcp__MCP_DOCKER__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__plugin_github_github__search_repositories, mcp__plugin_github_github__search_code, mcp__plugin_github_github__list_releases
+disallowedTools: Write, Edit, NotebookEdit
+model: opus
+memory: project
+maxTurns: 60
+permissionMode: bypassPermissions
+---
+{{ template "shared/prompts/loop/strategist.md" . -}}

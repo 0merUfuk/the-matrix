@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
 )
 
 // createFile is a test helper that creates a file with the given content and permissions.
@@ -41,7 +42,7 @@ func createCoreFiles(t *testing.T, dir string) {
 // settings.json gets valid JSON with permissions.allow.
 func createInitOnlyFiles(t *testing.T, dir string) {
 	t.Helper()
-	for _, f := range INIT_ONLY_FILES {
+	for _, f := range initOnlyFilesForRuntime(agentruntime.Registry.Get("claude")) {
 		perm := os.FileMode(0644)
 		if EXEC_FILES[f] {
 			perm = 0755
@@ -55,6 +56,7 @@ func createInitOnlyFiles(t *testing.T, dir string) {
 }
 
 func TestCheckDoctor(t *testing.T) {
+	claudeInitOnlyFiles := initOnlyFilesForRuntime(agentruntime.Registry.Get("claude"))
 	tests := []struct {
 		name        string
 		setup       func(t *testing.T, dir string)
@@ -78,7 +80,7 @@ func TestCheckDoctor(t *testing.T) {
 				// Add tech detection rule so we don't get a tech detection warn
 				createFile(t, dir, ".claude/rules/go-service.md", "go rules", 0644)
 			},
-			wantPass: len(CORE_FILES) + len(INIT_ONLY_FILES),
+			wantPass: len(CORE_FILES) + len(claudeInitOnlyFiles),
 			wantFail: 0,
 			wantWarn: 0,
 		},
@@ -120,7 +122,7 @@ func TestCheckDoctor(t *testing.T) {
 				}
 				createFile(t, dir, ".claude/rules/go-service.md", "go rules", 0644)
 			},
-			wantPass: len(CORE_FILES) + len(INIT_ONLY_FILES) - 1,
+			wantPass: len(CORE_FILES) + len(claudeInitOnlyFiles) - 1,
 			wantFail: 1,
 			wantWarn: 0,
 		},
@@ -145,7 +147,7 @@ func TestCheckDoctor(t *testing.T) {
 				createFile(t, dir, ".claude/settings.json", "not json {{{", 0644)
 				createFile(t, dir, ".claude/rules/go-service.md", "go rules", 0644)
 			},
-			wantPass: len(CORE_FILES) + len(INIT_ONLY_FILES) - 1,
+			wantPass: len(CORE_FILES) + len(claudeInitOnlyFiles) - 1,
 			wantFail: 1, // invalid JSON
 			wantWarn: 0,
 		},
@@ -170,7 +172,7 @@ func TestCheckDoctor(t *testing.T) {
 				createFile(t, dir, ".claude/settings.json", `{"other": "value"}`, 0644)
 				createFile(t, dir, ".claude/rules/go-service.md", "go rules", 0644)
 			},
-			wantPass: len(CORE_FILES) + len(INIT_ONLY_FILES) - 1,
+			wantPass: len(CORE_FILES) + len(claudeInitOnlyFiles) - 1,
 			wantFail: 0,
 			wantWarn: 1, // missing permissions key
 		},
@@ -225,7 +227,7 @@ func TestCheckDoctor(t *testing.T) {
 			// SERVICE_CONTEXT.md: fail (missing)
 			// tech detection: warn
 			// pass: core(8) + init(8) - loop.sh(1) - CLAUDE.md(1) - SERVICE_CONTEXT.md(1) = 13
-			wantPass: len(CORE_FILES) + len(INIT_ONLY_FILES) - 3,
+			wantPass: len(CORE_FILES) + len(claudeInitOnlyFiles) - 3,
 			wantFail: 2,
 			wantWarn: 2,
 		},
@@ -238,7 +240,7 @@ func TestCheckDoctor(t *testing.T) {
 				createFile(t, dir, ".claude/settings.json", `{"permissions": {"deny": []}}`, 0644)
 				createFile(t, dir, ".claude/rules/go-service.md", "go rules", 0644)
 			},
-			wantPass: len(CORE_FILES) + len(INIT_ONLY_FILES) - 1,
+			wantPass: len(CORE_FILES) + len(claudeInitOnlyFiles) - 1,
 			wantFail: 1, // missing permissions.allow array
 			wantWarn: 0,
 		},
@@ -276,6 +278,35 @@ func TestCheckDoctor(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestCheckDoctorCodexScaffold(t *testing.T) {
+	dir := t.TempDir()
+	createCoreFiles(t, dir)
+	for _, f := range INIT_ONLY_FILES {
+		perm := os.FileMode(0644)
+		if EXEC_FILES[f] {
+			perm = 0755
+		}
+		createFile(t, dir, f, "valid content", perm)
+	}
+	createFile(t, dir, "AGENTS.md", "# Codex project", 0644)
+	createFile(t, dir, ".matrix.yaml", "runtime: codex\n", 0644)
+
+	result := CheckDoctor(dir)
+	if result.NotAService {
+		t.Fatal("Codex scaffold reported as not a service")
+	}
+	if result.Fail != 0 || result.Warn != 0 {
+		for _, message := range result.Messages {
+			t.Logf("%v: %s -> %s", message.Status, message.Label, message.Detail)
+		}
+		t.Fatalf("Codex doctor result: %d failures, %d warnings", result.Fail, result.Warn)
+	}
+	wantPass := len(CORE_FILES) + len(initOnlyFilesForRuntime(agentruntime.Registry.Get("codex")))
+	if result.Pass != wantPass {
+		t.Fatalf("Pass = %d, want %d", result.Pass, wantPass)
 	}
 }
 

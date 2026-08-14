@@ -33,7 +33,30 @@ func generateManifestFiles(manifest []ManifestEntry, ctx any) ([]string, error) 
 				return nil, fmt.Errorf("reading template %s: %w", entry.TemplatePath, err)
 			}
 
-			rendered, err := tmpl.Render(entry.TemplatePath, string(data), ctx)
+			var rendered string
+			partialPaths := append([]string(nil), entry.PartialPaths...)
+			if entry.PartialPath != "" {
+				partialPaths = append(partialPaths, entry.PartialPath)
+			}
+			if len(partialPaths) == 0 {
+				rendered, err = tmpl.Render(entry.TemplatePath, string(data), ctx)
+			} else {
+				partials := make(map[string]string, len(partialPaths))
+				for _, partialPath := range partialPaths {
+					partial, readErr := morpheusFS.ReadFile("templates/" + partialPath)
+					if readErr != nil {
+						return nil, fmt.Errorf("reading template partial %s: %w", partialPath, readErr)
+					}
+					partialName := strings.TrimSuffix(partialPath, ".tmpl")
+					partials[partialName] = string(partial)
+				}
+				rendered, err = tmpl.RenderWithPartials(
+					entry.TemplatePath,
+					string(data),
+					partials,
+					ctx,
+				)
+			}
 			if err != nil {
 				return nil, fmt.Errorf("template render failed for %s: %w", entry.TemplatePath, err)
 			}

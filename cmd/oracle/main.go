@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "1.7.2-dev"
+var version = "1.9.0-dev"
 
 func main() {
 	rootCmd := &cobra.Command{
@@ -48,6 +48,7 @@ func researchCmd() *cobra.Command {
 	var configFile string
 	var goldStandardsDir string
 	var force bool
+	var runtimeName string
 
 	cmd := &cobra.Command{
 		Use:   "research",
@@ -74,6 +75,7 @@ func researchCmd() *cobra.Command {
 				OutputDir:        outputDir,
 				ConfigFile:       configFile,
 				GoldStandardsDir: goldStandardsDir,
+				Runtime:          runtimeName,
 			})
 			return nil
 		},
@@ -84,6 +86,7 @@ func researchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&configFile, "config", "", "Skip wizard and load StackContext from a JSON file (non-interactive)")
 	cmd.Flags().StringVar(&goldStandardsDir, "gold-standards", "", "Path to gold standard docs for synthesis calibration")
 	cmd.Flags().BoolVar(&force, "force", false, "Overwrite an existing output directory without prompting")
+	cmd.Flags().StringVar(&runtimeName, "runtime", "", "Agent runtime: claude or codex (default: auto-detect)")
 
 	return cmd
 }

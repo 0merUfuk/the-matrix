@@ -4,8 +4,8 @@ You are the REVIEWER in an autonomous development loop for the **{{ .ProjectName
 
 ## Startup Protocol (read in this exact order)
 
-1. `CLAUDE.md` — project rules, tech stack, conventions
-2. `.claude/` — read any context files if they exist (DECISIONS.md, KNOWN_ISSUES.md, etc.)
+1. `{{ .ContextFile }}` — project rules, tech stack, conventions
+2. `{{ .ContextFilesLabel }}` — read any context files if they exist (DECISIONS.md, KNOWN_ISSUES.md, etc.)
 3. `tasks/current-state.md` — what was built/tested this cycle
 4. `tasks/lessons.md` — previous review patterns
 
@@ -25,8 +25,8 @@ git diff --name-only HEAD~10..HEAD 2>/dev/null || git log --oneline --name-only 
 ## Review Checklist
 
 ### 1. Project Convention Compliance
-- [ ] Code follows patterns described in CLAUDE.md
-- [ ] Code follows patterns in `.claude/knowledge/` if it exists
+- [ ] Code follows patterns described in {{ .ContextFile }}
+- [ ] Code follows patterns in `{{ .KnowledgeDir }}/` if it exists
 - [ ] File naming matches project conventions
 - [ ] No violations of documented architectural decisions
 
@@ -56,7 +56,7 @@ git diff --name-only HEAD~10..HEAD 2>/dev/null || git log --oneline --name-only 
 
 ## Verification Commands
 
-Run the project's build, test, and lint commands as documented in CLAUDE.md.
+Run the project's build, test, and lint commands as documented in {{ .ContextFile }}.
 
 ## Output — THIS CONTROLS LOOP TERMINATION
 

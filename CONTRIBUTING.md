@@ -45,7 +45,7 @@ docs(README): update agent roster count
 chore(deps): bump cobra to v1.9.0
 ```
 
-Scope: `neo`, `morp`, `oracle`, `trinity`, `cli`, `config`, `tmpl`, `wizard`, `docs`, `deps`, or `ci`.
+Scope: `neo`, `morp`, `oracle`, `trinity`, `runtime`, `subprocess`, `matrixcfg`, `cli`, `config`, `tmpl`, `wizard`, `docs`, `deps`, or `ci`.
 
 ## Project Structure
 
@@ -56,17 +56,22 @@ internal/      # Shared packages + per-tool implementations
   config/      # JSON/file I/O
   tmpl/        # Template engine (text/template + 17 helpers)
   wizard/      # Interactive prompts (huh v2)
-  subprocess/  # Claude subprocess wrapper
+  runtime/     # ARAL interface, registry, detection, Claude/Codex adapters
+  subprocess/  # Runtime-neutral invocation + legacy Claude wrapper
   staleness/   # Document age calculation
-  matrixcfg/   # .matrix.yaml config schema
-  neo/         # neo implementation + 23 templates
-  morpheus/    # morp CLI implementation (internal package: morpheus) + 93 templates
-  oracle/      # oracle implementation + export formats
+  matrixcfg/   # .matrix.yaml schema and runtime persistence
+  neo/         # neo implementation + embedded runtime templates
+  morpheus/    # morp implementation + shared/runtime template layers
+  oracle/      # oracle implementation + export/runtime templates
   registry/    # knowledge registry (pack catalog)
   trinity/     # trinity implementation
 ```
 
-All templates are embedded via `go:embed` — no external file dependencies at runtime. The CLIs generate `.claude/` directories in target projects, but this repo's own root `.claude/` directory is private/ignored maintainer state and is absent from fresh public clones.
+All templates are embedded via `go:embed` — no external file dependencies at runtime. Runtime-independent content belongs under `templates/shared/`; CLI wrappers, settings, and shell invocation belong under `templates/runtimes/<name>/`. Claude target projects generate `.claude/` integration, while Codex projects generate `AGENTS.md` and share `.claude/knowledge/`. This repo's own root `.claude/` directory is private/ignored maintainer state and is absent from fresh public clones.
+
+## Runtime Changes
+
+Runtime adapters implement `internal/runtime.Runtime`, register in `init()`, and are imported through `internal/runtime/builtin`. Preserve the no-flag Claude compatibility path. Changes to selection, generators, templates, subprocess invocation, doctor, or health checks should cover explicit Claude, explicit Codex, automatic detection, and generated fixture content. Keep runtime-specific context paths out of templates rendered for another runtime.
 
 ## Architecture Decisions
 
@@ -88,7 +93,7 @@ Use `ARCHITECTURE.md`, issues, and pull request discussion for public design con
 ## Pull Request Checklist
 
 - [ ] `make vet` passes
-- [ ] `make test` passes (all 15 test packages green, 0 failures)
+- [ ] `make test` passes (all packages green, 0 failures)
 - [ ] `make build` passes (all 4 binaries)
 - [ ] New code has tests
 - [ ] Commit messages follow Conventional Commits

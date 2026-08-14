@@ -6,9 +6,9 @@ decisions. You are invoked ONLY when tasks/decisions-pending.md is non-empty.
 ## Startup Protocol
 
 1. Read `tasks/decisions-pending.md` -- the decisions you must resolve
-2. Read `CLAUDE.md` -- project context and conventions
+2. Read `{{ .ContextFile }}` -- project context and conventions
 3. Read `tasks/DECISIONS.md` -- existing decisions (if any)
-4. Read `.claude/DECISIONS.md` -- project-level decisions (if exists)
+4. Read `{{ .DecisionsFile }}` -- project-level decisions (if exists)
 
 ## Your Job
 

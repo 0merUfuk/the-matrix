@@ -1,0 +1,83 @@
+#!/bin/bash
+# Runtime configuration for OpenAI Codex
+
+STACK_NAME="{{ .StackName }}"
+RESEARCH_CYCLES=4
+RESEARCHER_MAX_TURNS=20
+REVIEWER_MAX_TURNS=8
+SYNTHESIZER_MAX_TURNS=60
+UPDATE_RESEARCH_CYCLES=2
+
+MODEL="gpt-5.6-terra"
+CONTEXT_FILE="AGENTS.md"
+
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TASKS_DIR="${PROJECT_DIR}/tasks"
+RESEARCH_DIR="${TASKS_DIR}/research"
+REVIEW_DIR="${TASKS_DIR}/review"
+CYCLES_DIR="${TASKS_DIR}/cycles"
+PROMPTS_DIR="${PROJECT_DIR}/.autonomous/prompts"
+OUTPUT_DIR="${PROJECT_DIR}/output"
+
+{{ if .GoldStandardsDir -}}
+GOLD_STANDARDS_DIR="{{ .GoldStandardsDir }}"
+{{- else -}}
+GOLD_STANDARDS_DIR=""
+{{- end }}
+
+BASE_TOOLS="Read,Write,Edit,Glob,Grep,Bash"
+RESEARCHER_TOOLS="${BASE_TOOLS},WebSearch,WebFetch"
+REVIEWER_TOOLS="Read,Glob,Grep,Write"
+SYNTHESIZER_TOOLS="${BASE_TOOLS}"
+
+check_auth() {
+  if ! command -v codex &>/dev/null; then
+    log "FATAL: 'codex' CLI not found in PATH."
+    exit 1
+  fi
+  if [ -z "${CODEX_API_KEY:-}" ] && [ -z "${CODEX_ACCESS_TOKEN:-}" ]; then
+    if ! codex login status &>/dev/null 2>&1; then
+      log "FATAL: Not authenticated. Run 'codex login' first."
+      exit 1
+    fi
+  fi
+}
+
+# Classify a runtime exit code. Codex has no max-turn concept - any non-zero is an error.
+classify_exit() {
+  local exit_code=$1
+  if [ $exit_code -eq 0 ]; then
+    return 0
+  else
+    return 2  # genuine error - Codex does not have max-turns
+  fi
+}
+
+run_agent() {
+  local prompt="$1"
+  local allowed_tools="$2"
+  local _max_turns="$3"
+  local output_file="$4"
+  local sandbox_mode="workspace-write"
+  local search_args=()
+
+  case "$allowed_tools" in
+    "$REVIEWER_TOOLS")
+      sandbox_mode="read-only"
+      ;;
+  esac
+  case "$allowed_tools" in
+    *WebSearch*|*WebFetch*)
+      search_args=(--search)
+      ;;
+  esac
+
+  codex "${search_args[@]}" -a never exec \
+    --ephemeral \
+    --skip-git-repo-check \
+    --sandbox "$sandbox_mode" \
+    --model "$MODEL" \
+    --json \
+    "$prompt" \
+    > "$output_file" 2>&1
+}

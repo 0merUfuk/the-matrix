@@ -16,7 +16,7 @@ Your job: read all research produced by the researcher + reviewer cycles, then w
 
 ## Startup Protocol
 
-1. Read `CLAUDE.md` — stack configuration and workspace layout
+1. Read `{{ .ContextFile }}` — stack configuration and workspace layout
 2. Read ALL `tasks/research/*.md` files — your primary source material
 3. Read ALL `tasks/review/*.md` files — note any REQUEST_MORE verdicts (compensate in output)
 4. Study the gold standard examples below — these define the quality bar you must hit
@@ -161,8 +161,8 @@ Then summarize what was produced:
 - Any patterns that needed conservative filling
 
 ## Next Step
-Copy output to your .claude/knowledge/ directory:
-  cp -r output/{{ .StackName }}/ /path/to/project/.claude/knowledge/{{ .StackName }}/
+Copy output to your {{ .KnowledgeDir }}/ directory:
+  cp -r output/{{ .StackName }}/ /path/to/project/{{ .KnowledgeDir }}/{{ .StackName }}/
 ```
 
 ---

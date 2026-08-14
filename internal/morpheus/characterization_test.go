@@ -113,7 +113,7 @@ func TestGenerateMorpheusFiles_GoWorkerCharacterization(t *testing.T) {
 	snapshot := snapshotGeneratedFiles(t, dir)
 	assertGeneratedSnapshot(t, snapshot, 43,
 		"14f2ad854b5c74b91b0c83eaf2603bc83de8f634bac9eecc7c63f134196debcc",
-		"6a21431e62a68a8a17af6b35e7ce4aa1912c9adf300e5d92f8f490009b1ed7e3")
+		"9646351ce88713c80cd94be736111dd20549679fef69d7517d99a5629b6b4b6c")
 	assertGeneratedKeyPaths(t, snapshot,
 		".autonomous/loop.sh",
 		".autonomous/config.sh",
@@ -173,7 +173,7 @@ func TestGenerateLoopFiles_Characterization(t *testing.T) {
 	snapshot := snapshotGeneratedFiles(t, dir)
 	assertGeneratedSnapshot(t, snapshot, 25,
 		"94e2591df32ab2cefc3d80acc79c954d9998fd830d3c4a166c8481e59d7855ee",
-		"510157903001971c4dc2ffbc88df0f8df851ad5875a00333630d493e733056fb")
+		"bcca8428a58dfe0815d796c60e0104a061ebaba835e35020aa2b97ba2e293641")
 	assertGeneratedKeyPaths(t, snapshot,
 		".autonomous/loop.sh",
 		".autonomous/config.sh",

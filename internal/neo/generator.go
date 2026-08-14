@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/0merUfuk/the-matrix/internal/config"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
+	_ "github.com/0merUfuk/the-matrix/internal/runtime/builtin"
 	"github.com/0merUfuk/the-matrix/internal/tmpl"
 )
 
@@ -17,27 +19,18 @@ import (
 //go:embed templates/.claude/KNOWN_ISSUES.md.tmpl
 //go:embed templates/.claude/rules/session-protocol.md.tmpl
 //go:embed templates/.claude/rules/stack-services.md.tmpl
-//go:embed templates/.claude/agents/strategist.md.tmpl
-//go:embed templates/.claude/agents/developer.md.tmpl
-//go:embed templates/.claude/agents/manager.md.tmpl
-//go:embed templates/.claude/agents/reviewer.md.tmpl
-//go:embed templates/.claude/agents/tester.md.tmpl
-//go:embed templates/.claude/agents/security-reviewer.md.tmpl
-//go:embed templates/.claude/skills/audit/SKILL.md.tmpl
-//go:embed templates/.claude/skills/commit/SKILL.md.tmpl
-//go:embed templates/.claude/skills/continue/SKILL.md.tmpl
-//go:embed templates/.claude/skills/doublecheck/SKILL.md.tmpl
-//go:embed templates/.claude/skills/fix/SKILL.md.tmpl
-//go:embed templates/.claude/skills/issue/SKILL.md.tmpl
-//go:embed templates/.claude/skills/owasp-review/SKILL.md.tmpl
-//go:embed templates/.claude/skills/secret-scan/SKILL.md.tmpl
-//go:embed templates/.claude/skills/dep-audit/SKILL.md.tmpl
-//go:embed templates/.claude/skills/security-scan/SKILL.md.tmpl
+//go:embed templates/shared/prompts/*.tmpl
+//go:embed templates/shared/prompts/skills/*.tmpl
+//go:embed templates/runtimes/claude/agents/*.tmpl
+//go:embed templates/runtimes/claude/skills/*/*.tmpl
+//go:embed templates/runtimes/codex/*.tmpl
 var neoFS embed.FS
 
 // ManifestEntry describes a file to generate.
 type ManifestEntry struct {
 	TemplatePath string // relative to templates/ in embed.FS
+	PartialPath  string // optional named partial relative to templates/
+	PartialPaths []string
 	OutputPath   string // absolute output path
 	IsStatic     bool   // if true, copy as-is without template rendering
 	Data         any    // template data (defaults to ProjectProfile if nil)
@@ -95,8 +88,26 @@ func languageExtension(language string) string {
 }
 
 // BuildNeoManifest returns the file manifest for a neo-provisioned ecosystem.
-func BuildNeoManifest(profile *ProjectProfile, outputDir string) []ManifestEntry {
+func BuildNeoManifest(profile *ProjectProfile, outputDir string, runtimeNames ...string) []ManifestEntry {
 	o := func(rel string) string { return filepath.Join(outputDir, rel) }
+	rt, _ := resolveRuntime(runtimeNames)
+
+	if rt.Name() == "codex" {
+		return []ManifestEntry{
+			{
+				TemplatePath: "runtimes/codex/AGENTS.md.tmpl",
+				PartialPaths: []string{
+					"shared/prompts/manager.md.tmpl",
+					"shared/prompts/strategist.md.tmpl",
+					"shared/prompts/developer.md.tmpl",
+					"shared/prompts/tester.md.tmpl",
+					"shared/prompts/reviewer.md.tmpl",
+					"shared/prompts/security-reviewer.md.tmpl",
+				},
+				OutputPath: o(rt.ContextFiles().PrimaryContext),
+			},
+		}
+	}
 
 	var manifest []ManifestEntry
 
@@ -158,27 +169,33 @@ func BuildNeoManifest(profile *ProjectProfile, outputDir string) []ManifestEntry
 	// ─── .claude/agents/ ────────────────────────────────────────────────────
 	manifest = append(manifest,
 		ManifestEntry{
-			TemplatePath: ".claude/agents/strategist.md.tmpl",
+			TemplatePath: "runtimes/claude/agents/strategist.md.tmpl",
+			PartialPath:  "shared/prompts/strategist.md.tmpl",
 			OutputPath:   o(".claude/agents/strategist.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/agents/developer.md.tmpl",
+			TemplatePath: "runtimes/claude/agents/developer.md.tmpl",
+			PartialPath:  "shared/prompts/developer.md.tmpl",
 			OutputPath:   o(".claude/agents/developer.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/agents/manager.md.tmpl",
+			TemplatePath: "runtimes/claude/agents/manager.md.tmpl",
+			PartialPath:  "shared/prompts/manager.md.tmpl",
 			OutputPath:   o(".claude/agents/manager.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/agents/reviewer.md.tmpl",
+			TemplatePath: "runtimes/claude/agents/reviewer.md.tmpl",
+			PartialPath:  "shared/prompts/reviewer.md.tmpl",
 			OutputPath:   o(".claude/agents/reviewer.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/agents/tester.md.tmpl",
+			TemplatePath: "runtimes/claude/agents/tester.md.tmpl",
+			PartialPath:  "shared/prompts/tester.md.tmpl",
 			OutputPath:   o(".claude/agents/tester.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/agents/security-reviewer.md.tmpl",
+			TemplatePath: "runtimes/claude/agents/security-reviewer.md.tmpl",
+			PartialPath:  "shared/prompts/security-reviewer.md.tmpl",
 			OutputPath:   o(".claude/agents/security-reviewer.md"),
 		},
 	)
@@ -186,43 +203,53 @@ func BuildNeoManifest(profile *ProjectProfile, outputDir string) []ManifestEntry
 	// ─── .claude/skills/ ───────────────────────────────────────────────────
 	manifest = append(manifest,
 		ManifestEntry{
-			TemplatePath: ".claude/skills/audit/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/audit/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/audit.md.tmpl",
 			OutputPath:   o(".claude/skills/audit/SKILL.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/skills/commit/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/commit/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/commit.md.tmpl",
 			OutputPath:   o(".claude/skills/commit/SKILL.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/skills/continue/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/continue/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/continue.md.tmpl",
 			OutputPath:   o(".claude/skills/continue/SKILL.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/skills/doublecheck/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/doublecheck/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/doublecheck.md.tmpl",
 			OutputPath:   o(".claude/skills/doublecheck/SKILL.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/skills/fix/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/fix/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/fix.md.tmpl",
 			OutputPath:   o(".claude/skills/fix/SKILL.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/skills/issue/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/issue/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/issue.md.tmpl",
 			OutputPath:   o(".claude/skills/issue/SKILL.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/skills/owasp-review/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/owasp-review/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/owasp-review.md.tmpl",
 			OutputPath:   o(".claude/skills/owasp-review/SKILL.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/skills/secret-scan/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/secret-scan/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/secret-scan.md.tmpl",
 			OutputPath:   o(".claude/skills/secret-scan/SKILL.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/skills/dep-audit/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/dep-audit/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/dep-audit.md.tmpl",
 			OutputPath:   o(".claude/skills/dep-audit/SKILL.md"),
 		},
 		ManifestEntry{
-			TemplatePath: ".claude/skills/security-scan/SKILL.md.tmpl",
+			TemplatePath: "runtimes/claude/skills/security-scan/SKILL.md.tmpl",
+			PartialPath:  "shared/prompts/skills/security-scan.md.tmpl",
 			OutputPath:   o(".claude/skills/security-scan/SKILL.md"),
 		},
 	)
@@ -233,8 +260,27 @@ func BuildNeoManifest(profile *ProjectProfile, outputDir string) []ManifestEntry
 // GenerateEcosystem renders all templates, writes files, and produces
 // .neo.json and .trinity.json configuration files. Returns the list of
 // written file paths.
-func GenerateEcosystem(profile *ProjectProfile, outputDir string) ([]string, error) {
-	manifest := BuildNeoManifest(profile, outputDir)
+func GenerateEcosystem(profile *ProjectProfile, outputDir string, runtimeNames ...string) ([]string, error) {
+	rt, _ := resolveRuntime(runtimeNames)
+	manifest := BuildNeoManifest(profile, outputDir, rt.Name())
+	renderProfile := *profile
+	renderProfile.Runtime = rt.Name()
+	spec := rt.ContextFiles()
+	renderProfile.ContextFile = spec.PrimaryContext
+	renderProfile.KnowledgeDir = spec.KnowledgeDir
+	if spec.ContextDir == "" {
+		renderProfile.ServiceContextFile = spec.PrimaryContext
+		renderProfile.DecisionsFile = spec.PrimaryContext
+		renderProfile.KnownIssuesFile = spec.PrimaryContext
+		renderProfile.NextStepsFile = spec.PrimaryContext
+		renderProfile.ContextFilesLabel = spec.PrimaryContext
+	} else {
+		renderProfile.ServiceContextFile = filepath.Join(spec.ContextDir, "SERVICE_CONTEXT.md")
+		renderProfile.DecisionsFile = filepath.Join(spec.ContextDir, "DECISIONS.md")
+		renderProfile.KnownIssuesFile = filepath.Join(spec.ContextDir, "KNOWN_ISSUES.md")
+		renderProfile.NextStepsFile = filepath.Join(spec.ContextDir, "NEXT_STEPS.md")
+		renderProfile.ContextFilesLabel = spec.ContextDir + "/"
+	}
 	var written []string
 
 	for _, entry := range manifest {
@@ -258,10 +304,33 @@ func GenerateEcosystem(profile *ProjectProfile, outputDir string) ([]string, err
 			// Determine template data
 			templateData := entry.Data
 			if templateData == nil {
-				templateData = profile
+				templateData = &renderProfile
 			}
 
-			rendered, err := tmpl.Render(entry.TemplatePath, string(data), templateData)
+			var rendered string
+			partialPaths := append([]string(nil), entry.PartialPaths...)
+			if entry.PartialPath != "" {
+				partialPaths = append(partialPaths, entry.PartialPath)
+			}
+			if len(partialPaths) == 0 {
+				rendered, err = tmpl.Render(entry.TemplatePath, string(data), templateData)
+			} else {
+				partials := make(map[string]string, len(partialPaths))
+				for _, partialPath := range partialPaths {
+					partial, readErr := neoFS.ReadFile("templates/" + partialPath)
+					if readErr != nil {
+						return nil, fmt.Errorf("reading embedded partial %s: %w", partialPath, readErr)
+					}
+					partialName := strings.TrimSuffix(partialPath, ".tmpl")
+					partials[partialName] = string(partial)
+				}
+				rendered, err = tmpl.RenderWithPartials(
+					entry.TemplatePath,
+					string(data),
+					partials,
+					templateData,
+				)
+			}
 			if err != nil {
 				return nil, fmt.Errorf("template render failed for %s: %w", entry.TemplatePath, err)
 			}
@@ -290,6 +359,22 @@ func GenerateEcosystem(profile *ProjectProfile, outputDir string) ([]string, err
 	written = append(written, trinityJsonPath)
 
 	return written, nil
+}
+
+func resolveRuntime(runtimeNames []string) (agentruntime.Runtime, bool) {
+	name := ""
+	if len(runtimeNames) > 0 {
+		name = strings.TrimSpace(runtimeNames[0])
+	}
+	explicit := name != ""
+	if name == "" {
+		name = "claude"
+	}
+	rt := agentruntime.Registry.Get(name)
+	if rt == nil {
+		rt = agentruntime.Registry.Default()
+	}
+	return rt, explicit
 }
 
 // newTrinityConfig creates a .trinity.json config from the project profile.

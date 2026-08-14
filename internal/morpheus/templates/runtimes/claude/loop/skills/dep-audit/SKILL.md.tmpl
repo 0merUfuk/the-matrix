@@ -1,0 +1,6 @@
+---
+description: >
+  Audit {{ .ProjectName }} dependencies for known vulnerabilities.
+  Uses the appropriate scanner for the project's tech stack.
+---
+{{ template "shared/prompts/loop/skills/dep-audit.md" . -}}

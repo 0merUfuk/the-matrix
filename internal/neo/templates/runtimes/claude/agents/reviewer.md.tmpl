@@ -1,0 +1,14 @@
+---
+name: reviewer
+description: >
+  Adversarial code reviewer for {{ .ProjectName }}. Use after implementation and testing
+  to perform a quality gate review. Checks code correctness, documentation accuracy, and
+  convention compliance. Read-only — cannot modify any files.
+tools: Read, Grep, Glob, Bash, mcp__MCP_DOCKER__sequentialthinking, mcp__plugin_github_github__search_code, mcp__context7__resolve-library-id, mcp__context7__query-docs
+disallowedTools: Write, Edit, NotebookEdit
+model: sonnet
+permissionMode: bypassPermissions
+memory: project
+maxTurns: 50
+---
+{{ template "shared/prompts/reviewer.md" . -}}

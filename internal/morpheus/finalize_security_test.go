@@ -38,6 +38,40 @@ func TestFinalizeSecurityDualApprovalProceeds(t *testing.T) {
 	if _, err := os.Stat(marker); err != nil {
 		t.Fatalf("RunFinalize did not run the finalizer after dual approval: %v\n%s", err, output)
 	}
+	for _, path := range []string{
+		".claude/SERVICE_CONTEXT.md",
+		".claude/DECISIONS.md",
+		".claude/KNOWN_ISSUES.md",
+		".claude/NEXT_STEPS.md",
+	} {
+		if !strings.Contains(string(output), path) {
+			t.Errorf("Claude finalize summary does not contain %q:\n%s", path, output)
+		}
+	}
+}
+
+func TestFinalizeCodexSummaryUsesPrimaryContext(t *testing.T) {
+	projectDir, marker := createFinalizeSecurityProject(t, map[string]string{
+		"cycle-01-review.md":   "## Verdict: APPROVED\n",
+		"cycle-01-security.md": "## Verdict: SECURITY_APPROVED\n",
+	})
+	if err := os.WriteFile(filepath.Join(projectDir, ".matrix.yaml"), []byte("runtime: codex\n"), 0644); err != nil {
+		t.Fatalf("write runtime config: %v", err)
+	}
+
+	output, err := runFinalizeSecuritySubprocess(t, projectDir)
+	if err != nil {
+		t.Fatalf("RunFinalize(codex) failed: %v\n%s", err, output)
+	}
+	if _, err := os.Stat(marker); err != nil {
+		t.Fatalf("RunFinalize(codex) did not run the finalizer: %v\n%s", err, output)
+	}
+	if !strings.Contains(string(output), "AGENTS.md") {
+		t.Errorf("Codex finalize summary does not contain AGENTS.md:\n%s", output)
+	}
+	if strings.Contains(string(output), ".claude/") {
+		t.Errorf("Codex finalize summary contains Claude paths:\n%s", output)
+	}
 }
 
 func TestFinalizeSecurityBlockedRefuses(t *testing.T) {

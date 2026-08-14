@@ -8,6 +8,8 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	"github.com/0merUfuk/the-matrix/internal/matrixcfg"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
 	"github.com/0merUfuk/the-matrix/internal/safewrite"
 	"github.com/charmbracelet/x/term"
 )
@@ -19,6 +21,7 @@ type ResearchOpts struct {
 	OutputDir        string
 	ConfigFile       string
 	GoldStandardsDir string // --gold-standards flag value
+	Runtime          string
 }
 
 // RunResearch scaffolds a 3-phase autonomous research workspace.
@@ -72,6 +75,12 @@ func RunResearch(opts ResearchOpts) {
 		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Error resolving output path: %v", err)))
 		os.Exit(1)
 	}
+	rt, err := agentruntime.Select(opts.Runtime, outputDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(err.Error()))
+		os.Exit(1)
+	}
+	runtimeName := rt.Name()
 
 	// Step 3: Show resolved path (skip confirmation in --config mode)
 	// In Go version, config mode skips interactive confirmation
@@ -82,7 +91,7 @@ func RunResearch(opts ResearchOpts) {
 
 	// Step 4: Dry-run — print manifest and exit
 	if opts.DryRun {
-		manifest := BuildDryRunManifest(&ctx, outputDir)
+		manifest := BuildDryRunManifest(&ctx, outputDir, runtimeName)
 		fmt.Printf("  %s\n\n", cli.Bold(cli.Cyan(fmt.Sprintf("── Dry Run: %d files would be generated to %s ──", len(manifest), outputDir))))
 		cwd, _ := os.Getwd()
 		for _, entry := range manifest {
@@ -156,10 +165,16 @@ func RunResearch(opts ResearchOpts) {
 	// Step 6: Generate files
 	fmt.Printf("  Generating research workspace...\n")
 
-	writtenFiles, err := GenerateFiles(&ctx, outputDir)
+	writtenFiles, err := GenerateFiles(&ctx, outputDir, runtimeName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("File generation failed: %v", err)))
 		os.Exit(1)
+	}
+	if opts.Runtime != "" {
+		if err := matrixcfg.WriteRuntime(outputDir, runtimeName); err != nil {
+			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Runtime config failed: %v", err)))
+			os.Exit(1)
+		}
 	}
 
 	fmt.Printf("  %s\n", cli.Green(fmt.Sprintf("✓ Generated %d files", len(writtenFiles))))

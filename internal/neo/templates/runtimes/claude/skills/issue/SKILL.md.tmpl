@@ -1,0 +1,9 @@
+---
+description: >
+  Create GitHub Issues with enforced conventions for {{ .ProjectName }}.
+  Applies consistent title format, label taxonomy, and body template.
+  Use for filing bugs, feature requests, tech debt, test gaps, and deferred findings.
+argument-hint: "[type(scope): title | setup-labels]"
+allowed-tools: Read, Grep, Glob, Bash(gh issue:*), Bash(gh label:*), Bash(git log:*), Bash(git diff:*), Bash(git status:*)
+---
+{{ template "shared/prompts/skills/issue.md" . -}}

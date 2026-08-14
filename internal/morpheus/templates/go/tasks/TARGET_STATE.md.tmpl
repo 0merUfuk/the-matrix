@@ -53,7 +53,7 @@
 │   │   └── api-local.yaml
 {{ if .HasWorker }}│   └── worker/
 │       └── worker-local.yaml
-{{ end }}├── CLAUDE.md
+{{ end }}├── {{ .ContextFile }}
 ├── Makefile
 ├── go.mod
 └── go.sum
@@ -73,7 +73,7 @@
 
 ---
 
-## Naming Conventions
+{{if .Entities}}## Naming Conventions
 
 | Type | Pattern | Example |
 |------|---------|---------|
@@ -83,11 +83,11 @@
 | Handler method | `Create{Entity}`, `Get{Entity}`, `List{Entity}s` | `Create{{ index .Entities 0 }}` |
 | File | `{entity}_{layer}.go` | `{{ lower (index .Entities 0) }}_service.go` |
 | Test file | `{entity}_{layer}_test.go` | `{{ lower (index .Entities 0) }}_service_test.go` |
-| Migration | `NNN_create_{entity}s.sql` | `001_create_{{ lower (index .Entities 0) }}s.sql` |
+| Migration | `NNN_create_{entity}s.sql` | `001_create_{{ lower (index .Entities 0) }}s.sql` |{{end}}
 
 ---
 
-## Entity Design Pattern
+{{if .Entities}}## Entity Design Pattern
 
 Using `{{ index .Entities 0 }}` as example (all entities follow this pattern):
 
@@ -126,7 +126,7 @@ type I{{ index .Entities 0 }}Service interface {
     Update{{ index .Entities 0 }}(ctx context.Context, id uuid.UUID, input Update{{ index .Entities 0 }}Input) (*{{ index .Entities 0 }}, error)
     Delete{{ index .Entities 0 }}(ctx context.Context, id uuid.UUID) error
 }
-```
+```{{end}}
 
 ---
 

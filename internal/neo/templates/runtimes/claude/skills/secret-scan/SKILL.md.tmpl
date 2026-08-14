@@ -1,0 +1,7 @@
+---
+description: >
+  Scan {{ .ProjectName }} codebase and git history for leaked secrets using gitleaks.
+  Detects API keys, tokens, passwords, and platform-specific credential patterns.
+argument-hint: ""
+---
+{{ template "shared/prompts/skills/secret-scan.md" . -}}

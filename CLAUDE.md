@@ -1,13 +1,13 @@
-**Version**: 2.5
+**Version**: 2.6
 **Created**: 2026-03-12
-**Last Updated**: 2026-07-26
+**Last Updated**: 2026-08-10
 **Authors:** Ömer Ufuk
 
 ---
 
 # the-matrix — Autonomous Agent Ecosystem
 
-The-matrix is a CLI-driven, self-refreshing autonomous agent ecosystem for any software project. It contains standalone CLI tools that together provision, scaffold, and maintain complete Claude Code agent ecosystems — from knowledge synthesis to service scaffolding to live ecosystem maintenance.
+The-matrix is a CLI-driven, self-refreshing autonomous agent ecosystem for any software project. Its standalone tools provision, scaffold, and maintain runtime-specific ecosystems for Claude Code and OpenAI Codex, from knowledge synthesis to service scaffolding and live ecosystem maintenance.
 
 > **Public clone note**: this repository no longer ships its own root `.claude/` ecosystem. That directory is local/private maintainer state, ignored by Git, and absent from fresh public clones.
 >
@@ -19,15 +19,15 @@ The-matrix is a CLI-driven, self-refreshing autonomous agent ecosystem for any s
 
 | Tool | Entry Point | Latest Public Release | Role |
 |------|-------------|-----------------------|------|
-|| `neo` | `cmd/neo` | v1.8.0 | Meta-CLI — provisions ecosystems, prints oracle/trinity guidance, invokes morp for multi-repo scaffolds |
-|| `morp` | `cmd/morp` | v1.8.0 | Service scaffolding + autonomous development loops |
-| `oracle` | `cmd/oracle` | v1.8.0 | Researches any tech stack → best-practice knowledge docs |
-| `trinity` | `cmd/trinity` | v1.8.0 | Maintenance runtime — keeps ecosystems alive and fresh |
+| `neo` | `cmd/neo` | v1.9.0 | Meta-CLI — provisions ecosystems, prints oracle/trinity guidance, invokes morp for multi-repo scaffolds |
+| `morp` | `cmd/morp` | v1.9.0 | Service scaffolding + autonomous development loops |
+| `oracle` | `cmd/oracle` | v1.9.0 | Researches any tech stack → best-practice knowledge docs |
+| `trinity` | `cmd/trinity` | v1.9.0 | Maintenance runtime — keeps ecosystems alive and fresh |
 | `sentinel` | *(future)* | — | Ecosystem health monitoring |
 
 > **Note**: All 4 tools are Go binaries in a single repo (`github.com/0merUfuk/the-matrix`). Node.js predecessors have been removed.
 >
-> **Release/version note**: v1.8.0 is the latest public release and marks the clean root commit. `main` continues from that public baseline. GoReleaser injects the tag version into release binaries, while the current command source constants and Makefile defaults remain `1.7.2-dev`; plain source builds use that default unless version ldflags override it.
+> **Release/version note**: v1.9.0 is the latest public release. The `v1.8.0` tag marks the clean root commit; `main` continues from that public baseline. GoReleaser injects the tag version into release binaries, while the current command source constants and Makefile defaults remain `1.9.0-dev`; plain source builds use that default unless version ldflags override it.
 
 ---
 
@@ -46,26 +46,36 @@ the-matrix (ecosystem name)
 │                  only for multi-repo service scaffolds
 ├── trinity      ← independently invoked maintenance: sync, health, refresh
 │
+├── runtime      ← ARAL registry + Claude Code/Codex adapters
+│                  selected by flag, project config, or context-file detection
+│
 └── sentinel     ← future: ecosystem health monitoring
 ```
 
 ### Data Flow
 
-The `.claude/` paths here describe generated target-project ecosystems. They are not files expected to exist at this repository root in a public clone.
+The `.claude/` paths here describe generated target-project knowledge or Claude integration. They are not files expected to exist at this repository root in a public clone.
 
 ```
+--runtime / .matrix.yaml / context-file detection → Claude Code or Codex adapter
 oracle (independent) → synthesizes stack knowledge → .claude/knowledge/
-trinity (independent) → syncs output and prints refresh guidance
-morp (standalone) → scaffolds services and consumes .claude/knowledge/
-neo → provisions/detects, prints oracle/trinity commands, and invokes morp
+trinity (independent) → syncs output and performs runtime-aware health checks
+morp (standalone) → scaffolds services, runtime context, and autonomous loops
+neo → provisions runtime context, prints oracle/trinity commands, and invokes morp
       only for multi-repo service scaffolds
 ```
+
+### Runtime Selection
+
+`neo init`, `morp init`, `morp loop`, and `oracle research` accept `--runtime claude|codex`. An explicit choice is persisted to project-local `.matrix.yaml`/`.matrix.yml`; with no flag, selection uses project config, then `CLAUDE.md`, then `AGENTS.md`, then the Claude compatibility default. Global config is not used for runtime detection.
+
+The runtime contract lives in `internal/runtime/`. Built-in adapters register through `init()` and are imported by `internal/runtime/builtin`. Runtime-independent Go calls use `subprocess.Invoke`; `subprocess.CallClaude` remains a Claude-only compatibility wrapper. Runtime-specific shell config defines `check_auth()`, `run_agent()`, and `run_finalizer()` for shared loop scripts.
 
 ---
 
 ## Agent Ecosystems
 
-Neo provisions 6 core Claude Code agents into generated target projects:
+Neo provisions 6 core role definitions into generated target projects:
 
 | Agent | Role |
 |-------|------|
@@ -76,7 +86,7 @@ Neo provisions 6 core Claude Code agents into generated target projects:
 | `strategist` | Product/technical strategist — researches and designs work |
 | `security-reviewer` | OWASP/security reviewer — read-only security pass |
 
-Their definitions are embedded in the public binaries as templates and written into each generated project's `.claude/agents/` directory. Morpheus also embeds service-loop agents, prompts, skills, and rules for generated service scaffolds.
+Claude ecosystems write these roles to `.claude/agents/` and also provision skills, rules, and settings. Codex ecosystems consolidate role guidance in `AGENTS.md` and intentionally omit separate generated agent and skill files. Both use `.claude/knowledge/` as the shared knowledge location. Morpheus embeds shared prompt bodies plus runtime-specific wrappers and shell configuration.
 
 This repo's maintainer checkout may have extra private workflow agents and continuation context under its ignored root `.claude/` directory. Those files are not part of the public repository; do not assume they exist unless you are explicitly working in that private local checkout.
 
@@ -120,12 +130,13 @@ make build
 make neo morp oracle trinity
 
 # Release (tags + pushes, triggers CI → GoReleaser → Homebrew tap)
-make release VERSION=1.2.0 SUMMARY="knowledge registry and preset mode"
+make release VERSION=X.Y.Z SUMMARY="one-line release summary"
 
 # neo (meta-CLI orchestrator)
-neo init                 # Wizard → provisions .claude/ ecosystem + oracle/trinity config
-neo analyze              # Auto-detect existing codebase → generate .claude/ ecosystem (no wizard)
-neo doctor               # Validate provisioned ecosystem integrity
+neo init --runtime codex # Wizard → provisions AGENTS.md + runtime config
+neo init --runtime claude # Wizard → provisions CLAUDE.md + .claude/ integration
+neo analyze              # Auto-detect existing codebase → generate Claude integration (no runtime flag yet)
+neo doctor               # Detect runtime and validate supported ecosystem files
 neo status               # Ecosystem dashboard — knowledge freshness, tool versions
 neo update               # Staleness check → prints suggested oracle/trinity commands
 neo registry list        # List available packs from the knowledge registry
@@ -134,15 +145,15 @@ neo registry info        # Show detailed pack metadata and topic list
 neo registry pull        # Download and validate pack docs to target directory
 
 # morp (service scaffolding + autonomous loops)
-morp init                # Scaffold a new service (originating project Go/Node.js)
-morp loop                # Add autonomous loop to ANY existing project
+morp init --runtime codex  # Scaffold a service with Codex context
+morp loop --runtime codex  # Add a Codex-driven loop to an existing project
 morp doctor              # Validate scaffolded service before running the loop
 morp status              # Loop progress at a glance
-morp finalize            # Post-loop .claude/ context updater
+morp finalize            # Post-loop project context updater
 morp report              # Autonomous loop analysis
 
 # oracle (knowledge synthesis)
-oracle research          # Wizard-guided knowledge collection for any stack
+oracle research --runtime codex  # Wizard-guided Codex knowledge collection
 oracle status            # Research loop progress at a glance
 oracle inject --from <dir> --to <dir>  # Validate + inject output into .claude/knowledge/
 oracle update --workspace <dir> --knowledge <dir>   # Re-research stale topics only
@@ -175,6 +186,7 @@ trinity self-state --prune            # Enforce retention (keep last 12 snapshot
 - **Session end**: Update tracked docs when public behavior changed; update private maintainer context only if it exists locally
 - **Never commit**: service source code to this repo
 - **Tool work**: all 4 tools live in this repo under `cmd/` and `internal/`
+- **Runtime changes**: preserve the no-flag Claude path, test explicit Claude and Codex generation, and keep shared templates free of hardcoded runtime context paths
 
 ---
 
@@ -251,5 +263,6 @@ trinity self-state --prune            # Enforce retention (keep last 12 snapshot
 | `CONTRIBUTING.md` | Fresh-clone contributor workflow |
 | `go.mod` | Minimum Go version and module dependencies |
 | `Makefile` | Build, test, vet, and release commands |
+| `internal/runtime/` | ARAL interface, registry, detection, selection, and built-in adapters |
 | `.github/workflows/` | Public CI, security, and release automation |
 | Maintainer-local `.claude/` context | Private continuation notes, ADRs, agent state, and action lists; absent from public clones |

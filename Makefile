@@ -4,10 +4,10 @@
 BIN_DIR := bin
 
 # Version injection via ldflags
-NEO_VERSION := 1.7.2-dev
-MORP_VERSION := 1.7.2-dev
-ORACLE_VERSION := 1.7.2-dev
-TRINITY_VERSION := 1.7.2-dev
+NEO_VERSION := 1.9.0-dev
+MORP_VERSION := 1.9.0-dev
+ORACLE_VERSION := 1.9.0-dev
+TRINITY_VERSION := 1.9.0-dev
 
 LDFLAGS_NEO := -ldflags "-X main.version=$(NEO_VERSION)"
 LDFLAGS_MORP := -ldflags "-X main.version=$(MORP_VERSION)"

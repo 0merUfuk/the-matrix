@@ -1,0 +1,27 @@
+{{if .IsNode}}---
+name: manager
+description: >
+  Project manager and orchestrator for {{ .ServiceName }}. Use when a task requires coordinated
+  work across multiple agents — breaking down features, assigning implementation to developer,
+  validation to tester, and quality gates to reviewer. Manages handoffs and ensures deliverables
+  meet quality standards before completion.
+tools: Agent(strategist, developer, tester, reviewer), Read, Edit, Write, Grep, Glob, Bash, Skill, mcp__plugin_github_github__create_branch, mcp__plugin_github_github__create_pull_request, mcp__plugin_github_github__list_issues, mcp__plugin_github_github__add_issue_comment, mcp__plugin_github_github__search_issues
+model: opus
+memory: project
+maxTurns: 100
+permissionMode: bypassPermissions
+---
+{{else}}---
+name: manager
+description: >
+  Project manager and orchestrator for {{ .ServiceName }}. Use when a task requires coordinated
+  work across multiple agents — breaking down features, assigning implementation to developer,
+  validation to tester, and quality gates to reviewer. Manages handoffs and ensures deliverables
+  meet quality standards before completion.
+tools: Agent(strategist, developer, tester, reviewer), Read, Edit, Write, Grep, Glob, Bash, Skill, mcp__plugin_github_github__create_branch, mcp__plugin_github_github__create_pull_request, mcp__plugin_github_github__list_issues, mcp__plugin_github_github__add_issue_comment, mcp__plugin_github_github__search_issues
+model: opus
+memory: project
+maxTurns: 100
+permissionMode: bypassPermissions
+---
+{{end}}{{ template "shared/prompts/manager.md" . -}}

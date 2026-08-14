@@ -10,12 +10,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "1.7.2-dev"
+var version = "1.9.0-dev"
 
 func main() {
 	rootCmd := &cobra.Command{
 		Use:     "trinity",
-		Short:   "Maintenance runtime — keeps Claude Code agent ecosystems alive and fresh",
+		Short:   "Maintenance runtime — keeps agent ecosystems alive and fresh",
 		Version: version,
 	}
 

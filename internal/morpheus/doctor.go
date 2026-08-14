@@ -9,6 +9,8 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
+	_ "github.com/0merUfuk/the-matrix/internal/runtime/builtin"
 )
 
 // CORE_FILES are checked for ALL projects (both `morp init` and `morp loop`).
@@ -28,12 +30,6 @@ var CORE_FILES = []string{
 var INIT_ONLY_FILES = []string{
 	".autonomous/finalizer.sh",
 	".autonomous/prompts/finalizer.md",
-	".claude/settings.json",
-	".claude/SERVICE_CONTEXT.md",
-	".claude/NEXT_STEPS.md",
-	".claude/DECISIONS.md",
-	".claude/KNOWN_ISSUES.md",
-	"CLAUDE.md",
 }
 
 // EXEC_FILES must have the executable bit set.
@@ -81,11 +77,35 @@ func isInitScaffolded(cwd string) bool {
 	return config.FileExists(filepath.Join(cwd, ".autonomous/prompts/finalizer.md"))
 }
 
+func initOnlyFilesForRuntime(rt agentruntime.Runtime) []string {
+	files := append([]string(nil), INIT_ONLY_FILES...)
+	contextSpec := rt.ContextFiles()
+	capabilities := rt.Capabilities()
+	if contextSpec.ContextDir != "" && capabilities.AgentDefinitions {
+		files = append(files,
+			contextSpec.SettingsFile,
+			filepath.Join(contextSpec.ContextDir, "SERVICE_CONTEXT.md"),
+			filepath.Join(contextSpec.ContextDir, "NEXT_STEPS.md"),
+			filepath.Join(contextSpec.ContextDir, "DECISIONS.md"),
+			filepath.Join(contextSpec.ContextDir, "KNOWN_ISSUES.md"),
+		)
+	}
+	if contextSpec.PrimaryContext != "" {
+		files = append(files, contextSpec.PrimaryContext)
+	}
+	return files
+}
+
 // CheckDoctor runs all doctor validations against the given directory and
 // returns a structured result. It does not print output or call os.Exit,
 // making it suitable for testing.
 func CheckDoctor(cwd string) DoctorResult {
 	var result DoctorResult
+	rt := agentruntime.Registry.Get(agentruntime.DetectRuntime(cwd))
+	if rt == nil {
+		rt = agentruntime.Registry.Default()
+	}
+	contextSpec := rt.ContextFiles()
 
 	// Guard: check we're in a morp service
 	if !config.FileExists(filepath.Join(cwd, ".autonomous/loop.sh")) {
@@ -98,7 +118,7 @@ func CheckDoctor(cwd string) DoctorResult {
 	checkFiles := make([]string, len(CORE_FILES))
 	copy(checkFiles, CORE_FILES)
 	if isInitScaffolded(cwd) {
-		checkFiles = append(checkFiles, INIT_ONLY_FILES...)
+		checkFiles = append(checkFiles, initOnlyFilesForRuntime(rt)...)
 	}
 
 	for _, relPath := range checkFiles {
@@ -124,7 +144,7 @@ func CheckDoctor(cwd string) DoctorResult {
 		}
 
 		// Special check: settings.json
-		if relPath == ".claude/settings.json" {
+		if contextSpec.SettingsFile != "" && relPath == contextSpec.SettingsFile {
 			content, err := config.ReadFileString(absPath)
 			if err != nil {
 				result.addWarn(padded, "exists but cannot be read: "+err.Error())
@@ -163,11 +183,13 @@ func CheckDoctor(cwd string) DoctorResult {
 		result.addPass(padded, "OK")
 	}
 
-	// Tech detection
-	hasGoRules := config.FileExists(filepath.Join(cwd, ".claude/rules/go-service.md"))
-	hasNodeRules := config.FileExists(filepath.Join(cwd, ".claude/rules/node-service.md"))
-	if !hasGoRules && !hasNodeRules {
-		result.addWarn(fmt.Sprintf("%-38s", "tech detection"), "neither go-service.md nor node-service.md found")
+	// Tech detection is available only for runtimes with a rules directory.
+	if contextSpec.RulesDir != "" {
+		hasGoRules := config.FileExists(filepath.Join(cwd, contextSpec.RulesDir, "go-service.md"))
+		hasNodeRules := config.FileExists(filepath.Join(cwd, contextSpec.RulesDir, "node-service.md"))
+		if !hasGoRules && !hasNodeRules {
+			result.addWarn(fmt.Sprintf("%-38s", "tech detection"), "neither go-service.md nor node-service.md found")
+		}
 	}
 
 	return result

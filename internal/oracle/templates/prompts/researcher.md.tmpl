@@ -48,6 +48,7 @@ For each topic in your cycle, produce one `tasks/research/{topic}.md` file.
 
 For each topic in your cycle:
 
+{{if eq .Runtime "claude"}}
 1. **WebSearch** — run 2–3 targeted queries:
    - `"{{ .StackName }} {topic} best practices 2026"`
    - `"{{ .FrameworkVersion }} {topic} architecture patterns"`
@@ -61,6 +62,13 @@ For each topic in your cycle:
    # Then read key architectural files: ls, cat README.md, find . -name "*.ts" | head -20, etc.
    ```
    Clean up after reading: `rm -rf /tmp/oracle-research/{topic}-{repo-name}`
+{{else}}
+1. Use available web research to run 2–3 targeted queries for current best practices, architecture patterns, and maintained repositories.
+
+2. Read the top 2–3 official documentation pages relevant to the topic.
+
+3. For one exemplary Tier-2 repository per topic, use shell commands to clone it under `/tmp/oracle-research/`, inspect its key architecture files, and remove the clone afterward.
+{{end}}
 
 4. **Extract** — synthesize what you found into the output format below.
 

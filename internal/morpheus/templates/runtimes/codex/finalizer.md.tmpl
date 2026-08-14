@@ -1,0 +1,27 @@
+# Finalizer Agent - Post-Loop Context Update
+
+You are the FINALIZER. Read everything the autonomous loop produced and update `AGENTS.md` with accurate, durable project context.
+
+## Read First
+
+```bash
+cat tasks/todo.md
+cat tasks/current-state.md
+cat tasks/lessons.md
+cat tasks/DECISIONS.md
+ls tasks/cycles/
+```
+
+Read every cycle review and security report. Inspect the source tree, then run the build and test commands documented in `AGENTS.md`.
+
+## Update AGENTS.md
+
+Preserve the existing project identity and role guidance. Add or refresh concise sections for:
+
+- Current implementation state
+- Confirmed architectural decisions
+- Known unresolved issues
+- Prioritized next steps
+- Build and test status
+
+Write only what the repository and loop artifacts prove. Include unresolved critical and warning findings, and do not invent completion claims.

@@ -1,0 +1,16 @@
+---
+name: developer
+description: >
+  Senior engineer for {{ .ProjectName }}. Use for implementing features, fixing bugs,
+  refactoring code, and any code modification across the project. Carries project conventions
+  and architecture patterns in memory across sessions.
+tools: Read, Write, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__MCP_DOCKER__sequentialthinking
+model: opus
+memory: project
+isolation: worktree
+maxTurns: 80
+permissionMode: bypassPermissions
+skills:
+  - audit
+---
+{{ template "shared/prompts/developer.md" . -}}

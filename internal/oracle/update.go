@@ -16,6 +16,8 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
+	_ "github.com/0merUfuk/the-matrix/internal/runtime/builtin"
 	"github.com/0merUfuk/the-matrix/internal/staleness"
 	"github.com/0merUfuk/the-matrix/internal/validation"
 )
@@ -280,6 +282,13 @@ func scaffoldUpdateWorkspace(originalWorkspace, updateDir string, topics []strin
 		}
 	}
 
+	runtimeName := agentruntime.DetectRuntime(originalWorkspace)
+	rt := agentruntime.Registry.Get(runtimeName)
+	if rt == nil {
+		rt = agentruntime.Registry.Default()
+	}
+	contextFile := rt.ContextFiles().PrimaryContext
+
 	// Copy files from original workspace
 	copyFiles := []struct {
 		src string
@@ -289,7 +298,15 @@ func scaffoldUpdateWorkspace(originalWorkspace, updateDir string, topics []strin
 		{filepath.Join(originalWorkspace, ".autonomous", "prompts", "researcher.md"), filepath.Join(updateDir, ".autonomous", "prompts", "researcher.md")},
 		{filepath.Join(originalWorkspace, ".autonomous", "prompts", "reviewer.md"), filepath.Join(updateDir, ".autonomous", "prompts", "reviewer.md")},
 		{filepath.Join(originalWorkspace, ".autonomous", "prompts", "synthesizer.md"), filepath.Join(updateDir, ".autonomous", "prompts", "synthesizer.md")},
-		{filepath.Join(originalWorkspace, "CLAUDE.md"), filepath.Join(updateDir, "CLAUDE.md")},
+		{filepath.Join(originalWorkspace, contextFile), filepath.Join(updateDir, contextFile)},
+	}
+
+	matrixYAML := filepath.Join(originalWorkspace, ".matrix.yaml")
+	if config.FileExists(matrixYAML) {
+		copyFiles = append(copyFiles, struct {
+			src string
+			dst string
+		}{matrixYAML, filepath.Join(updateDir, ".matrix.yaml")})
 	}
 
 	for _, cf := range copyFiles {

@@ -1,0 +1,9 @@
+---
+description: >
+  Applies safe mechanical fixes from the last /audit report. Corrects context file
+  drift, closes resolved issues, updates stale paths and versions. Never touches
+  application source code or git history.
+argument-hint: "[--dry-run]"
+allowed-tools: Read, Edit, Grep, Glob, Bash(cat:*), Bash(ls:*)
+---
+{{ template "shared/prompts/skills/fix.md" . -}}

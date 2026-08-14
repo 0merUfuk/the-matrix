@@ -3,16 +3,60 @@
 All notable changes to this project will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+## [1.9.0] - 2026-08-11
+
+### Added
+- **runtime**: Agent Runtime Abstraction Layer (ARAL) with a registered `Runtime` interface, Claude Code adapter, and OpenAI Codex adapter
+- **CLI**: `--runtime claude|codex` for `neo init`, `morp init`, `morp loop`, and `oracle research`
+- **config**: project-local `.matrix.yaml`/`.matrix.yml` `runtime:` selection, written for explicit runtime flags and consumed by runtime detection
+- **codex**: first-class Codex CLI provisioning with `AGENTS.md`, sandbox-aware invocation, authentication checks, and JSONL usage parsing in shared loops
+- **morp**: `morp doctor` is now runtime-aware — validates Codex scaffolds correctly (previously Claude-only)
+- `/self-state` skill: produces structured state.v1 JSON snapshots for autonomous self-improvement decisions
+- `trinity self-state` subcommand: deterministic input collector, supports `--json`/`--out`/`--prune` flags
+
+### Changed
+- **templates**: agent and skill content split into shared prompt bodies plus runtime-specific wrappers; Claude and Codex shell configuration now define `run_agent()`, `check_auth()`, `run_finalizer()`, and `classify_exit()` for shared loop/finalizer/oracle scripts
+- **health**: `neo doctor`, `trinity health`, and `morp doctor` detect the selected runtime, validate its primary context file, and skip capabilities not provisioned by that runtime
+- **subprocess**: new runtime-neutral `subprocess.Invoke` with `ModelTier` and `OutputJSON` support; `subprocess.CallClaude` remains as a backward-compatible Claude wrapper
+- **generators**: neo, morp, morp loop, and oracle manifests now select runtime-specific context/config templates while preserving Claude as the no-flag default
+- **shell**: runtime-specific exit-code classification — Claude treats exit 1 as max-turns exhaustion (continue), Codex treats any non-zero as a genuine error (stop and report)
+- **codex**: role-specific sandbox modes (read-only for reviewer/manager/security, workspace-write for developer/tester) and conditional web search
+- **version**: source constants, Makefile defaults, and self-state fixtures advanced to `1.9.0-dev`
+
+### Fixed
+- **morp**: `TARGET_STATE.md.tmpl` no longer panics on zero-entity profiles — naming conventions and code example sections are omitted when no entities are defined
+- **oracle**: `oracle update` now copies the detected runtime's context file (AGENTS.md for Codex, CLAUDE.md for Claude) instead of always copying CLAUDE.md
+- **neo**: auto-detected runtime is now propagated to child services during multi-repo provisioning (previously dropped, defaulting children to Claude)
+- **subprocess**: model selection is no longer silently dropped — `Options.ModelTier` is honored by `Invoke`
+- **config**: `.matrix.yaml` writer preserves existing file permissions instead of widening to 0644
+- **runtime**: `DetectRuntime` resolves configured runtimes through the registry instead of a hardcoded name list
+- **codex**: shared prompts no longer advertise Claude-only capabilities (Agent tool, worktree isolation, mcp__context7, /owasp-review) in generated AGENTS.md
+- **version**: source constants and Makefile defaults updated from stale pre-v1.8 development defaults to `1.9.0-dev` (v1.8.3 drift cleanup)
+- **changelog**: missing v1.8.0 and v1.8.1 entries added; historical `morpheus` command examples updated to `morp`
+
 ## [1.8.2] - 2026-07-31
 
 ### Changed
 - **morp**: renamed the CLI binary/command from `morpheus` to `morp` to avoid collision with the `morpheus` systems-biology tool in Homebrew-core. Internal Go package paths (`internal/morpheus`), import paths, YAML config keys (`morpheus:`), and type/function names remain unchanged.
 
-## [Unreleased]
+## [1.8.1] - 2026-07-29
 
-### Added
-- `/self-state` skill: produces structured state.v1 JSON snapshots for autonomous self-improvement decisions
-- `trinity self-state` subcommand: deterministic input collector, supports `--json`/`--out`/`--prune` flags
+### Fixed
+- **safewrite**: new `internal/safewrite` package — `ResolveOutputPath` rejects empty/root/home paths; `ConfirmOverwrite` provides interactive prompt / `--force` / refuse-noninteractive semantics (MX-011, MX-012)
+- **morp init**: output-directory removal now guarded by `safewrite.ConfirmOverwrite` — interactive confirmation by default, `--force` flag for noninteractive/CI, refuses without TTY unless `--force` (MX-011)
+- **oracle research**: empty `OutputPath` in config mode no longer resolves to cwd; output-directory removal now guarded by `safewrite.ConfirmOverwrite`; `--force` flag added (MX-012)
+- **morp finalize**: now requires dual approval from the same cycle — `hasDualApproval` checks both reviewer `APPROVED` and security `SECURITY_APPROVED` on the latest cycle before allowing finalize (MX-013)
+- **finalizer.sh**: shell template now includes a security-approval grep guard alongside the existing reviewer check (MX-013)
+- **trinity health**: unified agent/skill expectation contract via new `internal/matrixassets` package — Trinity and Neo doctor both reference the same `ExpectedAgents` (6) and `ExpectedSkills` (10), eliminating phantom missing-agent/missing-skill warnings on fresh ecosystems (MX-014)
+
+## [1.8.0] - 2026-07-28
+
+### Notes
+- Clean root commit. Public history rewritten to remove all former-project references. `v1.8.0` tag marks the clean root; `main` continues from that public baseline.
+- All four tools (neo, morp, oracle, trinity) are Go binaries in a single repo (`github.com/0merUfuk/the-matrix`). Node.js predecessors have been removed.
+- This repository no longer ships its own root `.claude/` ecosystem. That directory is local/private maintainer state, ignored by Git, and absent from fresh public clones.
 
 ## [1.7.1] - 2026-04-29
 
@@ -65,7 +109,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer](https
 - **neo**: wizard service loop panicked with index-out-of-range when a stack type was not recognized and `Stacks` remained empty; guarded with `len() > 0` before `Stacks[0]` access (fixes #90)
 - **neo**: `neo init --preset` returned exit code 0 on unknown preset name and OS errors — only `Ctrl+C` (huh.ErrUserAborted) now exits 0; all other errors print a red message to stderr and exit 1
 - **neo**: `filepath.Abs` error was silently discarded when `--path` was provided in non-preset mode; now propagated and reported
-- **morpheus**: `morpheus doctor` refactored for testability — behaviour extracted from `cobra.Command` handler into pure functions; 20 integration tests added
+- **morpheus**: `morp doctor` refactored for testability — behaviour extracted from `cobra.Command` handler into pure functions; 20 integration tests added
 - **morpheus**: 20 additional IsInternal rendering tests for previously uncovered templates
 - **morpheus**: security-reviewer agent allowlist was too broad; scoped Bash tool to specific prefixes; `MAX_TURNS` increased to match actual loop requirements
 - **monorepo**: resolved 3 code issues (hasReviewerApproval check, error handling, agent parity — fixes #38, #40, #80)
@@ -74,7 +118,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer](https
 ## [1.6.0] - 2026-03-23
 
 ### Added
-- `morpheus loop --non-interactive`: skip all interactive prompts for CI/CD and automation pipelines; accepts `--goal`, `--max-cycles`, `--dev-turns`, `--test-turns`, `--review-turns` flags
+- `morp loop --non-interactive`: skip all interactive prompts for CI/CD and automation pipelines; accepts `--goal`, `--max-cycles`, `--dev-turns`, `--test-turns`, `--review-turns` flags
 - **morpheus**: `GoVersion` field added to `ProjectContext`; Dockerfile templates now use `{{.GoVersion}}` — no more hardcoded `golang:1.24` (closes #67)
 - **morpheus**: mandatory "Coverage Gap Detection" step added as Step 1 to all 7 tester agent templates (morpheus go/node/loop + neo) — coverage gaps are now enumerated before any tests are written (closes #68)
 - **claude ecosystem**: two new auto-loaded rules — `security-baseline.md` (6 Go security patterns: path traversal, shell injection, file permissions, secret handling, template injection, crypto/rand) and `ecosystem-conventions.md` (agent/skill/rule convention quick reference, condensed from /provision checklist)
@@ -114,8 +158,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer](https
 - **neo**: `neo analyze` command — reverse oracle: static analysis of existing codebases generates a populated `.claude/` ecosystem in under 2 seconds. Detects language, framework, architecture, testing, CI/CD. Supports Go, Node.js, Python, Flutter, Rust, Ruby (NEO-12)
 - **neo**: `neo registry list/search/info/pull` — knowledge registry client for browsing and downloading pre-researched oracle packs from `0merUfuk/knowledge-registry`; local cache at `~/.the-matrix/registry/` (NEO-10)
 - **neo**: `neo init` checks knowledge registry before running oracle research — instant pack download when a matching pack exists
-- **neo**: `neo init` invokes `morpheus init --context --service-name --output-dir` per service for multi-repo microservice projects (NEO-06)
-- **morpheus**: `morpheus init --context <path>` flag — reads `.neo.json` to pre-populate service name, tech stack, and IsInternal flag (M-22)
+- **neo**: `neo init` invokes `morp init --context --service-name --output-dir` per service for multi-repo microservice projects (NEO-06)
+- **morpheus**: `morp init --context <path>` flag — reads `.neo.json` to pre-populate service name, tech stack, and IsInternal flag (M-22)
 - **oracle**: `oracle research --gold-standards <dir>` flag — pluggable gold standard injection via explicit directory or `~/.the-matrix/gold-standards/<language>/` convention (O-06)
 - **oracle**: `oracle inject` prompts to register injected docs as gold standard for future runs (O-06)
 
@@ -176,7 +220,7 @@ No release was cut at v1.4.0. The version identifier was reserved in the roadmap
 - **claude ecosystem**: `/doublecheck` and `/audit` skills for context file verification and ground-truth auditing
 
 ### Fixed
-- **morpheus**: `morpheus doctor` false positives on loop-only projects — split `CRITICAL_FILES` into `CORE_FILES` (always checked) and `INIT_ONLY_FILES` (init-scaffolded only) (PR #4)
+- **morpheus**: `morp doctor` false positives on loop-only projects — split `CRITICAL_FILES` into `CORE_FILES` (always checked) and `INIT_ONLY_FILES` (init-scaffolded only) (PR #4)
 - **monorepo**: `.gitignore` `tasks/` pattern matched at any depth, masking 9 embedded template files under `internal/morpheus/templates/*/tasks/` — changed to root-only `/tasks/` (PR #4)
 - **docs**: context file accuracy — corrected versions, template counts, file paths, phase priorities, and known issue statuses across 13+ documentation files (PR #4)
 - **morpheus**: `AUTONOMOUS_LOOP.md` rendering — added frontmatter and code fences for proper GitHub display (PR #4)
@@ -198,7 +242,7 @@ No release was cut at v1.4.0. The version identifier was reserved in the roadmap
 
 ### Changed
 - **morpheus**: loop termination architecture — reviewer APPROVED verdict is now the sole quality gate (replaces agent-written `ALL_TASKS_COMPLETE` / `status.txt` mechanism)
-- **morpheus**: `morpheus finalize` and `morpheus status` now check reviewer verdict in cycle review files instead of `status.txt`
+- **morpheus**: `morp finalize` and `morp status` now check reviewer verdict in cycle review files instead of `status.txt`
 - **morpheus**: developer prompt no longer writes `ALL_TASKS_COMPLETE` — loop always runs full Dev → Test → Review pipeline per cycle
 - **morpheus**: reviewer prompt now includes explicit termination contract (APPROVED stops loop, NEEDS_FIX continues)
 
@@ -220,12 +264,12 @@ First stable release. Complete Go rewrite of the-matrix autonomous agent ecosyst
 - 14 embedded templates for ecosystem provisioning
 
 **morpheus** v1.0.0 — Service Scaffolding + Autonomous Development Loops
-- `morpheus init` — scaffold new services with full `.claude/` + `.autonomous/` + `tasks/` setup
-- `morpheus loop` — add autonomous dev loop to ANY existing project with a CLAUDE.md
-- `morpheus doctor` — validate scaffolded service before running loop
-- `morpheus status` — loop progress at a glance
-- `morpheus finalize` — post-loop `.claude/` context file population
-- `morpheus report` — post-loop analytics from cycle data
+- `morp init` — scaffold new services with full `.claude/` + `.autonomous/` + `tasks/` setup
+- `morp loop` — add autonomous dev loop to ANY existing project with a CLAUDE.md
+- `morp doctor` — validate scaffolded service before running loop
+- `morp status` — loop progress at a glance
+- `morp finalize` — post-loop `.claude/` context file population
+- `morp report` — post-loop analytics from cycle data
 - 42+ embedded templates (Go + Node.js + loop + shared)
 - Generic loop prompts that work on any tech stack via CLAUDE.md context
 - Claude-powered task decomposition for `tasks/todo.md`

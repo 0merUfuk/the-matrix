@@ -8,6 +8,8 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	"github.com/0merUfuk/the-matrix/internal/matrixcfg"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
 	"github.com/0merUfuk/the-matrix/internal/wizard"
 )
 
@@ -16,6 +18,7 @@ type LoopOpts struct {
 	DryRun         bool
 	Path           string
 	NonInteractive bool
+	Runtime        string
 
 	// Non-interactive inputs (used when NonInteractive=true, ignored otherwise).
 	Goal              string
@@ -39,6 +42,17 @@ type LoopContext struct {
 	// Aliases for shared templates that expect .ServiceName / .ServiceNamePascal
 	ServiceName       string
 	ServiceNamePascal string
+
+	// Runtime-specific template paths. These are populated only while rendering.
+	Runtime            string
+	ContextFile        string
+	ContextDir         string
+	KnowledgeDir       string
+	ServiceContextFile string
+	DecisionsFile      string
+	KnownIssuesFile    string
+	NextStepsFile      string
+	ContextFilesLabel  string
 }
 
 // defaultCycleConfig is the canonical default cycle configuration.
@@ -77,6 +91,13 @@ func RunLoop(opts LoopOpts) {
 		projectDir, _ = os.Getwd()
 	}
 	projectDir, _ = filepath.Abs(projectDir)
+	rt, err := agentruntime.Select(opts.Runtime, projectDir)
+	if err != nil {
+		cli.PrintError(err.Error())
+		os.Exit(1)
+	}
+	runtimeName := rt.Name()
+	contextSpec := rt.ContextFiles()
 
 	// Warn if non-interactive-only flags are passed without --non-interactive
 	if !opts.NonInteractive && (opts.Goal != "" || opts.MaxCycles > 0 || opts.DeveloperMaxTurns > 0 || opts.TesterMaxTurns > 0 || opts.ReviewerMaxTurns > 0) {
@@ -84,12 +105,12 @@ func RunLoop(opts LoopOpts) {
 		fmt.Println()
 	}
 
-	// 2. Validate CLAUDE.md exists
-	claudemd := filepath.Join(projectDir, "CLAUDE.md")
-	if !config.FileExists(claudemd) {
-		cli.PrintError("No CLAUDE.md found in " + projectDir)
+	// 2. Validate the selected runtime's primary context exists
+	contextPath := filepath.Join(projectDir, contextSpec.PrimaryContext)
+	if !config.FileExists(contextPath) {
+		cli.PrintError("No " + contextSpec.PrimaryContext + " found in " + projectDir)
 		fmt.Println()
-		cli.PrintDim("  morp loop requires a CLAUDE.md — it's how agents learn the project.")
+		cli.PrintDim("  morp loop requires " + contextSpec.PrimaryContext + " — it's how agents learn the project.")
 		cli.PrintDim("  Create one with project rules, tech stack, and build commands.")
 		fmt.Println()
 		os.Exit(1)
@@ -128,7 +149,7 @@ func RunLoop(opts LoopOpts) {
 
 	// 6. Dry-run
 	if opts.DryRun {
-		manifest := BuildLoopManifest(ctx, projectDir)
+		manifest := BuildLoopManifest(ctx, projectDir, runtimeName)
 		fmt.Printf("  %s\n\n", cli.Bold(cli.Cyan(fmt.Sprintf("── Dry Run: %d files would be generated ──", len(manifest)))))
 		for _, entry := range manifest {
 			rel, _ := filepath.Rel(projectDir, entry.OutputPath)
@@ -145,10 +166,16 @@ func RunLoop(opts LoopOpts) {
 
 	// 7. Generate files
 	fmt.Printf("  Generating loop infrastructure...\n")
-	writtenFiles, err := GenerateLoopFiles(ctx, projectDir)
+	writtenFiles, err := GenerateLoopFiles(ctx, projectDir, runtimeName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("File generation failed: %v", err)))
 		os.Exit(1)
+	}
+	if opts.Runtime != "" {
+		if err := matrixcfg.WriteRuntime(projectDir, runtimeName); err != nil {
+			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Runtime config failed: %v", err)))
+			os.Exit(1)
+		}
 	}
 	fmt.Printf("  %s\n", cli.Green(fmt.Sprintf("✓ Generated %d files", len(writtenFiles))))
 
@@ -156,9 +183,13 @@ func RunLoop(opts LoopOpts) {
 	todoPath := filepath.Join(projectDir, "tasks/todo.md")
 	if ctx.Goal != "" {
 		fmt.Printf("  Decomposing goal into tasks/todo.md...\n")
-		todoContent, err := DecomposeGoalWithClaude(projectDir, ctx.Goal)
+		todoContent, err := DecomposeGoal(projectDir, ctx.Goal, runtimeName)
 		if err != nil {
-			cli.PrintDim(fmt.Sprintf("  Claude unavailable — using empty skeleton (%v)", err))
+			runtimeLabel := rt.DisplayName()
+			if runtimeName == "claude" {
+				runtimeLabel = "Claude"
+			}
+			cli.PrintDim(fmt.Sprintf("  %s unavailable — using empty skeleton (%v)", runtimeLabel, err))
 			todoContent = BuildEmptyTodo(ctx.ProjectNamePascal)
 		}
 		if err := config.WriteFileString(todoPath, todoContent); err != nil {
@@ -173,9 +204,11 @@ func RunLoop(opts LoopOpts) {
 	}
 	fmt.Printf("  %s\n", cli.Green("✓ tasks/todo.md generated"))
 
-	// 9. Ensure .claude/ directory exists (so loop.sh preflight passes)
-	if err := config.EnsureDir(filepath.Join(projectDir, ".claude")); err != nil {
-		cli.PrintWarning(fmt.Sprintf("Could not create .claude/ directory: %v", err))
+	// 9. Ensure the runtime context directory exists when one is required.
+	if contextSpec.ContextDir != "" {
+		if err := config.EnsureDir(filepath.Join(projectDir, contextSpec.ContextDir)); err != nil {
+			cli.PrintWarning(fmt.Sprintf("Could not create %s directory: %v", contextSpec.ContextDir, err))
+		}
 	}
 
 	// 10. Update .gitignore

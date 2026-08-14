@@ -2,11 +2,11 @@
 
 > Describe the expected directory structure and conventions here.
 > Agents read this at the start of every cycle as their compliance reference.
-> If your project's CLAUDE.md already describes the architecture, you can leave this minimal.
+> If your project's {{ .ContextFile }} already describes the architecture, you can leave this minimal.
 
 ## Source of Truth
 
-Read `CLAUDE.md` for the full project architecture, conventions, and patterns.
+Read `{{ .ContextFile }}` for the full project architecture, conventions, and patterns.
 {{ if .Goal }}
 ## Goal
 
@@ -33,4 +33,4 @@ Read `CLAUDE.md` for the full project architecture, conventions, and patterns.
 - Commit message format
 -->
 
-Refer to `CLAUDE.md` for all project-specific conventions.
+Refer to `{{ .ContextFile }}` for all project-specific conventions.

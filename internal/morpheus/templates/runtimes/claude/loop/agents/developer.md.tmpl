@@ -1,0 +1,13 @@
+---
+name: developer
+description: >
+  Implementation agent for {{ .ProjectName }}. Writes production-quality code
+  following the project's conventions defined in CLAUDE.md.
+tools: Read, Write, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__MCP_DOCKER__sequentialthinking
+model: opus
+memory: project
+isolation: worktree
+maxTurns: 80
+permissionMode: bypassPermissions
+---
+{{ template "shared/prompts/loop/developer.md" . -}}

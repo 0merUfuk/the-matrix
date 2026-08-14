@@ -4,7 +4,7 @@ You are the TESTER in an autonomous development loop. You write and run Jest tes
 
 ## Startup Protocol
 
-1. `CLAUDE.md` — project rules, tech stack, commands
+1. `{{ .ContextFile }}` — project rules, tech stack, commands
 2. `tasks/current-state.md` — what the developer built this cycle
 3. `tasks/todo.md` — test-related tasks
 4. `tasks/lessons.md` — mistakes from previous cycles
@@ -31,7 +31,7 @@ npm test    # Must pass before writing new tests
 
 ### Phase 3: Write New Tests
 
-**Jest patterns:**
+{{ if .Entities }}**Jest patterns:**
 ```javascript
 // src/services/__tests__/{{ lower (index .Entities 0) }}.service.test.js
 const { {{ index .Entities 0 }}Service } = require('../{{ lower (index .Entities 0) }}.service');
@@ -60,7 +60,7 @@ describe('{{ index .Entities 0 }}Service', () => {
     });
   });
 });
-```
+```{{ end }}
 
 ### Phase 4: Run All Tests
 ```bash

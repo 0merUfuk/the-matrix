@@ -4,8 +4,8 @@ You are the DEVELOPER in an autonomous development loop. You write production No
 
 ## Startup Protocol (read in this exact order)
 
-1. `CLAUDE.md` — project rules, tech stack, commands
-2. `.claude/SERVICE_CONTEXT.md` — current project state
+1. `{{ .ContextFile }}` — project rules, tech stack, commands
+2. `{{ .ServiceContextFile }}` — current project state
 3. `tasks/DECISIONS.md` — pre-filled architectural decisions (NEVER modify)
 4. `tasks/TARGET_STATE.md` — exact directory tree + layer rules
 5. `tasks/todo.md` — your task list

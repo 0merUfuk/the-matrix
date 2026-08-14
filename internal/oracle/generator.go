@@ -8,11 +8,15 @@ import (
 	"strings"
 
 	"github.com/0merUfuk/the-matrix/internal/config"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
+	_ "github.com/0merUfuk/the-matrix/internal/runtime/builtin"
 	"github.com/0merUfuk/the-matrix/internal/tmpl"
 )
 
 //go:embed templates/*
 //go:embed templates/prompts/*
+//go:embed templates/runtimes/claude/*
+//go:embed templates/runtimes/codex/*
 var templateFS embed.FS
 
 // ManifestEntry describes a file to generate.
@@ -23,13 +27,19 @@ type ManifestEntry struct {
 }
 
 // BuildFileManifest returns the 6-file manifest for oracle research workspace.
-func BuildFileManifest(ctx *StackContext, outputDir string) []ManifestEntry {
+func BuildFileManifest(ctx *StackContext, outputDir string, runtimeNames ...string) []ManifestEntry {
 	o := func(rel string) string { return filepath.Join(outputDir, rel) }
+	rt, _ := resolveOracleRuntime(runtimeNames)
+	runtimeName := rt.Name()
+	contextTemplate := "CLAUDE.md.tmpl"
+	if runtimeName == "codex" {
+		contextTemplate = "runtimes/codex/AGENTS.md.tmpl"
+	}
 
 	return []ManifestEntry{
 		{TemplatePath: "loop.sh", OutputPath: o(".autonomous/loop.sh"), IsStatic: true},
-		{TemplatePath: "config.sh.tmpl", OutputPath: o(".autonomous/config.sh"), IsStatic: false},
-		{TemplatePath: "CLAUDE.md.tmpl", OutputPath: o("CLAUDE.md"), IsStatic: false},
+		{TemplatePath: "runtimes/" + runtimeName + "/config.sh.tmpl", OutputPath: o(".autonomous/config.sh"), IsStatic: false},
+		{TemplatePath: contextTemplate, OutputPath: o(rt.ContextFiles().PrimaryContext), IsStatic: false},
 		{TemplatePath: "prompts/researcher.md.tmpl", OutputPath: o(".autonomous/prompts/researcher.md"), IsStatic: false},
 		{TemplatePath: "prompts/reviewer.md.tmpl", OutputPath: o(".autonomous/prompts/reviewer.md"), IsStatic: false},
 		{TemplatePath: "prompts/synthesizer.md.tmpl", OutputPath: o(".autonomous/prompts/synthesizer.md"), IsStatic: false},
@@ -39,13 +49,32 @@ func BuildFileManifest(ctx *StackContext, outputDir string) []ManifestEntry {
 // GenerateFiles renders all templates and writes files to disk.
 // Returns the list of written file paths.
 // Gold standards must be resolved before calling this function (ctx.GoldStandards).
-func GenerateFiles(ctx *StackContext, outputDir string) ([]string, error) {
+func GenerateFiles(ctx *StackContext, outputDir string, runtimeNames ...string) ([]string, error) {
 	// Ensure GoldStandards is never nil (templates need a non-nil map)
 	if ctx.GoldStandards == nil {
 		ctx.GoldStandards = map[string]string{}
 	}
 
-	manifest := BuildFileManifest(ctx, outputDir)
+	rt, _ := resolveOracleRuntime(runtimeNames)
+	manifest := BuildFileManifest(ctx, outputDir, rt.Name())
+	renderCtx := *ctx
+	renderCtx.Runtime = rt.Name()
+	spec := rt.ContextFiles()
+	renderCtx.ContextFile = spec.PrimaryContext
+	renderCtx.KnowledgeDir = spec.KnowledgeDir
+	if spec.ContextDir == "" {
+		renderCtx.ServiceContextFile = spec.PrimaryContext
+		renderCtx.DecisionsFile = spec.PrimaryContext
+		renderCtx.KnownIssuesFile = spec.PrimaryContext
+		renderCtx.NextStepsFile = spec.PrimaryContext
+		renderCtx.ContextFilesLabel = spec.PrimaryContext
+	} else {
+		renderCtx.ServiceContextFile = filepath.Join(spec.ContextDir, "SERVICE_CONTEXT.md")
+		renderCtx.DecisionsFile = filepath.Join(spec.ContextDir, "DECISIONS.md")
+		renderCtx.KnownIssuesFile = filepath.Join(spec.ContextDir, "KNOWN_ISSUES.md")
+		renderCtx.NextStepsFile = filepath.Join(spec.ContextDir, "NEXT_STEPS.md")
+		renderCtx.ContextFilesLabel = spec.ContextDir + "/"
+	}
 	var written []string
 
 	for _, entry := range manifest {
@@ -69,7 +98,7 @@ func GenerateFiles(ctx *StackContext, outputDir string) ([]string, error) {
 				return nil, fmt.Errorf("reading template %s: %w", entry.TemplatePath, err)
 			}
 
-			rendered, err := tmpl.Render(entry.TemplatePath, string(data), ctx)
+			rendered, err := tmpl.Render(entry.TemplatePath, string(data), &renderCtx)
 			if err != nil {
 				return nil, fmt.Errorf("EJS render failed for %s: %w", entry.TemplatePath, err)
 			}
@@ -126,8 +155,8 @@ type DryRunEntry struct {
 }
 
 // BuildDryRunManifest returns manifest entries without writing — for --dry-run mode.
-func BuildDryRunManifest(ctx *StackContext, outputDir string) []DryRunEntry {
-	manifest := BuildFileManifest(ctx, outputDir)
+func BuildDryRunManifest(ctx *StackContext, outputDir string, runtimeNames ...string) []DryRunEntry {
+	manifest := BuildFileManifest(ctx, outputDir, runtimeNames...)
 	entries := make([]DryRunEntry, len(manifest))
 	for i, m := range manifest {
 		entries[i] = DryRunEntry{
@@ -137,4 +166,20 @@ func BuildDryRunManifest(ctx *StackContext, outputDir string) []DryRunEntry {
 		}
 	}
 	return entries
+}
+
+func resolveOracleRuntime(runtimeNames []string) (agentruntime.Runtime, bool) {
+	name := ""
+	if len(runtimeNames) > 0 {
+		name = strings.TrimSpace(runtimeNames[0])
+	}
+	explicit := name != ""
+	if name == "" {
+		name = "claude"
+	}
+	rt := agentruntime.Registry.Get(name)
+	if rt == nil {
+		rt = agentruntime.Registry.Default()
+	}
+	return rt, explicit
 }

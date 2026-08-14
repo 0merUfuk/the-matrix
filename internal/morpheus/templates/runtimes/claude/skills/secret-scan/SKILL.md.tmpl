@@ -1,0 +1,11 @@
+{{if .IsNode}}---
+description: >
+  Scan {{ .ServiceName }} codebase and git history for leaked secrets using gitleaks.
+  Detects API keys, tokens, passwords, and platform-specific credential patterns.
+---
+{{else}}---
+description: >
+  Scan {{ .ServiceName }} codebase and git history for leaked secrets using gitleaks.
+  Detects API keys, tokens, passwords, and platform-specific credential patterns.
+---
+{{end}}{{ template "shared/prompts/skills/secret-scan.md" . -}}

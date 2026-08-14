@@ -20,7 +20,7 @@ type AnalyzeOpts struct {
 }
 
 // RunAnalyze scans an existing codebase, detects its stack, and generates
-// a tailored Claude Code agent ecosystem without requiring a wizard.
+// a tailored agent runtime ecosystem without requiring a wizard.
 func RunAnalyze(opts AnalyzeOpts) {
 	cli.PrintHeader("neo", "analyze — codebase detection")
 

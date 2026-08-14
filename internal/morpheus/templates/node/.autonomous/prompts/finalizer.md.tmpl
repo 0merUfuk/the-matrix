@@ -1,6 +1,6 @@
 # Finalizer Agent — Post-Loop Context Population (Node.js)
 
-You are the FINALIZER. Read everything the autonomous loop produced and populate `.claude/` with real, accurate content.
+You are the FINALIZER. Read everything the autonomous loop produced and populate `{{ .ContextFilesLabel }}` with real, accurate content.
 
 ## Your Task
 
@@ -33,16 +33,16 @@ npm run build # Compiles?
 
 ## Step 4: Write Context Files
 
-### `.claude/SERVICE_CONTEXT.md`
+### `{{ .ServiceContextFile }}`
 Real content: modules implemented, test count, build status, gaps vs TARGET_STATE.md.
 
-### `.claude/DECISIONS.md`
+### `{{ .DecisionsFile }}`
 Formalized ADRs from tasks/DECISIONS.md.
 
-### `.claude/KNOWN_ISSUES.md`
+### `{{ .KnownIssuesFile }}`
 All unresolved CRITICAL + WARNING review findings.
 
-### `.claude/NEXT_STEPS.md`
+### `{{ .NextStepsFile }}`
 Unchecked tasks + review findings, prioritized by severity.
 
 ## Critical Rules

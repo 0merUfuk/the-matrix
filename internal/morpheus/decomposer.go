@@ -4,24 +4,33 @@ import (
 	"fmt"
 	"strings"
 
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
 	"github.com/0merUfuk/the-matrix/internal/subprocess"
 )
 
-// DecomposeTasksWithClaude generates tasks/todo.md content using Claude subprocess.
-func DecomposeTasksWithClaude(ctx *ProjectContext) (string, error) {
+// DecomposeTasks generates tasks/todo.md content using the selected runtime.
+func DecomposeTasks(ctx *ProjectContext, runtimeName, workingDir string) (string, error) {
 	contextDoc := BuildProjectContext(ctx)
 	prompt := BuildTaskDecompositionPrompt(ctx)
 	fullPrompt := fmt.Sprintf("CONTEXT:\n%s\n\n%s", contextDoc, prompt)
 
-	result, err := subprocess.CallClaude(fullPrompt, subprocess.Options{
-		Model:     "claude-sonnet-4-6",
-		MaxTurns:  10,
-		TimeoutMs: 5 * 60 * 1000,
+	result, err := subprocess.Invoke(fullPrompt, subprocess.Options{
+		ModelTier:    agentruntime.ModelBalanced,
+		ModelTierSet: true,
+		MaxTurns:     10,
+		TimeoutMs:    5 * 60 * 1000,
+		Runtime:      runtimeName,
+		WorkingDir:   workingDir,
 	})
 	if err != nil {
 		return "", err
 	}
 	return result, nil
+}
+
+// DecomposeTasksWithClaude is the backward-compatible Claude entry point.
+func DecomposeTasksWithClaude(ctx *ProjectContext) (string, error) {
+	return DecomposeTasks(ctx, "claude", "")
 }
 
 // BuildProjectContext builds a KEY: VALUE string describing the project for Claude.
@@ -142,10 +151,15 @@ Start with "# Tasks: %s"`, techLabel, ctx.ServiceName, strings.Join(ctx.Entities
 
 // BuildSkeletonTodo generates a fallback skeleton tasks/todo.md when Claude is unavailable.
 func BuildSkeletonTodo(ctx *ProjectContext) string {
+	return BuildSkeletonTodoForRuntime(ctx, "Claude")
+}
+
+// BuildSkeletonTodoForRuntime generates fallback tasks when a runtime is unavailable.
+func BuildSkeletonTodoForRuntime(ctx *ProjectContext, runtimeLabel string) string {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("# Tasks: %s\n\n", ctx.ServiceNamePascal))
-	sb.WriteString("> **Note**: Generated from skeleton template. Claude was unavailable. Consider re-running morp init or manually expanding these tasks.\n\n")
+	sb.WriteString(fmt.Sprintf("> **Note**: Generated from skeleton template. %s was unavailable. Consider re-running morp init or manually expanding these tasks.\n\n", runtimeLabel))
 
 	sb.WriteString("## Phase 1: Foundation\n\n")
 	if ctx.IsGo {

@@ -9,6 +9,8 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	"github.com/0merUfuk/the-matrix/internal/matrixcfg"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
 	"github.com/0merUfuk/the-matrix/internal/safewrite"
 	"github.com/0merUfuk/the-matrix/internal/wizard"
 )
@@ -20,9 +22,10 @@ type InitOpts struct {
 	OutputDir   string
 	ContextPath string // Path to .neo.json for pre-populated context
 	ServiceName string // Override service name when using --context (NEO-06)
+	Runtime     string
 }
 
-// RunInit scaffolds a new service with complete .claude/ + .autonomous/ setup.
+// RunInit scaffolds a new service with agent context and autonomous loop setup.
 func RunInit(opts InitOpts) {
 	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan("morp — autonomous development infrastructure generator")))
 
@@ -109,12 +112,18 @@ func RunInit(opts InitOpts) {
 		outputDir = filepath.Join(cwd, ctx.ServiceName)
 	}
 	outputDir, _ = filepath.Abs(outputDir)
+	rt, err := agentruntime.Select(opts.Runtime, outputDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(err.Error()))
+		os.Exit(1)
+	}
+	runtimeName := rt.Name()
 
 	fmt.Printf("  Creating workspace at: %s\n\n", outputDir)
 
 	// Step 4: Dry-run
 	if opts.DryRun {
-		manifest := BuildMorpheusManifest(&ctx, outputDir)
+		manifest := BuildMorpheusManifest(&ctx, outputDir, runtimeName)
 		fmt.Printf("  %s\n\n", cli.Bold(cli.Cyan(fmt.Sprintf("── Dry Run: %d files would be generated to %s ──", len(manifest), outputDir))))
 		cwd, _ := os.Getwd()
 		for _, entry := range manifest {
@@ -158,19 +167,29 @@ func RunInit(opts InitOpts) {
 
 	// Step 6: Generate files
 	fmt.Printf("  Generating project structure...\n")
-	writtenFiles, err := GenerateMorpheusFiles(&ctx, outputDir)
+	writtenFiles, err := GenerateMorpheusFiles(&ctx, outputDir, runtimeName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("File generation failed: %v", err)))
 		os.Exit(1)
 	}
+	if opts.Runtime != "" {
+		if err := matrixcfg.WriteRuntime(outputDir, runtimeName); err != nil {
+			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Runtime config failed: %v", err)))
+			os.Exit(1)
+		}
+	}
 	fmt.Printf("  %s\n", cli.Green(fmt.Sprintf("✓ Generated %d files", len(writtenFiles))))
 
-	// Step 7: Task decomposition (claude -p)
+	// Step 7: Task decomposition
 	fmt.Printf("  Generating tasks/todo.md...\n")
-	todoContent, err := DecomposeTasksWithClaude(&ctx)
+	todoContent, err := DecomposeTasks(&ctx, runtimeName, outputDir)
 	if err != nil {
-		cli.PrintDim(fmt.Sprintf("Claude unavailable — using skeleton template (%v)", err))
-		todoContent = BuildSkeletonTodo(&ctx)
+		runtimeLabel := rt.DisplayName()
+		if runtimeName == "claude" {
+			runtimeLabel = "Claude"
+		}
+		cli.PrintDim(fmt.Sprintf("%s unavailable — using skeleton template (%v)", runtimeLabel, err))
+		todoContent = BuildSkeletonTodoForRuntime(&ctx, runtimeLabel)
 	}
 	todoPath := filepath.Join(outputDir, "tasks/todo.md")
 	if err := config.WriteFileString(todoPath, todoContent); err != nil {
@@ -180,10 +199,10 @@ func RunInit(opts InitOpts) {
 	fmt.Printf("  %s\n", cli.Green("✓ tasks/todo.md generated"))
 
 	// Step 8: Summary
-	printInitSummary(&ctx, outputDir, len(writtenFiles))
+	printInitSummary(&ctx, outputDir, len(writtenFiles), runtimeName)
 }
 
-func printInitSummary(ctx *ProjectContext, outputDir string, fileCount int) {
+func printInitSummary(ctx *ProjectContext, outputDir string, fileCount int, runtimeName string) {
 	cwd, _ := os.Getwd()
 	rel, _ := filepath.Rel(cwd, outputDir)
 	if rel == "" {
@@ -198,7 +217,11 @@ func printInitSummary(ctx *ProjectContext, outputDir string, fileCount int) {
 	fmt.Printf("  %s\n\n", cli.Cyan("Next steps:"))
 	cli.PrintWhite(fmt.Sprintf("cd %s", rel))
 	cli.PrintWhite("cat tasks/todo.md               # Review the task list")
-	cli.PrintWhite("morp doctor                  # Validate before running loop")
+	if runtimeName == "codex" {
+		cli.PrintWhite("trinity health --path .          # Validate runtime context")
+	} else {
+		cli.PrintWhite("morp doctor                  # Validate before running loop")
+	}
 	cli.PrintWhite("bash .autonomous/loop.sh         # Start the autonomous dev loop")
 	fmt.Println()
 

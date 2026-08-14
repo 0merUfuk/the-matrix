@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "1.7.2-dev"
+var version = "1.9.0-dev"
 
 func init() {
 	registry.ClientVersion = version
@@ -18,7 +18,7 @@ func init() {
 func main() {
 	rootCmd := &cobra.Command{
 		Use:     "neo",
-		Short:   "Meta-CLI orchestrator — provisions and maintains Claude Code agent ecosystems",
+		Short:   "Meta-CLI orchestrator — provisions and maintains agent ecosystems",
 		Version: version,
 	}
 
@@ -39,10 +39,11 @@ func initCmd() *cobra.Command {
 	var dryRun bool
 	var path string
 	var preset string
+	var runtimeName string
 
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Provision a complete Claude Code agent ecosystem",
+		Short: "Provision a complete agent runtime ecosystem",
 		Example: `  # Provision a new .claude/ ecosystem interactively (wizard)
   neo init
 
@@ -53,9 +54,10 @@ func initCmd() *cobra.Command {
   neo init --path . --preset go-service`,
 		Run: func(cmd *cobra.Command, args []string) {
 			neo.RunInit(neo.InitOpts{
-				DryRun: dryRun,
-				Path:   path,
-				Preset: preset,
+				DryRun:  dryRun,
+				Path:    path,
+				Preset:  preset,
+				Runtime: runtimeName,
 			})
 		},
 	}
@@ -63,6 +65,7 @@ func initCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would be generated without writing")
 	cmd.Flags().StringVar(&path, "path", "", "Project directory (default: wizard-selected)")
 	cmd.Flags().StringVar(&preset, "preset", "", "Pre-configured project type (internal-go-service, go-service, nextjs-solo)")
+	cmd.Flags().StringVar(&runtimeName, "runtime", "", "Agent runtime: claude or codex (default: auto-detect)")
 
 	return cmd
 }

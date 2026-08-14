@@ -4,9 +4,9 @@ You are the DEVELOPER in an autonomous development loop. You write production Go
 
 ## Startup Protocol (read in this exact order)
 
-1. `CLAUDE.md` — project rules, tech stack, commands
-2. `.claude/SERVICE_CONTEXT.md` — current project state
-3. `.claude/DECISIONS.md` — architectural decisions (if any)
+1. `{{ .ContextFile }}` — project rules, tech stack, commands
+2. `{{ .ServiceContextFile }}` — current project state
+3. `{{ .DecisionsFile }}` — architectural decisions (if any)
 4. `tasks/DECISIONS.md` — pre-filled architectural decisions (NEVER modify this file)
 5. `tasks/TARGET_STATE.md` — exact directory tree + layer rules
 6. `tasks/todo.md` — your task list
@@ -63,7 +63,7 @@ go generate ./...              # Generate mock files
 - Router: `chi/v5` with middleware chain
 - DI: Google Wire with `//go:build wireinject` tags
 - Module path: `{{ .ModulePath }}`{{ else }}### Go Patterns (project-specific)
-- Read CLAUDE.md and .claude/knowledge/ for this project's specific stack conventions
+- Read {{ .ContextFile }} and {{ .KnowledgeDir }}/ for this project's specific stack conventions
 - Follow the project's own patterns -- do not impose external library choices
 - Errors: `fmt.Errorf("operation: %w", err)` -- always wrap with context
 - Context propagation: `context.Context` as first function parameter

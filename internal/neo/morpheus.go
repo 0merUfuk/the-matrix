@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/wizard"
@@ -15,7 +16,7 @@ import (
 // installed, or when there are no services in the profile. All failure modes are
 // handled internally (warnings printed, execution continues) — the function never
 // returns an error.
-func RunMorpheusIntegration(profile *ProjectProfile, outputDir string) {
+func RunMorpheusIntegration(profile *ProjectProfile, outputDir string, runtimeNames ...string) {
 	// Only applicable for multi-repo-microservices projects.
 	if profile.ProjectType != "multi-repo-microservices" {
 		return
@@ -64,11 +65,15 @@ func RunMorpheusIntegration(profile *ProjectProfile, outputDir string) {
 		fmt.Printf("\n  %s\n\n",
 			cli.Bold(cli.Cyan(fmt.Sprintf("── morp init: %s ──", svc.Name))))
 
-		cmd := exec.Command("morp", "init",
+		args := []string{"init",
 			"--context", contextPath,
 			"--output-dir", svcOutputDir,
 			"--service-name", svc.Name,
-		)
+		}
+		if len(runtimeNames) > 0 && strings.TrimSpace(runtimeNames[0]) != "" {
+			args = append(args, "--runtime", strings.TrimSpace(runtimeNames[0]))
+		}
+		cmd := exec.Command("morp", args...)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

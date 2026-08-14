@@ -1,0 +1,11 @@
+{{if .IsNode}}---
+description: >
+  Audit {{ .ServiceName }} dependencies for known vulnerabilities using npm audit
+  and trivy. Merges findings across scanners.
+---
+{{else}}---
+description: >
+  Audit {{ .ServiceName }} dependencies for known vulnerabilities using govulncheck,
+  go mod verify, and trivy. Merges findings across scanners.
+---
+{{end}}{{ template "shared/prompts/skills/dep-audit.md" . -}}

@@ -312,6 +312,40 @@ func TestGenerateMorpheusFiles(t *testing.T) {
 	}
 }
 
+func TestGenerateMorpheusFiles_EmptyEntities(t *testing.T) {
+	tests := []struct {
+		name string
+		tech string
+	}{
+		{name: "go", tech: "go"},
+		{name: "node", tech: "node"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			ctx := testProjectContext()
+			ctx.Entities = []string{}
+			ctx.EntityCount = 0
+			ctx.Tech = tt.tech
+			ctx.IsGo = tt.tech == "go"
+			ctx.IsNode = tt.tech == "node"
+
+			if _, err := GenerateMorpheusFiles(ctx, dir); err != nil {
+				t.Fatalf("GenerateMorpheusFiles() with empty entities failed: %v", err)
+			}
+
+			targetState, err := os.ReadFile(filepath.Join(dir, "tasks", "TARGET_STATE.md"))
+			if err != nil {
+				t.Fatalf("read generated TARGET_STATE.md: %v", err)
+			}
+			if strings.Contains(string(targetState), "## Naming Conventions") {
+				t.Error("TARGET_STATE.md contains naming conventions for an empty entity list")
+			}
+		})
+	}
+}
+
 func TestBuildSkeletonTodo(t *testing.T) {
 	ctx := testProjectContext()
 	todo := BuildSkeletonTodo(ctx)

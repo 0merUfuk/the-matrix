@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "1.7.2-dev"
+var version = "1.9.0-dev"
 
 func main() {
 	rootCmd := &cobra.Command{
@@ -36,10 +36,11 @@ func initCmd() *cobra.Command {
 	var outputDir string
 	var contextPath string
 	var serviceName string
+	var runtimeName string
 
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Scaffold a new service with complete .claude/ + .autonomous/ setup",
+		Short: "Scaffold a new service with runtime context and autonomous loop setup",
 		Example: `  # Wizard-guided scaffold in the current directory
   morp init
 
@@ -58,6 +59,7 @@ func initCmd() *cobra.Command {
 				OutputDir:   outputDir,
 				ContextPath: contextPath,
 				ServiceName: serviceName,
+				Runtime:     runtimeName,
 			})
 		},
 	}
@@ -67,6 +69,7 @@ func initCmd() *cobra.Command {
 	cmd.Flags().StringVar(&outputDir, "output-dir", "", "Output directory (defaults to ./{service-name})")
 	cmd.Flags().StringVar(&contextPath, "context", "", "Path to neo project profile (skips project type and tech stack questions)")
 	cmd.Flags().StringVar(&serviceName, "service-name", "", "Override service name (used when context is provided by neo)")
+	cmd.Flags().StringVar(&runtimeName, "runtime", "", "Agent runtime: claude or codex (default: auto-detect)")
 
 	return cmd
 }
@@ -80,11 +83,12 @@ func loopCmd() *cobra.Command {
 	var devTurns int
 	var testTurns int
 	var reviewTurns int
+	var runtimeName string
 
 	cmd := &cobra.Command{
 		Use:   "loop",
 		Short: "Set up autonomous development loop on an existing project",
-		Long:  "Generates .autonomous/ + tasks/ for any project with a CLAUDE.md. Does NOT scaffold service code.",
+		Long:  "Generates .autonomous/ + tasks/ for a project with runtime context. Does NOT scaffold service code.",
 		Example: `  # Wizard-guided loop setup in the current project
   morp loop
 
@@ -106,6 +110,7 @@ func loopCmd() *cobra.Command {
 				DeveloperMaxTurns: devTurns,
 				TesterMaxTurns:    testTurns,
 				ReviewerMaxTurns:  reviewTurns,
+				Runtime:           runtimeName,
 			})
 		},
 	}
@@ -118,6 +123,7 @@ func loopCmd() *cobra.Command {
 	cmd.Flags().IntVar(&devTurns, "dev-turns", 0, "Developer max turns per cycle (default: 30, non-interactive mode)")
 	cmd.Flags().IntVar(&testTurns, "test-turns", 0, "Tester max turns per cycle (default: 20, non-interactive mode)")
 	cmd.Flags().IntVar(&reviewTurns, "review-turns", 0, "Reviewer max turns per cycle (default: 12, non-interactive mode)")
+	cmd.Flags().StringVar(&runtimeName, "runtime", "", "Agent runtime: claude or codex (default: auto-detect)")
 
 	return cmd
 }
@@ -125,7 +131,7 @@ func loopCmd() *cobra.Command {
 func finalizeCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "finalize",
-		Short: "Populate .claude/ context files after loop completes",
+		Short: "Populate project context files after loop completes",
 		Example: `  # Post-loop context update in the current project
   morp finalize`,
 		Run: func(cmd *cobra.Command, args []string) {

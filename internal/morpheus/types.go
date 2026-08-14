@@ -66,6 +66,17 @@ type ProjectContext struct {
 
 	// Node.js specific
 	NodeArchitecture string `json:"nodeArchitecture"` // "4-layer" if Node.js
+
+	// Runtime-specific template paths. These are populated only while rendering.
+	Runtime            string `json:"-"`
+	ContextFile        string `json:"-"`
+	ContextDir         string `json:"-"`
+	KnowledgeDir       string `json:"-"`
+	ServiceContextFile string `json:"-"`
+	DecisionsFile      string `json:"-"`
+	KnownIssuesFile    string `json:"-"`
+	NextStepsFile      string `json:"-"`
+	ContextFilesLabel  string `json:"-"`
 }
 
 // CycleConfig holds auto-calculated or user-overridden cycle configuration.

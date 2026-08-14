@@ -38,7 +38,7 @@
 │   └── integration/
 ├── package.json
 ├── .env.example
-└── CLAUDE.md
+└── {{ .ContextFile }}
 ```
 
 ---
@@ -54,7 +54,7 @@
 
 ---
 
-## Naming Conventions
+{{if .Entities}}## Naming Conventions
 
 | Type | Pattern | Example |
 |------|---------|---------|
@@ -62,7 +62,7 @@
 | Controller | `{Entity}Controller` class | `{{ index .Entities 0 }}Controller` |
 | Service | `{Entity}Service` class | `{{ index .Entities 0 }}Service` |
 | Repository | `{Entity}Repository` class | `{{ index .Entities 0 }}Repository` |
-| Test file | `__tests__/{entity}.{layer}.test.js` | `__tests__/{{ lower (index .Entities 0) }}.service.test.js` |
+| Test file | `__tests__/{entity}.{layer}.test.js` | `__tests__/{{ lower (index .Entities 0) }}.service.test.js` |{{end}}
 
 ---
 

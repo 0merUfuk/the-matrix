@@ -9,6 +9,8 @@ import (
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
 	"github.com/0merUfuk/the-matrix/internal/matrixassets"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
+	_ "github.com/0merUfuk/the-matrix/internal/runtime/builtin"
 	"github.com/0merUfuk/the-matrix/internal/staleness"
 )
 
@@ -43,42 +45,53 @@ func RunHealth(opts HealthOpts) {
 	fmt.Println()
 
 	results := &Results{}
-
-	// 1. .claude/ directory exists
-	claudeDir := filepath.Join(root, ".claude")
-	if !config.IsDir(claudeDir) {
-		fmt.Println(theme.StatusLine(cli.Fail, ".claude/", "missing"))
-		results.Fail++
-		printSummary(theme, results)
-		os.Exit(1)
+	rt := agentruntime.Registry.Get(agentruntime.DetectRuntime(root))
+	if rt == nil {
+		rt = agentruntime.Registry.Default()
 	}
-	fmt.Println(theme.StatusLine(cli.Pass, ".claude/", "exists"))
-	results.Pass++
+	contextSpec := rt.ContextFiles()
 
-	// 2. CLAUDE.md exists at project root
-	claudeMd := filepath.Join(root, "CLAUDE.md")
-	if config.FileExists(claudeMd) {
-		fmt.Println(theme.StatusLine(cli.Pass, "CLAUDE.md", "exists"))
+	// 1. Runtime context directory exists when the runtime requires one.
+	if contextSpec.ContextDir != "" {
+		contextDir := filepath.Join(root, contextSpec.ContextDir)
+		contextDirLabel := filepath.ToSlash(contextSpec.ContextDir) + "/"
+		if !config.IsDir(contextDir) {
+			fmt.Println(theme.StatusLine(cli.Fail, contextDirLabel, "missing"))
+			results.Fail++
+			printSummaryForRuntime(theme, results, rt)
+			os.Exit(1)
+		}
+		fmt.Println(theme.StatusLine(cli.Pass, contextDirLabel, "exists"))
+		results.Pass++
+	}
+
+	// 2. Primary runtime context exists at project root.
+	primaryContext := filepath.Join(root, contextSpec.PrimaryContext)
+	if config.FileExists(primaryContext) {
+		fmt.Println(theme.StatusLine(cli.Pass, contextSpec.PrimaryContext, "exists"))
 		results.Pass++
 	} else {
-		fmt.Println(theme.StatusLine(cli.Fail, "CLAUDE.md", "missing"))
+		fmt.Println(theme.StatusLine(cli.Fail, contextSpec.PrimaryContext, "missing"))
 		results.Fail++
 	}
 
-	// 3. .claude/knowledge/ directory exists
+	// 3. Runtime knowledge directory exists.
 	// Not all projects use oracle-driven knowledge — only warn, do not fail.
-	knowledgeDir := filepath.Join(claudeDir, "knowledge")
-	if !config.IsDir(knowledgeDir) {
-		fmt.Println(theme.StatusLine(cli.Warn, ".claude/knowledge/", "missing — run oracle research + trinity sync if you want stack knowledge docs"))
+	knowledgeDir := filepath.Join(root, contextSpec.KnowledgeDir)
+	knowledgeLabel := filepath.ToSlash(contextSpec.KnowledgeDir) + "/"
+	if contextSpec.KnowledgeDir != "" && !config.IsDir(knowledgeDir) {
+		fmt.Println(theme.StatusLine(cli.Warn, knowledgeLabel, "missing — run oracle research + trinity sync if you want stack knowledge docs"))
 		results.Warn++
-		checkContextFiles(theme, root, results)
-		checkAgentSkillEcosystem(theme, root, results)
-		checkTrinityLog(theme, root, results)
-		printSummary(theme, results)
+		checkContextFilesForRuntime(theme, root, contextSpec, results)
+		checkAgentSkillEcosystemForRuntime(theme, root, rt, results)
+		checkTrinityLogForRuntime(theme, root, contextSpec, results)
+		printSummaryForRuntime(theme, results, rt)
 		os.Exit(exitCode(results))
 	}
-	fmt.Println(theme.StatusLine(cli.Pass, ".claude/knowledge/", "exists"))
-	results.Pass++
+	if contextSpec.KnowledgeDir != "" {
+		fmt.Println(theme.StatusLine(cli.Pass, knowledgeLabel, "exists"))
+		results.Pass++
+	}
 
 	// 4. Scan knowledge subdirectories
 	entries, err := os.ReadDir(knowledgeDir)
@@ -100,27 +113,31 @@ func RunHealth(opts HealthOpts) {
 		}
 
 		for _, name := range subdirs {
-			checkKnowledgeDir(theme, filepath.Join(knowledgeDir, name), name, opts.MaxAgeMonths, results)
+			checkKnowledgeDirAt(theme, filepath.Join(knowledgeDir, name), knowledgeLabel, name, opts.MaxAgeMonths, results)
 		}
 	}
 
 	// 5. Context files
-	checkContextFiles(theme, root, results)
+	checkContextFilesForRuntime(theme, root, contextSpec, results)
 
 	// 6. Agent & skill ecosystem
-	checkAgentSkillEcosystem(theme, root, results)
+	checkAgentSkillEcosystemForRuntime(theme, root, rt, results)
 
 	// 7. Trinity log
-	checkTrinityLog(theme, root, results)
+	checkTrinityLogForRuntime(theme, root, contextSpec, results)
 
 	// Summary
-	printSummary(theme, results)
+	printSummaryForRuntime(theme, results, rt)
 	os.Exit(exitCode(results))
 }
 
 // checkKnowledgeDir validates a single knowledge subdirectory.
 func checkKnowledgeDir(theme *cli.Theme, dirPath, name string, maxAgeMonths float64, results *Results) {
-	relPath := fmt.Sprintf(".claude/knowledge/%s/", name)
+	checkKnowledgeDirAt(theme, dirPath, ".claude/knowledge/", name, maxAgeMonths, results)
+}
+
+func checkKnowledgeDirAt(theme *cli.Theme, dirPath, knowledgeLabel, name string, maxAgeMonths float64, results *Results) {
+	relPath := fmt.Sprintf("%s%s/", knowledgeLabel, name)
 
 	mdFiles, err := config.ListMDFiles(dirPath)
 	if err != nil {
@@ -189,16 +206,24 @@ func checkKnowledgeDir(theme *cli.Theme, dirPath, name string, maxAgeMonths floa
 
 // checkContextFiles verifies that key .claude/ context files exist.
 func checkContextFiles(theme *cli.Theme, root string, results *Results) {
+	rt := agentruntime.Registry.Get("claude")
+	checkContextFilesForRuntime(theme, root, rt.ContextFiles(), results)
+}
+
+func checkContextFilesForRuntime(theme *cli.Theme, root string, spec agentruntime.ContextFileSpec, results *Results) {
+	if spec.ContextDir == "" {
+		return
+	}
+
 	contextFiles := []struct {
-		rel   string
 		label string
 	}{
-		{".claude/SERVICE_CONTEXT.md", "SERVICE_CONTEXT.md"},
-		{".claude/NEXT_STEPS.md", "NEXT_STEPS.md"},
+		{"SERVICE_CONTEXT.md"},
+		{"NEXT_STEPS.md"},
 	}
 
 	for _, cf := range contextFiles {
-		filePath := filepath.Join(root, cf.rel)
+		filePath := filepath.Join(root, spec.ContextDir, cf.label)
 		if config.FileExists(filePath) {
 			fmt.Println(theme.StatusLine(cli.Pass, cf.label, "exists"))
 			results.Pass++
@@ -211,7 +236,20 @@ func checkContextFiles(theme *cli.Theme, root string, results *Results) {
 
 // checkTrinityLog verifies the trinity sync log exists.
 func checkTrinityLog(theme *cli.Theme, root string, results *Results) {
-	logPath := filepath.Join(root, ".claude", "trinity-log.md")
+	rt := agentruntime.Registry.Get("claude")
+	checkTrinityLogForRuntime(theme, root, rt.ContextFiles(), results)
+}
+
+func checkTrinityLogForRuntime(theme *cli.Theme, root string, spec agentruntime.ContextFileSpec, results *Results) {
+	logDir := spec.ContextDir
+	if logDir == "" && spec.KnowledgeDir != "" {
+		logDir = filepath.Dir(spec.KnowledgeDir)
+	}
+	if logDir == "" || logDir == "." {
+		return
+	}
+
+	logPath := filepath.Join(root, logDir, "trinity-log.md")
 	if config.FileExists(logPath) {
 		fmt.Println(theme.StatusLine(cli.Pass, "trinity-log.md", "exists"))
 		results.Pass++
@@ -226,56 +264,82 @@ var ExpectedSkills = matrixassets.ExpectedSkills
 
 // checkAgentSkillEcosystem verifies expected agents and skills are present.
 func checkAgentSkillEcosystem(theme *cli.Theme, root string, results *Results) {
-	claudeDir := filepath.Join(root, ".claude")
+	rt := agentruntime.Registry.Get("claude")
+	checkAgentSkillEcosystemForRuntime(theme, root, rt, results)
+}
 
-	agentsDir := filepath.Join(claudeDir, "agents")
-	if config.IsDir(agentsDir) {
-		for _, agent := range ExpectedAgents {
-			p := filepath.Join(agentsDir, agent)
-			label := ".claude/agents/" + agent
-			if config.FileExists(p) {
-				fmt.Println(theme.StatusLine(cli.Pass, label, "exists"))
-				results.Pass++
-			} else {
-				fmt.Println(theme.StatusLine(cli.Warn, label, "missing — re-provision with neo init"))
-				results.Warn++
-			}
-		}
+func checkAgentSkillEcosystemForRuntime(theme *cli.Theme, root string, rt agentruntime.Runtime, results *Results) {
+	spec := rt.ContextFiles()
+	capabilities := rt.Capabilities()
+
+	if !capabilities.AgentDefinitions || spec.AgentDir == "" {
+		fmt.Println("  " + cli.Dim("Agent definitions: not provisioned for "+rt.DisplayName()))
 	} else {
-		fmt.Println(theme.StatusLine(cli.Warn, ".claude/agents/", "missing — re-provision with neo init"))
-		results.Warn++
+		agentsDir := filepath.Join(root, spec.AgentDir)
+		agentDirLabel := filepath.ToSlash(spec.AgentDir) + "/"
+		if config.IsDir(agentsDir) {
+			for _, agent := range ExpectedAgents {
+				p := filepath.Join(agentsDir, agent)
+				label := filepath.ToSlash(filepath.Join(spec.AgentDir, agent))
+				if config.FileExists(p) {
+					fmt.Println(theme.StatusLine(cli.Pass, label, "exists"))
+					results.Pass++
+				} else {
+					fmt.Println(theme.StatusLine(cli.Warn, label, "missing — re-provision with neo init"))
+					results.Warn++
+				}
+			}
+		} else {
+			fmt.Println(theme.StatusLine(cli.Warn, agentDirLabel, "missing — re-provision with neo init"))
+			results.Warn++
+		}
 	}
 
-	skillsDir := filepath.Join(claudeDir, "skills")
-	if config.IsDir(skillsDir) {
-		for _, skill := range ExpectedSkills {
-			dir := filepath.Join(skillsDir, skill)
-			label := ".claude/skills/" + skill + "/"
-			if config.IsDir(dir) {
-				fmt.Println(theme.StatusLine(cli.Pass, label, "exists"))
-				results.Pass++
-			} else {
-				fmt.Println(theme.StatusLine(cli.Warn, label, "missing — re-provision with neo init"))
-				results.Warn++
-			}
-		}
+	if !capabilities.SkillDefinitions || spec.SkillDir == "" {
+		fmt.Println("  " + cli.Dim("Skill definitions: not provisioned for "+rt.DisplayName()))
 	} else {
-		fmt.Println(theme.StatusLine(cli.Warn, ".claude/skills/", "missing — re-provision with neo init"))
-		results.Warn++
+		skillsDir := filepath.Join(root, spec.SkillDir)
+		skillDirLabel := filepath.ToSlash(spec.SkillDir) + "/"
+		if config.IsDir(skillsDir) {
+			for _, skill := range ExpectedSkills {
+				dir := filepath.Join(skillsDir, skill)
+				label := filepath.ToSlash(filepath.Join(spec.SkillDir, skill)) + "/"
+				if config.IsDir(dir) {
+					fmt.Println(theme.StatusLine(cli.Pass, label, "exists"))
+					results.Pass++
+				} else {
+					fmt.Println(theme.StatusLine(cli.Warn, label, "missing — re-provision with neo init"))
+					results.Warn++
+				}
+			}
+		} else {
+			fmt.Println(theme.StatusLine(cli.Warn, skillDirLabel, "missing — re-provision with neo init"))
+			results.Warn++
+		}
 	}
 }
 
 // printSummary renders the final pass/fail/warn summary.
 func printSummary(theme *cli.Theme, results *Results) {
+	rt := agentruntime.Registry.Get("claude")
+	printSummaryForRuntime(theme, results, rt)
+}
+
+func printSummaryForRuntime(theme *cli.Theme, results *Results, rt agentruntime.Runtime) {
 	fmt.Println()
 	fmt.Println(theme.Summary(results.Pass, results.Fail, results.Warn))
 
 	if results.Warn > 0 {
-		fmt.Println()
-		fmt.Println(theme.WarnBox("Some checks need attention",
+		details := []string{
 			"Run: trinity refresh --stale-only to update stale docs",
 			"Run: trinity sync to regenerate missing _index.md",
-			"Run: neo init to re-provision missing agents/skills"))
+		}
+		capabilities := rt.Capabilities()
+		if capabilities.AgentDefinitions || capabilities.SkillDefinitions {
+			details = append(details, "Run: neo init to re-provision missing agents/skills")
+		}
+		fmt.Println()
+		fmt.Println(theme.WarnBox("Some checks need attention", details...))
 	}
 	fmt.Println()
 }

@@ -2,15 +2,18 @@
 set -euo pipefail
 
 # ─── Finalizer — Post-Loop Context Population ─────────────────────
-# Runs after reviewer APPROVED verdict to populate .claude/ with real content.
+# Runs after reviewer APPROVED verdict to update runtime context.
 # Usage: .autonomous/finalizer.sh  (or via `morp finalize`)
 # ──────────────────────────────────────────────────────────────────
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Unset CLAUDECODE to prevent nested session errors
-unset CLAUDECODE 2>/dev/null || true
+log() {
+  echo "$1"
+}
+
+source "${SCRIPT_DIR}/config.sh"
 
 CYCLES_DIR="${PROJECT_DIR}/tasks/cycles"
 FINALIZER_PROMPT="${SCRIPT_DIR}/prompts/finalizer.md"
@@ -39,11 +42,15 @@ echo ""
 
 cd "${PROJECT_DIR}"
 
-claude -p "$(cat "${FINALIZER_PROMPT}")" \
-  --allowedTools "Read,Write,Edit,Glob,Grep,Bash(make build),Bash(make test),Bash(ls *),Bash(cat *),Bash(git log *),Bash(git diff *),Bash(git show *)" \
-  --max-turns 15 \
-  --model claude-sonnet-4-6 \
-  --no-session-persistence
+check_auth
+run_finalizer \
+  "$(cat "${FINALIZER_PROMPT}")" \
+  "Read,Write,Edit,Glob,Grep,Bash(make build),Bash(make test),Bash(ls *),Bash(cat *),Bash(git log *),Bash(git diff *),Bash(git show *)" \
+  15
 
 echo ""
-echo "Finalizer complete. Review .claude/ for updated context files."
+if [ -n "${CONTEXT_DIR:-}" ]; then
+  echo "Finalizer complete. Review ${CONTEXT_DIR}/ for updated context files."
+else
+  echo "Finalizer complete. Review ${CONTEXT_FILE} for updated context."
+fi

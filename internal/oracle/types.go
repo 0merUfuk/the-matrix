@@ -18,6 +18,16 @@ type StackContext struct {
 	CreatedDate       string            `json:"createdDate"`
 	GoldStandards     map[string]string `json:"-"` // Injected at render time, not from wizard/JSON
 	GoldStandardsDir  string            `json:"-"` // Resolved from --gold-standards flag or convention dir
+
+	// Runtime-specific template paths. These are populated only while rendering.
+	Runtime            string `json:"-"`
+	ContextFile        string `json:"-"`
+	KnowledgeDir       string `json:"-"`
+	ServiceContextFile string `json:"-"`
+	DecisionsFile      string `json:"-"`
+	KnownIssuesFile    string `json:"-"`
+	NextStepsFile      string `json:"-"`
+	ContextFilesLabel  string `json:"-"`
 }
 
 // Topic represents a single knowledge topic with display name.

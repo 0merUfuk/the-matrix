@@ -1,6 +1,6 @@
-**Version**: 1.2
+**Version**: 1.3
 **Created**: 2026-03-17
-**Last Updated**: 2026-07-29
+**Last Updated**: 2026-08-10
 **Authors:** Ömer Ufuk
 
 ---
@@ -9,7 +9,7 @@
 
 ## The Concept
 
-A bash script (loop.sh) runs `claude -p` (headless Claude Code) in a loop. Each iteration has up to 6 phases —
+A Bash script (`loop.sh`) calls the runtime-specific `run_agent()` function in a loop. Claude Code and OpenAI Codex configs provide different headless invocations behind that function. Each iteration has up to 6 phases —
 Manager (review/reprioritize), Strategist (resolve pending decisions), Developer, Tester, Reviewer, and Security —
 each getting a different role prompt. They communicate through files in `tasks/` (shared memory, gitignored).
 
@@ -21,7 +21,7 @@ Two quality gates must both pass before the loop finalizes: the Reviewer (code q
 ```
 .autonomous/                        # Loop infrastructure (gitignored)
 ├── loop.sh                         # The orchestrator — bash while loop
-├── config.sh                       # Turns, model, allowedTools per role
+├── config.sh                       # Runtime auth, invocation, model, role limits/tools
 ├── SETUP_GUIDE.md                  # (optional, user-created)
 └── prompts/
     ├── manager.md                  # "Review previous cycle, reprioritize tasks" (cycle > 1 only)
@@ -42,7 +42,7 @@ tasks/                              # Shared memory between phases (gitignored)
 ├── STOP                            # Touch to halt gracefully (SSH from phone)
 ├── loop.log                        # Timestamped log of everything
 └── cycles/                         # Per-cycle output
-    ├── cycle-001-developer-output.json
+    ├── cycle-001-developer-output.json # Claude JSON or Codex JSONL events
     ├── cycle-001-tester-output.json
     ├── cycle-001-reviewer-output.json
     ├── cycle-001-reviewer.md        # Reviewer verdict file (parsed by loop)
@@ -128,8 +128,8 @@ pipeline. The loop checks `tasks/STOP` after every phase and halts immediately i
 ├──────────────────────┼─────────────────────┼────────────────────────────────────────────┤
 │ MAX_CYCLES           │ while loop bound    │ Hard cap on total iterations                │
 ├──────────────────────┼─────────────────────┼────────────────────────────────────────────┤
-│ --max-turns          │ per-phase flag      │ Per-phase turn limit (prevents infinite     │
-│                      │                     │ loops within a phase)                      │
+│ Runtime phase limit  │ config capability   │ Claude enforces --max-turns; Codex has no   │
+│                      │                     │ equivalent CLI limit in the supported build │
 ├──────────────────────┼─────────────────────┼────────────────────────────────────────────┤
 │ Git tags             │ tag_cycle()         │ auto/cycle-001-pre-developer etc. —         │
 │                      │                     │ rollback points before each phase          │
@@ -146,16 +146,16 @@ pipeline. The loop checks `tasks/STOP` after every phase and halts immediately i
 
 ## Setup Steps
 
-1. Run `morp init` to scaffold a full service with .claude/ ecosystem
-2. Run `morp loop` to add the autonomous loop to your project
+1. Run `morp init --runtime claude|codex` to scaffold a service with runtime context
+2. Run `morp loop --runtime claude|codex` to add the autonomous loop to an existing project
 3. Review & refine — check prompts match your tech stack, config has right tools
 4. Fill human files — tasks/todo.md, tasks/TARGET_STATE.md, tasks/DECISIONS.md
 5. Git init + commit — loop needs at least one commit for tagging
-6. Dry run — single `claude -p` call with developer prompt to verify
+6. Dry run — one headless call through the selected runtime with the developer prompt
 7. Run loop — `.autonomous/loop.sh` (foreground) or `nohup ... &` (background)
 8. Morning review — check tasks/loop.log, git log, tasks/current-state.md
 
-## What Was Fixed After Test Run
+## What Was Fixed After The Original Claude Test Run
 
 ```
 ┌──────────────────────┬────────────────────────────────┬────────────────────────────────────────────┐

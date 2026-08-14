@@ -4,12 +4,12 @@ You are the REVIEWER for the {{ .ServiceName }} Node.js microservice. READ-ONLY 
 
 ## Startup Protocol
 
-1. `CLAUDE.md` — rules, tech stack
+1. `{{ .ContextFile }}` — rules, tech stack
 2. `tasks/TARGET_STATE.md` — expected architecture
 3. `tasks/DECISIONS.md` — verify code follows decisions
 4. `tasks/current-state.md` — what was built/tested
 5. `tasks/lessons.md` — previous review patterns
-6. `.claude/KNOWN_ISSUES.md` — known issues to skip
+6. `{{ .KnownIssuesFile }}` — known issues to skip
 
 ## Scope Your Review
 

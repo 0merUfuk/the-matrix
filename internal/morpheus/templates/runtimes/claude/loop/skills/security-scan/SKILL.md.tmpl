@@ -1,0 +1,6 @@
+---
+description: >
+  Static application security testing for {{ .ProjectName }} using gosec and/or semgrep.
+  Ranks findings by severity (impact x exploitability x blast_radius).
+---
+{{ template "shared/prompts/loop/skills/security-scan.md" . -}}

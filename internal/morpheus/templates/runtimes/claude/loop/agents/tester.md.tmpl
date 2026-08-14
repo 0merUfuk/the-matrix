@@ -1,0 +1,13 @@
+---
+name: tester
+description: >
+  QA engineer for {{ .ProjectName }}. Writes tests, validates implementations,
+  checks edge cases, and runs the test suite.
+tools: Read, Write, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs
+model: sonnet
+memory: project
+isolation: worktree
+maxTurns: 50
+permissionMode: bypassPermissions
+---
+{{ template "shared/prompts/loop/tester.md" . -}}

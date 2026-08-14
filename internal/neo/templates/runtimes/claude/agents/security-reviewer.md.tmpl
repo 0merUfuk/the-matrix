@@ -1,0 +1,14 @@
+---
+name: security-reviewer
+description: >
+  Security vulnerability auditor for {{ .ProjectName }}. Checks code against
+  OWASP Top 10:2025 and ASI01-ASI10. Read-only — cannot modify any files.
+  Produces SECURITY_APPROVED/SECURITY_BLOCKED verdict.
+tools: Read, Grep, Glob, Bash, mcp__MCP_DOCKER__sequentialthinking, mcp__plugin_github_github__search_code
+disallowedTools: Write, Edit, NotebookEdit
+model: sonnet
+permissionMode: bypassPermissions
+memory: project
+maxTurns: 50
+---
+{{ template "shared/prompts/security-reviewer.md" . -}}

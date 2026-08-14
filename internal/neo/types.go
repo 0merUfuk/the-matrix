@@ -19,6 +19,16 @@ type ProjectProfile struct {
 	IsInternal  bool   `json:"isInternal"`
 	CreatedDate string `json:"createdDate"` // YYYY-MM-DD
 	OutputPath  string `json:"outputPath"`  // absolute path to project root
+
+	// Runtime-specific template paths. These are populated only while rendering.
+	Runtime            string `json:"-"`
+	ContextFile        string `json:"-"`
+	KnowledgeDir       string `json:"-"`
+	ServiceContextFile string `json:"-"`
+	DecisionsFile      string `json:"-"`
+	KnownIssuesFile    string `json:"-"`
+	NextStepsFile      string `json:"-"`
+	ContextFilesLabel  string `json:"-"`
 }
 
 // StackProfile describes a tech stack used in the project.

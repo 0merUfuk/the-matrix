@@ -10,16 +10,19 @@ import (
 	huh "charm.land/huh/v2"
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
+	"github.com/0merUfuk/the-matrix/internal/matrixcfg"
 	"github.com/0merUfuk/the-matrix/internal/registry"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
 	"github.com/0merUfuk/the-matrix/internal/validation"
 	"github.com/0merUfuk/the-matrix/internal/wizard"
 )
 
 // InitOpts configures the neo init command.
 type InitOpts struct {
-	DryRun bool
-	Path   string
-	Preset string // Named preset — skips wizard if non-empty
+	DryRun  bool
+	Path    string
+	Preset  string // Named preset — skips wizard if non-empty
+	Runtime string
 }
 
 // runPresetFlow applies the preset template and derives the project name from
@@ -70,7 +73,7 @@ func runPresetFlow(presetName, path string) (ProjectProfile, error) {
 	return profile, nil
 }
 
-// RunInit provisions a complete Claude Code agent ecosystem.
+// RunInit provisions a complete agent runtime ecosystem.
 func RunInit(opts InitOpts) {
 	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan("neo — ecosystem provisioner")))
 
@@ -111,12 +114,19 @@ func RunInit(opts InitOpts) {
 		profile.OutputPath = abs
 	}
 
+	rt, err := agentruntime.Select(opts.Runtime, outputDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(err.Error()))
+		os.Exit(1)
+	}
+	runtimeName := rt.Name()
+
 	// Step 2: Print summary and confirm
 	printProfileSummary(&profile)
 
 	// Step 3: Dry-run — must come before registry check to avoid writing files
 	if opts.DryRun {
-		manifest := BuildNeoManifest(&profile, outputDir)
+		manifest := BuildNeoManifest(&profile, outputDir, runtimeName)
 		fmt.Printf("  %s\n\n", cli.Bold(cli.Cyan(fmt.Sprintf("── Dry Run: %d files would be generated ──", len(manifest)))))
 		cwd, _ := os.Getwd()
 		for _, entry := range manifest {
@@ -143,12 +153,22 @@ func RunInit(opts InitOpts) {
 	}
 
 	// Step 5: Generate ecosystem
-	fmt.Printf("  Generating .claude/ ecosystem...\n")
+	if runtimeName == "claude" {
+		fmt.Printf("  Generating .claude/ ecosystem...\n")
+	} else {
+		fmt.Printf("  Generating %s ecosystem...\n", rt.DisplayName())
+	}
 
-	written, err := GenerateEcosystem(&profile, outputDir)
+	written, err := GenerateEcosystem(&profile, outputDir, runtimeName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Generation failed: %v", err)))
 		os.Exit(1)
+	}
+	if strings.TrimSpace(opts.Runtime) != "" {
+		if err := matrixcfg.WriteRuntime(outputDir, runtimeName); err != nil {
+			fmt.Fprintf(os.Stderr, "  %s\n", cli.Red(fmt.Sprintf("Runtime config failed: %v", err)))
+			os.Exit(1)
+		}
 	}
 
 	fmt.Printf("  %s\n", cli.Green(fmt.Sprintf("✓ Generated %d files", len(written))))
@@ -157,7 +177,7 @@ func RunInit(opts InitOpts) {
 	printInitSummary(&profile, outputDir, len(written), registryPulled)
 
 	// Step 7: Optionally scaffold services with morp
-	RunMorpheusIntegration(&profile, outputDir)
+	RunMorpheusIntegration(&profile, outputDir, runtimeName)
 }
 
 func printProfileSummary(p *ProjectProfile) {

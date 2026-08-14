@@ -11,6 +11,8 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
+	_ "github.com/0merUfuk/the-matrix/internal/runtime/builtin"
 )
 
 // RunStatus shows loop progress at a glance.
@@ -25,13 +27,7 @@ func RunStatus() {
 
 	serviceName := filepath.Base(cwd)
 
-	// Tech detection
-	techLabel := "Unknown"
-	if config.FileExists(filepath.Join(cwd, ".claude/rules/go-service.md")) {
-		techLabel = "Go"
-	} else if config.FileExists(filepath.Join(cwd, ".claude/rules/node-service.md")) {
-		techLabel = "Node.js"
-	}
+	techLabel := detectTechLabel(cwd)
 
 	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Cyan(fmt.Sprintf("morp status — %s  (%s)", serviceName, techLabel))))
 
@@ -101,6 +97,24 @@ func RunStatus() {
 	}
 
 	fmt.Println()
+}
+
+func detectTechLabel(cwd string) string {
+	rt := agentruntime.Registry.Get(agentruntime.DetectRuntime(cwd))
+	if rt == nil {
+		return "Unknown"
+	}
+	rulesDir := rt.ContextFiles().RulesDir
+	if rulesDir == "" {
+		return "Unknown"
+	}
+	if config.FileExists(filepath.Join(cwd, rulesDir, "go-service.md")) {
+		return "Go"
+	}
+	if config.FileExists(filepath.Join(cwd, rulesDir, "node-service.md")) {
+		return "Node.js"
+	}
+	return "Unknown"
 }
 
 func countTasks(cwd string) (done, remaining int) {

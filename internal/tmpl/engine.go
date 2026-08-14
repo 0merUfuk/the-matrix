@@ -63,6 +63,25 @@ func Render(name, tmplStr string, data any) (string, error) {
 	return buf.String(), nil
 }
 
+// RenderWithPartials renders a template string with named partial templates.
+func RenderWithPartials(name, tmplStr string, partials map[string]string, data any) (string, error) {
+	t, err := template.New(name).Funcs(FuncMap()).Parse(tmplStr)
+	if err != nil {
+		return "", fmt.Errorf("parsing template %s: %w", name, err)
+	}
+	for partialName, partial := range partials {
+		if _, err := t.New(partialName).Parse(partial); err != nil {
+			return "", fmt.Errorf("parsing template %s: %w", name, err)
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := t.ExecuteTemplate(&buf, name, data); err != nil {
+		return "", fmt.Errorf("rendering template %s: %w", name, err)
+	}
+	return buf.String(), nil
+}
+
 // RenderToFile renders a template string and writes the result to a file.
 func RenderToFile(name, tmplStr string, data any, outPath string) error {
 	content, err := Render(name, tmplStr, data)

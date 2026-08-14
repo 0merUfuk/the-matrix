@@ -18,6 +18,9 @@ func TestLoad_NoFile(t *testing.T) {
 	if cfg.Models.Default != nil {
 		t.Error("expected Models.Default to be nil")
 	}
+	if cfg.Runtime != nil {
+		t.Error("expected Runtime to be nil")
+	}
 	if cfg.Morpheus.MaxCycles != nil {
 		t.Error("expected Morpheus.MaxCycles to be nil")
 	}
@@ -29,6 +32,8 @@ func TestLoad_NoFile(t *testing.T) {
 func TestLoad_ValidConfig(t *testing.T) {
 	dir := t.TempDir()
 	content := `
+runtime: codex
+
 models:
   default: "claude-sonnet-4-20250514"
   manager: "claude-opus-4-20250514"
@@ -67,6 +72,7 @@ trinity:
 	}
 
 	// Models
+	assertStringPtr(t, "Runtime", cfg.Runtime, "codex")
 	assertStringPtr(t, "Models.Default", cfg.Models.Default, "claude-sonnet-4-20250514")
 	assertStringPtr(t, "Models.Manager", cfg.Models.Manager, "claude-opus-4-20250514")
 	assertStringPtr(t, "Models.Architect", cfg.Models.Architect, "claude-opus-4-20250514")

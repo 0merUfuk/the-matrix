@@ -27,10 +27,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Unset CLAUDECODE env var — prevents "nested session" errors when launched
-# from inside a Claude Code terminal. Safe for -p (headless) mode.
-unset CLAUDECODE 2>/dev/null || true
-
 source "${SCRIPT_DIR}/config.sh"
 
 # ─── Logging ────────────────────────────────────────────────────
@@ -46,22 +42,12 @@ log() {
 preflight() {
   cd "$PROJECT_DIR"
 
-  if ! command -v claude &>/dev/null; then
-    log "FATAL: 'claude' CLI not found in PATH. Install: https://code.claude.com"
-    exit 1
-  fi
-
-  if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-    if ! claude auth status &>/dev/null 2>&1; then
-      log "FATAL: Not authenticated. Run 'claude auth login' first."
-      exit 1
-    fi
-  fi
+  check_auth
 
   mkdir -p "$RESEARCH_DIR" "$REVIEW_DIR" "$CYCLES_DIR" "$OUTPUT_DIR"
 
-  if [ ! -f "CLAUDE.md" ]; then
-    log "FATAL: CLAUDE.md not found. Run oracle research to scaffold first."
+  if [ ! -f "$CONTEXT_FILE" ]; then
+    log "FATAL: ${CONTEXT_FILE} not found. Run oracle research to scaffold first."
     exit 1
   fi
 
@@ -96,7 +82,7 @@ tag_cycle() {
   git tag -f "$tag" HEAD 2>/dev/null || true
 }
 
-# ─── Run a Claude Phase ────────────────────────────────────────
+# ─── Run an Agent Phase ────────────────────────────────────────
 run_phase() {
   local cycle=$1
   local role=$2           # researcher | reviewer | synthesizer
@@ -126,26 +112,27 @@ run_phase() {
   local output_file="${CYCLES_DIR}/cycle-${cycle_padded}-${role}-output.json"
 
   set +e
-  claude -p "$prompt" \
-    --allowedTools "$allowed_tools" \
-    --max-turns "$max_turns" \
-    --model "$MODEL" \
-    --output-format json \
-    --no-session-persistence \
-    > "$output_file" 2>&1
+  run_agent "$prompt" "$allowed_tools" "$max_turns" "$output_file"
   local exit_code=$?
   set -e
 
-  tag_cycle "$cycle" "post-${role}"
+  set +e
+  classify_exit "$exit_code"
+  local classify_result=$?
+  set -e
 
-  if [ $exit_code -eq 0 ]; then
+  if [ $classify_result -eq 0 ]; then
     log "Cycle ${cycle} | ${role_upper} | completed successfully"
-  else
+  elif [ $classify_result -eq 1 ]; then
     log "Cycle ${cycle} | ${role_upper} | exited with code ${exit_code}"
-    if [ $exit_code -eq 1 ]; then
-      log "  (likely: max-turns limit reached — not an error)"
-    fi
+    log "  (max-turns limit reached - not an error)"
+  else
+    log "Cycle ${cycle} | ${role_upper} | FAILED with code ${exit_code}"
+    rm -f "$TEMP_PROMPT_FILE"
+    return 1
   fi
+
+  tag_cycle "$cycle" "post-${role}"
 
   # Extract token usage
   if [ -f "$output_file" ]; then
@@ -153,9 +140,21 @@ run_phase() {
     tokens=$(python3 -c "
 import json, sys
 try:
-    d = json.load(open('$output_file'))
+    raw = open('$output_file').read()
+    try:
+        d = json.loads(raw)
+    except json.JSONDecodeError:
+        events = []
+        for line in raw.splitlines():
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+        d = next(event for event in reversed(events) if event.get('type') == 'turn.completed')
     u = d.get('usage', {})
-    inp = u.get('input_tokens', 0) + u.get('cache_read_input_tokens', 0) + u.get('cache_creation_input_tokens', 0)
+    cache_read = u.get('cache_read_input_tokens', u.get('cached_input_tokens', 0))
+    cache_create = u.get('cache_creation_input_tokens', u.get('cache_write_input_tokens', 0))
+    inp = u.get('input_tokens', 0) + cache_read + cache_create
     out = u.get('output_tokens', 0)
     print(f'{inp} in / {out} out')
 except: print('unknown')
@@ -164,6 +163,7 @@ except: print('unknown')
   fi
 
   rm -f "$TEMP_PROMPT_FILE"
+  return 0
 }
 
 # ─── Human Review Gate ─────────────────────────────────────────
@@ -224,15 +224,31 @@ total_cache_create = 0
 total_cache_read = 0
 phase_stats = []
 
+def load_result(path):
+    raw = open(path).read()
+    try:
+        d = json.loads(raw)
+        return d, d.get('num_turns', 0)
+    except json.JSONDecodeError:
+        events = []
+        for line in raw.splitlines():
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+        completed = [event for event in events if event.get('type') == 'turn.completed']
+        if not completed:
+            raise ValueError('no completed runtime turn')
+        return completed[-1], len(completed)
+
 for f in sorted(glob.glob('${CYCLES_DIR}/cycle-*-output.json')):
     try:
-        d = json.load(open(f))
+        d, turns = load_result(f)
         u = d.get('usage', {})
         inp = u.get('input_tokens', 0)
         out = u.get('output_tokens', 0)
-        cache_create = u.get('cache_creation_input_tokens', 0)
-        cache_read = u.get('cache_read_input_tokens', 0)
-        turns = d.get('num_turns', 0)
+        cache_create = u.get('cache_creation_input_tokens', u.get('cache_write_input_tokens', 0))
+        cache_read = u.get('cache_read_input_tokens', u.get('cached_input_tokens', 0))
         name = os.path.basename(f).replace('-output.json', '')
         phase_stats.append((name, inp + cache_create + cache_read, out, turns))
         total_input += inp + cache_create + cache_read
@@ -272,10 +288,13 @@ main() {
     fi
 
     # Researcher agent
-    run_phase "$cycle" "researcher" \
+    if ! run_phase "$cycle" "researcher" \
       "${PROMPTS_DIR}/researcher.md" \
       "$RESEARCHER_TOOLS" \
-      "$RESEARCHER_MAX_TURNS"
+      "$RESEARCHER_MAX_TURNS"; then
+      echo "RUNTIME_ERROR" > "${TASKS_DIR}/status.txt"
+      exit 1
+    fi
 
     if check_stop; then
       echo "STOPPED_BY_USER" > "${TASKS_DIR}/status.txt"
@@ -283,10 +302,13 @@ main() {
     fi
 
     # Reviewer agent — validates research quality
-    run_phase "$cycle" "reviewer" \
+    if ! run_phase "$cycle" "reviewer" \
       "${PROMPTS_DIR}/reviewer.md" \
       "$REVIEWER_TOOLS" \
-      "$REVIEWER_MAX_TURNS"
+      "$REVIEWER_MAX_TURNS"; then
+      echo "RUNTIME_ERROR" > "${TASKS_DIR}/status.txt"
+      exit 1
+    fi
 
     if check_stop; then
       echo "STOPPED_BY_USER" > "${TASKS_DIR}/status.txt"
@@ -313,10 +335,13 @@ main() {
 
   # Synthesizer runs as cycle 5 (after 4 research cycles)
   local SYNTHESIS_CYCLE=$((RESEARCH_CYCLES + 1))
-  run_phase "$SYNTHESIS_CYCLE" "synthesizer" \
+  if ! run_phase "$SYNTHESIS_CYCLE" "synthesizer" \
     "${PROMPTS_DIR}/synthesizer.md" \
     "$SYNTHESIZER_TOOLS" \
-    "$SYNTHESIZER_MAX_TURNS"
+    "$SYNTHESIZER_MAX_TURNS"; then
+    echo "RUNTIME_ERROR" > "${TASKS_DIR}/status.txt"
+    exit 1
+  fi
 
   echo "SYNTHESIS_COMPLETE" > "${TASKS_DIR}/status.txt"
 

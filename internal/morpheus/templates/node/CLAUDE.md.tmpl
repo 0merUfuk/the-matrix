@@ -23,8 +23,8 @@
 ```
 src/
 ├── routes/                   # Layer 1: HTTP Transport
-│   ├── {{ lower (index .Entities 0) }}.routes.js
-│   └── health.routes.js
+{{ if .Entities }}│   ├── {{ lower (index .Entities 0) }}.routes.js
+{{ end }}│   └── health.routes.js
 ├── controllers/              # Layer 2: Orchestration (coord. services)
 {{ range .Entities }}│   ├── {{ lower . }}.controller.js
 {{ end }}├── services/                 # Layer 3: Business logic

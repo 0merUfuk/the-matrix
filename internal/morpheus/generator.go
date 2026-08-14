@@ -3,45 +3,37 @@ package morpheus
 import (
 	"embed"
 	"path/filepath"
+	"strings"
+
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
+	_ "github.com/0merUfuk/the-matrix/internal/runtime/builtin"
 )
 
 //go:embed templates/shared/*
 //go:embed templates/shared/tasks/*
+//go:embed templates/shared/prompts/*.tmpl
+//go:embed templates/shared/prompts/skills/*.tmpl
+//go:embed templates/shared/prompts/loop/*.tmpl
+//go:embed templates/shared/prompts/loop/skills/*.tmpl
+//go:embed templates/runtimes/claude/*.tmpl
+//go:embed templates/runtimes/claude/agents/*.tmpl
+//go:embed templates/runtimes/claude/skills/*/*.tmpl
+//go:embed templates/runtimes/claude/loop/agents/*.tmpl
+//go:embed templates/runtimes/claude/loop/skills/*/*.tmpl
+//go:embed templates/runtimes/codex/*.tmpl
 //go:embed templates/go/*
 //go:embed templates/go/.autonomous/*
 //go:embed templates/go/.autonomous/prompts/*
-//go:embed templates/go/.claude/*
-//go:embed templates/go/.claude/agents/*
-//go:embed templates/go/.claude/skills/continue/*
-//go:embed templates/go/.claude/skills/commit/*
-//go:embed templates/go/.claude/skills/owasp-review/*
-//go:embed templates/go/.claude/skills/secret-scan/*
-//go:embed templates/go/.claude/skills/dep-audit/*
-//go:embed templates/go/.claude/skills/security-scan/*
+//go:embed templates/go/.claude/*.tmpl
 //go:embed templates/go/.claude/rules/*
 //go:embed templates/go/tasks/*
 //go:embed templates/go/external-configs/*
 //go:embed templates/node/*
 //go:embed templates/node/.autonomous/*
 //go:embed templates/node/.autonomous/prompts/*
-//go:embed templates/node/.claude/*
-//go:embed templates/node/.claude/agents/*
-//go:embed templates/node/.claude/skills/continue/*
-//go:embed templates/node/.claude/skills/commit/*
-//go:embed templates/node/.claude/skills/owasp-review/*
-//go:embed templates/node/.claude/skills/secret-scan/*
-//go:embed templates/node/.claude/skills/dep-audit/*
-//go:embed templates/node/.claude/skills/security-scan/*
+//go:embed templates/node/.claude/*.tmpl
 //go:embed templates/node/.claude/rules/*
 //go:embed templates/node/tasks/*
-//go:embed templates/loop/*
-//go:embed templates/loop/agents/*
-//go:embed templates/loop/skills/continue/*
-//go:embed templates/loop/skills/commit/*
-//go:embed templates/loop/skills/owasp-review/*
-//go:embed templates/loop/skills/secret-scan/*
-//go:embed templates/loop/skills/dep-audit/*
-//go:embed templates/loop/skills/security-scan/*
 //go:embed templates/loop/prompts/*
 //go:embed templates/loop/tasks/*
 var morpheusFS embed.FS
@@ -49,18 +41,35 @@ var morpheusFS embed.FS
 // ManifestEntry describes a file to generate.
 type ManifestEntry struct {
 	TemplatePath string // relative to templates/ in embed.FS
+	PartialPath  string // optional named partial relative to templates/
+	PartialPaths []string
 	OutputPath   string // absolute output path
 	IsStatic     bool
 }
 
 // BuildMorpheusManifest returns the file manifest for a morp scaffolded service.
-func BuildMorpheusManifest(ctx *ProjectContext, outputDir string) []ManifestEntry {
+func BuildMorpheusManifest(ctx *ProjectContext, outputDir string, runtimeNames ...string) []ManifestEntry {
 	o := func(rel string) string { return filepath.Join(outputDir, rel) }
+	rt, _ := resolveMorpheusRuntime(runtimeNames)
+	runtimeName := rt.Name()
+	contextSpec := rt.ContextFiles()
+	capabilities := rt.Capabilities()
 	techDir := "go"
 	if ctx.IsNode {
 		techDir = "node"
 	}
 	t := func(rel string) string { return filepath.Join(techDir, rel) }
+	finalizerTemplate := t(".autonomous/prompts/finalizer.md.tmpl")
+	if runtimeName == "codex" {
+		finalizerTemplate = "runtimes/codex/finalizer.md.tmpl"
+	}
+	p := func(templatePath, partialPath, outputPath string) ManifestEntry {
+		return ManifestEntry{
+			TemplatePath: templatePath,
+			PartialPath:  partialPath,
+			OutputPath:   o(outputPath),
+		}
+	}
 
 	var manifest []ManifestEntry
 
@@ -74,57 +83,81 @@ func BuildMorpheusManifest(ctx *ProjectContext, outputDir string) []ManifestEntr
 		ManifestEntry{TemplatePath: "shared/tasks/decisions-pending.tmpl", OutputPath: o("tasks/decisions-pending.md"), IsStatic: false},
 	)
 
-	// Tech-specific files
+	// Runtime context and config
+	if runtimeName == "codex" {
+		manifest = append(manifest, ManifestEntry{
+			TemplatePath: "runtimes/codex/AGENTS.md.tmpl",
+			PartialPaths: []string{
+				"shared/prompts/manager.md.tmpl",
+				"shared/prompts/strategist.md.tmpl",
+				"shared/prompts/developer.md.tmpl",
+				"shared/prompts/tester.md.tmpl",
+				"shared/prompts/reviewer.md.tmpl",
+				"shared/prompts/security-reviewer.md.tmpl",
+			},
+			OutputPath: o(contextSpec.PrimaryContext),
+		})
+	} else {
+		manifest = append(manifest, ManifestEntry{
+			TemplatePath: t("CLAUDE.md.tmpl"),
+			OutputPath:   o(contextSpec.PrimaryContext),
+		})
+	}
 	manifest = append(manifest,
-		ManifestEntry{TemplatePath: t("CLAUDE.md.tmpl"), OutputPath: o("CLAUDE.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".autonomous/config.sh.tmpl"), OutputPath: o(".autonomous/config.sh"), IsStatic: false},
+		ManifestEntry{TemplatePath: "runtimes/" + runtimeName + "/config.sh.tmpl", OutputPath: o(".autonomous/config.sh"), IsStatic: false},
+	)
+
+	// Tech-specific runtime-agnostic prompts
+	manifest = append(manifest,
 		ManifestEntry{TemplatePath: t(".autonomous/prompts/manager.md.tmpl"), OutputPath: o(".autonomous/prompts/manager.md"), IsStatic: false},
 		ManifestEntry{TemplatePath: t(".autonomous/prompts/strategist.md.tmpl"), OutputPath: o(".autonomous/prompts/strategist.md"), IsStatic: false},
 		ManifestEntry{TemplatePath: t(".autonomous/prompts/developer.md.tmpl"), OutputPath: o(".autonomous/prompts/developer.md"), IsStatic: false},
 		ManifestEntry{TemplatePath: t(".autonomous/prompts/tester.md.tmpl"), OutputPath: o(".autonomous/prompts/tester.md"), IsStatic: false},
 		ManifestEntry{TemplatePath: t(".autonomous/prompts/reviewer.md.tmpl"), OutputPath: o(".autonomous/prompts/reviewer.md"), IsStatic: false},
 		ManifestEntry{TemplatePath: t(".autonomous/prompts/security.md.tmpl"), OutputPath: o(".autonomous/prompts/security.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".autonomous/prompts/finalizer.md.tmpl"), OutputPath: o(".autonomous/prompts/finalizer.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/settings.json.tmpl"), OutputPath: o(".claude/settings.json"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/SERVICE_CONTEXT.md.tmpl"), OutputPath: o(".claude/SERVICE_CONTEXT.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/NEXT_STEPS.md.tmpl"), OutputPath: o(".claude/NEXT_STEPS.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/DECISIONS.md.tmpl"), OutputPath: o(".claude/DECISIONS.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/KNOWN_ISSUES.md.tmpl"), OutputPath: o(".claude/KNOWN_ISSUES.md"), IsStatic: false},
+		ManifestEntry{TemplatePath: finalizerTemplate, OutputPath: o(".autonomous/prompts/finalizer.md"), IsStatic: false},
 	)
 
-	// Tech-specific agents
-	manifest = append(manifest,
-		ManifestEntry{TemplatePath: t(".claude/agents/developer.md.tmpl"), OutputPath: o(".claude/agents/developer.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/agents/tester.md.tmpl"), OutputPath: o(".claude/agents/tester.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/agents/reviewer.md.tmpl"), OutputPath: o(".claude/agents/reviewer.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/agents/strategist.md.tmpl"), OutputPath: o(".claude/agents/strategist.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/agents/manager.md.tmpl"), OutputPath: o(".claude/agents/manager.md"), IsStatic: false},
-	)
-
-	// Tech-specific skills
-	manifest = append(manifest,
-		ManifestEntry{TemplatePath: t(".claude/skills/continue/SKILL.md.tmpl"), OutputPath: o(".claude/skills/continue/SKILL.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/skills/commit/SKILL.md.tmpl"), OutputPath: o(".claude/skills/commit/SKILL.md"), IsStatic: false},
-	)
-
-	// Security agent + skills
-	manifest = append(manifest,
-		ManifestEntry{TemplatePath: t(".claude/agents/security-reviewer.md.tmpl"), OutputPath: o(".claude/agents/security-reviewer.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/skills/owasp-review/SKILL.md.tmpl"), OutputPath: o(".claude/skills/owasp-review/SKILL.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/skills/secret-scan/SKILL.md.tmpl"), OutputPath: o(".claude/skills/secret-scan/SKILL.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/skills/dep-audit/SKILL.md.tmpl"), OutputPath: o(".claude/skills/dep-audit/SKILL.md"), IsStatic: false},
-		ManifestEntry{TemplatePath: t(".claude/skills/security-scan/SKILL.md.tmpl"), OutputPath: o(".claude/skills/security-scan/SKILL.md"), IsStatic: false},
-	)
-
-	// Tech-specific rules
-	if ctx.IsGo {
+	if contextSpec.ContextDir != "" {
 		manifest = append(manifest,
-			ManifestEntry{TemplatePath: t(".claude/rules/go-service.md.tmpl"), OutputPath: o(".claude/rules/go-service.md"), IsStatic: false},
+			ManifestEntry{TemplatePath: "runtimes/claude/" + techDir + "-settings.json.tmpl", OutputPath: o(contextSpec.SettingsFile), IsStatic: false},
+			ManifestEntry{TemplatePath: t(".claude/SERVICE_CONTEXT.md.tmpl"), OutputPath: o(filepath.Join(contextSpec.ContextDir, "SERVICE_CONTEXT.md")), IsStatic: false},
+			ManifestEntry{TemplatePath: t(".claude/NEXT_STEPS.md.tmpl"), OutputPath: o(filepath.Join(contextSpec.ContextDir, "NEXT_STEPS.md")), IsStatic: false},
+			ManifestEntry{TemplatePath: t(".claude/DECISIONS.md.tmpl"), OutputPath: o(filepath.Join(contextSpec.ContextDir, "DECISIONS.md")), IsStatic: false},
+			ManifestEntry{TemplatePath: t(".claude/KNOWN_ISSUES.md.tmpl"), OutputPath: o(filepath.Join(contextSpec.ContextDir, "KNOWN_ISSUES.md")), IsStatic: false},
 		)
-	} else {
+	}
+
+	if capabilities.AgentDefinitions && contextSpec.AgentDir != "" {
 		manifest = append(manifest,
-			ManifestEntry{TemplatePath: t(".claude/rules/node-service.md.tmpl"), OutputPath: o(".claude/rules/node-service.md"), IsStatic: false},
+			p("runtimes/"+runtimeName+"/agents/developer.md.tmpl", "shared/prompts/developer.md.tmpl", filepath.Join(contextSpec.AgentDir, "developer.md")),
+			p("runtimes/"+runtimeName+"/agents/tester.md.tmpl", "shared/prompts/tester.md.tmpl", filepath.Join(contextSpec.AgentDir, "tester.md")),
+			p("runtimes/"+runtimeName+"/agents/reviewer.md.tmpl", "shared/prompts/reviewer.md.tmpl", filepath.Join(contextSpec.AgentDir, "reviewer.md")),
+			p("runtimes/"+runtimeName+"/agents/strategist.md.tmpl", "shared/prompts/strategist.md.tmpl", filepath.Join(contextSpec.AgentDir, "strategist.md")),
+			p("runtimes/"+runtimeName+"/agents/manager.md.tmpl", "shared/prompts/manager.md.tmpl", filepath.Join(contextSpec.AgentDir, "manager.md")),
+			p("runtimes/"+runtimeName+"/agents/security-reviewer.md.tmpl", "shared/prompts/security-reviewer.md.tmpl", filepath.Join(contextSpec.AgentDir, "security-reviewer.md")),
 		)
+	}
+
+	if capabilities.SkillDefinitions && contextSpec.SkillDir != "" {
+		for _, skill := range []string{"continue", "commit", "owasp-review", "secret-scan", "dep-audit", "security-scan"} {
+			manifest = append(manifest, p(
+				filepath.Join("runtimes", runtimeName, "skills", skill, "SKILL.md.tmpl"),
+				filepath.Join("shared", "prompts", "skills", skill+".md.tmpl"),
+				filepath.Join(contextSpec.SkillDir, skill, "SKILL.md"),
+			))
+		}
+	}
+
+	if contextSpec.RulesDir != "" {
+		ruleName := "node-service.md"
+		if ctx.IsGo {
+			ruleName = "go-service.md"
+		}
+		manifest = append(manifest, ManifestEntry{
+			TemplatePath: t(filepath.Join(".claude/rules", ruleName+".tmpl")),
+			OutputPath:   o(filepath.Join(contextSpec.RulesDir, ruleName)),
+		})
 	}
 
 	// Tasks
@@ -156,6 +189,52 @@ func BuildMorpheusManifest(ctx *ProjectContext, outputDir string) []ManifestEntr
 }
 
 // GenerateMorpheusFiles renders all init templates and writes files to disk.
-func GenerateMorpheusFiles(ctx *ProjectContext, outputDir string) ([]string, error) {
-	return generateManifestFiles(BuildMorpheusManifest(ctx, outputDir), ctx)
+func GenerateMorpheusFiles(ctx *ProjectContext, outputDir string, runtimeNames ...string) ([]string, error) {
+	rt, _ := resolveMorpheusRuntime(runtimeNames)
+	renderCtx := *ctx
+	renderCtx.Runtime = rt.Name()
+	setRuntimeTemplatePaths(&renderCtx.ContextFile, &renderCtx.ContextDir, &renderCtx.KnowledgeDir,
+		&renderCtx.ServiceContextFile, &renderCtx.DecisionsFile, &renderCtx.KnownIssuesFile,
+		&renderCtx.NextStepsFile, &renderCtx.ContextFilesLabel, rt)
+	return generateManifestFiles(BuildMorpheusManifest(ctx, outputDir, rt.Name()), &renderCtx)
+}
+
+func setRuntimeTemplatePaths(
+	contextFile, contextDir, knowledgeDir, serviceContextFile, decisionsFile,
+	knownIssuesFile, nextStepsFile, contextFilesLabel *string,
+	rt agentruntime.Runtime,
+) {
+	spec := rt.ContextFiles()
+	*contextFile = spec.PrimaryContext
+	*contextDir = spec.ContextDir
+	*knowledgeDir = spec.KnowledgeDir
+	if spec.ContextDir == "" {
+		*serviceContextFile = spec.PrimaryContext
+		*decisionsFile = spec.PrimaryContext
+		*knownIssuesFile = spec.PrimaryContext
+		*nextStepsFile = spec.PrimaryContext
+		*contextFilesLabel = spec.PrimaryContext
+		return
+	}
+	*serviceContextFile = filepath.Join(spec.ContextDir, "SERVICE_CONTEXT.md")
+	*decisionsFile = filepath.Join(spec.ContextDir, "DECISIONS.md")
+	*knownIssuesFile = filepath.Join(spec.ContextDir, "KNOWN_ISSUES.md")
+	*nextStepsFile = filepath.Join(spec.ContextDir, "NEXT_STEPS.md")
+	*contextFilesLabel = spec.ContextDir + "/"
+}
+
+func resolveMorpheusRuntime(runtimeNames []string) (agentruntime.Runtime, bool) {
+	name := ""
+	if len(runtimeNames) > 0 {
+		name = strings.TrimSpace(runtimeNames[0])
+	}
+	explicit := name != ""
+	if name == "" {
+		name = "claude"
+	}
+	rt := agentruntime.Registry.Get(name)
+	if rt == nil {
+		rt = agentruntime.Registry.Default()
+	}
+	return rt, explicit
 }

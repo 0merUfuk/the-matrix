@@ -1,0 +1,25 @@
+{{if .IsNode}}---
+name: developer
+description: >
+  Senior Node.js engineer for {{ .ServiceName }}. Implements features, fixes bugs, writes code
+  following Express/Prisma/Pino conventions and the 4-layer architecture.
+tools: Read, Write, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__MCP_DOCKER__sequentialthinking
+model: opus
+memory: project
+isolation: worktree
+maxTurns: 80
+permissionMode: bypassPermissions
+---
+{{else}}---
+name: developer
+description: >
+  Senior Go engineer for {{ .ServiceName }}. Implements features, fixes bugs, writes code
+  {{ if .IsInternal }}following chi/Bun/Wire/zerolog conventions{{ else }}following the project conventions{{ end }} and the 4-layer architecture.
+tools: Read, Write, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__MCP_DOCKER__sequentialthinking
+model: opus
+memory: project
+isolation: worktree
+maxTurns: 80
+permissionMode: bypassPermissions
+---
+{{end}}{{ template "shared/prompts/developer.md" . -}}

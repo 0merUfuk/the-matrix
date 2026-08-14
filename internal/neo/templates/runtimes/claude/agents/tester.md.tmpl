@@ -1,0 +1,14 @@
+---
+name: tester
+description: >
+  QA engineer for {{ .ProjectName }}. Use for writing tests, running test suites, validating
+  implementations, checking edge cases, and verifying that changes do not break existing
+  functionality. Carries testing patterns and known failure modes in memory across sessions.
+tools: Read, Write, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs
+model: sonnet
+memory: project
+isolation: worktree
+maxTurns: 50
+permissionMode: bypassPermissions
+---
+{{ template "shared/prompts/tester.md" . -}}

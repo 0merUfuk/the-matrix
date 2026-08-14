@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ─── Autonomous Development Loop ────────────────────────────────
 # Orchestrates: [Manager] → [Strategist] → Developer → Tester → Reviewer → Security cycles
-# Each phase runs as a separate `claude -p` call with role-specific prompts
+# Each phase runs as a separate headless runtime call with role-specific prompts
 # Shared memory lives in tasks/ directory
 #
 # Usage:
@@ -14,11 +14,6 @@ set -euo pipefail
 # ─────────────────────────────────────────────────────────────────
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Unset CLAUDECODE env var if set — this prevents "nested session" errors
-# when the loop is launched from inside a Claude Code terminal.
-# Safe for -p (headless) mode which doesn't use interactive TUI resources.
-unset CLAUDECODE 2>/dev/null || true
 
 source "${SCRIPT_DIR}/config.sh"
 
@@ -35,19 +30,7 @@ log() {
 preflight() {
   cd "$PROJECT_DIR"
 
-  # Check claude CLI exists
-  if ! command -v claude &>/dev/null; then
-    log "FATAL: 'claude' CLI not found in PATH. Install: https://code.claude.com"
-    exit 1
-  fi
-
-  # Check authentication (Anthropic account or API key)
-  if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-    if ! claude auth status &>/dev/null 2>&1; then
-      log "FATAL: Not authenticated. Run 'claude auth login' first."
-      exit 1
-    fi
-  fi
+  check_auth
 
   # Check git is installed
   if ! command -v git &>/dev/null; then
@@ -70,13 +53,13 @@ preflight() {
     exit 1
   fi
 
-  if [ ! -f "CLAUDE.md" ]; then
-    log "FATAL: CLAUDE.md not found. Run your blueprint to scaffold .claude/ first."
+  if [ ! -f "$CONTEXT_FILE" ]; then
+    log "FATAL: ${CONTEXT_FILE} not found. Run your blueprint first."
     exit 1
   fi
 
-  if [ ! -d ".claude" ]; then
-    log "FATAL: .claude/ directory not found. Run your blueprint first."
+  if [ -n "$CONTEXT_DIR" ] && [ ! -d "$CONTEXT_DIR" ]; then
+    log "FATAL: ${CONTEXT_DIR}/ directory not found. Run your blueprint first."
     exit 1
   fi
 
@@ -187,7 +170,7 @@ tag_cycle() {
   git tag -f "$tag" HEAD 2>/dev/null || true
 }
 
-# ─── Run a Claude Phase ────────────────────────────────────────
+# ─── Run an Agent Phase ────────────────────────────────────────
 run_phase() {
   local cycle=$1
   local role=$2           # developer | tester | reviewer | manager | strategist | security-reviewer
@@ -221,33 +204,33 @@ run_phase() {
   local prompt
   prompt=$(cat "$TEMP_PROMPT_FILE")
 
-  # Run claude in headless mode
+  # Run the configured runtime in headless mode
   local output_file="${CYCLES_DIR}/cycle-${cycle_padded}-${role}-output.json"
 
-  set +e  # Don't exit on claude failure
-  claude -p "$prompt" \
-    --allowedTools "$allowed_tools" \
-    --max-turns "$max_turns" \
-    --model "$MODEL" \
-    --output-format json \
-    --no-session-persistence \
-    > "$output_file" 2>&1
+  set +e  # Don't exit on runtime failure
+  run_agent "$prompt" "$allowed_tools" "$max_turns" "$output_file"
   local exit_code=$?
   set -e
 
-  # Tag after phase completes
-  tag_cycle "$cycle" "post-${role}"
+  set +e
+  classify_exit "$exit_code"
+  local classify_result=$?
+  set -e
 
   # Log result
-  if [ $exit_code -eq 0 ]; then
+  if [ $classify_result -eq 0 ]; then
     log "Cycle ${cycle} | ${role_upper} | completed successfully"
-  else
+  elif [ $classify_result -eq 1 ]; then
     log "Cycle ${cycle} | ${role_upper} | exited with code ${exit_code}"
-    # Exit code 1 from --max-turns means turns exhausted (not a failure)
-    if [ $exit_code -eq 1 ]; then
-      log "  (likely: max-turns limit reached — not an error)"
-    fi
+    log "  (max-turns limit reached - not an error)"
+  else
+    log "Cycle ${cycle} | ${role_upper} | FAILED with code ${exit_code}"
+    rm -f "$TEMP_PROMPT_FILE"
+    return 1
   fi
+
+  # Tag only after a successful or Claude max-turns phase.
+  tag_cycle "$cycle" "post-${role}"
 
   # Extract token usage from output JSON (for fun stats)
   if [ -f "$output_file" ]; then
@@ -255,9 +238,21 @@ run_phase() {
     tokens=$(python3 -c "
 import json, sys
 try:
-    d = json.load(open('$output_file'))
+    raw = open('$output_file').read()
+    try:
+        d = json.loads(raw)
+    except json.JSONDecodeError:
+        events = []
+        for line in raw.splitlines():
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+        d = next(event for event in reversed(events) if event.get('type') == 'turn.completed')
     u = d.get('usage', {})
-    inp = u.get('input_tokens', 0) + u.get('cache_read_input_tokens', 0) + u.get('cache_creation_input_tokens', 0)
+    cache_read = u.get('cache_read_input_tokens', u.get('cached_input_tokens', 0))
+    cache_create = u.get('cache_creation_input_tokens', u.get('cache_write_input_tokens', 0))
+    inp = u.get('input_tokens', 0) + cache_read + cache_create
     out = u.get('output_tokens', 0)
     print(f'{inp} in / {out} out')
 except: print('unknown')
@@ -267,6 +262,7 @@ except: print('unknown')
 
   # Clean up temp file
   rm -f "$TEMP_PROMPT_FILE"
+  return 0
 }
 
 # ─── Token Summary ─────────────────────────────────────────────
@@ -283,15 +279,31 @@ total_cache_create = 0
 total_cache_read = 0
 phase_stats = []
 
+def load_result(path):
+    raw = open(path).read()
+    try:
+        d = json.loads(raw)
+        return d, d.get('num_turns', 0)
+    except json.JSONDecodeError:
+        events = []
+        for line in raw.splitlines():
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+        completed = [event for event in events if event.get('type') == 'turn.completed']
+        if not completed:
+            raise ValueError('no completed runtime turn')
+        return completed[-1], len(completed)
+
 for f in sorted(glob.glob('${CYCLES_DIR}/cycle-*-output.json')):
     try:
-        d = json.load(open(f))
+        d, turns = load_result(f)
         u = d.get('usage', {})
         inp = u.get('input_tokens', 0)
         out = u.get('output_tokens', 0)
-        cache_create = u.get('cache_creation_input_tokens', 0)
-        cache_read = u.get('cache_read_input_tokens', 0)
-        turns = d.get('num_turns', 0)
+        cache_create = u.get('cache_creation_input_tokens', u.get('cache_write_input_tokens', 0))
+        cache_read = u.get('cache_read_input_tokens', u.get('cached_input_tokens', 0))
         name = os.path.basename(f).replace('-output.json', '')
         phase_stats.append((name, inp + cache_create + cache_read, out, turns))
         total_input += inp + cache_create + cache_read
@@ -317,6 +329,7 @@ main() {
 
   local cycle=0
   local exit_reason="MAX_CYCLES_REACHED"
+  local runtime_failed=0
 
   while [ $cycle -lt "$MAX_CYCLES" ]; do
     cycle=$((cycle + 1))
@@ -333,54 +346,78 @@ main() {
 
     # ── Manager: review previous cycle and reprioritize (cycle > 1 only) ──
     if [ "$cycle" -gt 1 ]; then
-      run_phase "$cycle" "manager" \
+      if ! run_phase "$cycle" "manager" \
         "${PROMPTS_DIR}/manager.md" \
         "$MANAGER_TOOLS" \
-        "$MANAGER_MAX_TURNS"
+        "$MANAGER_MAX_TURNS"; then
+        exit_reason="RUNTIME_ERROR"
+        runtime_failed=1
+        break
+      fi
 
       if check_stop; then exit_reason="STOPPED_BY_USER"; break; fi
     fi
 
     # ── Strategist: resolve pending decisions (only if decisions-pending.md has content) ──
     if [ -f "${TASKS_DIR}/decisions-pending.md" ] && grep -q "^## " "${TASKS_DIR}/decisions-pending.md"; then
-      run_phase "$cycle" "strategist" \
+      if ! run_phase "$cycle" "strategist" \
         "${PROMPTS_DIR}/strategist.md" \
         "$STRATEGIST_TOOLS" \
-        "$STRATEGIST_MAX_TURNS"
+        "$STRATEGIST_MAX_TURNS"; then
+        exit_reason="RUNTIME_ERROR"
+        runtime_failed=1
+        break
+      fi
 
       if check_stop; then exit_reason="STOPPED_BY_USER"; break; fi
     fi
 
     # ── Phase 1: DEVELOPER ──
-    run_phase "$cycle" "developer" \
+    if ! run_phase "$cycle" "developer" \
       "${PROMPTS_DIR}/developer.md" \
       "$DEVELOPER_TOOLS" \
-      "$DEVELOPER_MAX_TURNS"
+      "$DEVELOPER_MAX_TURNS"; then
+      exit_reason="RUNTIME_ERROR"
+      runtime_failed=1
+      break
+    fi
 
     if check_stop; then exit_reason="STOPPED_BY_USER"; break; fi
     if check_decisions_pending; then exit_reason="DECISIONS_PENDING"; break; fi
 
     # ── Phase 2: TESTER ──
-    run_phase "$cycle" "tester" \
+    if ! run_phase "$cycle" "tester" \
       "${PROMPTS_DIR}/tester.md" \
       "$TESTER_TOOLS" \
-      "$TESTER_MAX_TURNS"
+      "$TESTER_MAX_TURNS"; then
+      exit_reason="RUNTIME_ERROR"
+      runtime_failed=1
+      break
+    fi
 
     if check_stop; then exit_reason="STOPPED_BY_USER"; break; fi
 
     # ── Phase 3: REVIEWER (code quality gate) ──
-    run_phase "$cycle" "reviewer" \
+    if ! run_phase "$cycle" "reviewer" \
       "${PROMPTS_DIR}/reviewer.md" \
       "$REVIEWER_TOOLS" \
-      "$REVIEWER_MAX_TURNS"
+      "$REVIEWER_MAX_TURNS"; then
+      exit_reason="RUNTIME_ERROR"
+      runtime_failed=1
+      break
+    fi
 
     if check_stop; then exit_reason="STOPPED_BY_USER"; break; fi
 
     # ── Phase 4: SECURITY (security quality gate) ──
-    run_phase "$cycle" "security" \
+    if ! run_phase "$cycle" "security" \
       "${PROMPTS_DIR}/security.md" \
       "$SECURITY_TOOLS" \
-      "$SECURITY_MAX_TURNS"
+      "$SECURITY_MAX_TURNS"; then
+      exit_reason="RUNTIME_ERROR"
+      runtime_failed=1
+      break
+    fi
 
     if check_stop; then exit_reason="STOPPED_BY_USER"; break; fi
 
@@ -412,6 +449,11 @@ main() {
   log "Check tasks/current-state.md for final state."
   log "Check tasks/cycles/ for per-cycle logs."
   log "═══════════════════════════════════════════════════════"
+
+  if [ "$runtime_failed" -ne 0 ]; then
+    echo "RUNTIME_ERROR" > "${TASKS_DIR}/status.txt"
+    return 1
+  fi
 }
 
 main "$@"

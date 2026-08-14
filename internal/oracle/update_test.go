@@ -307,7 +307,7 @@ func TestReadStackNameFromConfig(t *testing.T) {
 // ── scaffoldUpdateWorkspace tests ──────────────────────────────
 
 func TestScaffoldUpdateWorkspace(t *testing.T) {
-	t.Run("creates expected directory structure and files", func(t *testing.T) {
+	t.Run("copies default Claude context and creates expected files", func(t *testing.T) {
 		// Set up a mock original workspace
 		origDir := t.TempDir()
 		autoDir := filepath.Join(origDir, ".autonomous")
@@ -399,6 +399,43 @@ func TestScaffoldUpdateWorkspace(t *testing.T) {
 		}
 		if string(statusData) != "INITIALIZED\n" {
 			t.Errorf("status.txt: expected INITIALIZED, got %q", string(statusData))
+		}
+	})
+
+	t.Run("copies Codex context and runtime config", func(t *testing.T) {
+		origDir := t.TempDir()
+		autoDir := filepath.Join(origDir, ".autonomous")
+		promptsDir := filepath.Join(autoDir, "prompts")
+		if err := os.MkdirAll(promptsDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		files := map[string]string{
+			filepath.Join(autoDir, "config.sh"):         "STACK_NAME=\"go-codex\"\n",
+			filepath.Join(promptsDir, "researcher.md"):  "researcher prompt",
+			filepath.Join(promptsDir, "reviewer.md"):    "reviewer prompt",
+			filepath.Join(promptsDir, "synthesizer.md"): "synthesizer prompt",
+			filepath.Join(origDir, "AGENTS.md"):         "# Codex Oracle Workspace\n",
+			filepath.Join(origDir, ".matrix.yaml"):      "runtime: codex\n",
+		}
+		for path, content := range files {
+			if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+				t.Fatalf("write %s: %v", path, err)
+			}
+		}
+
+		updateDir := filepath.Join(t.TempDir(), "update-codex")
+		if err := scaffoldUpdateWorkspace(origDir, updateDir, []string{"05-testing"}); err != nil {
+			t.Fatalf("scaffoldUpdateWorkspace: %v", err)
+		}
+
+		for _, rel := range []string{"AGENTS.md", ".matrix.yaml"} {
+			if _, err := os.Stat(filepath.Join(updateDir, rel)); err != nil {
+				t.Errorf("expected %s to be copied: %v", rel, err)
+			}
+		}
+		if _, err := os.Stat(filepath.Join(updateDir, "CLAUDE.md")); !os.IsNotExist(err) {
+			t.Fatalf("CLAUDE.md should not be copied for Codex, stat error: %v", err)
 		}
 	})
 }

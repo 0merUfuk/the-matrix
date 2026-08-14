@@ -42,10 +42,10 @@ func writeTool(t *testing.T, root, tool, ver string) {
 
 func TestSelfState_VersionExtraction(t *testing.T) {
 	root := t.TempDir()
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	state, _ := collectSelfState(root, stubFetchers())
 
@@ -54,8 +54,8 @@ func TestSelfState_VersionExtraction(t *testing.T) {
 		if !ok || tb == nil {
 			t.Fatalf("tool %s missing or nil", name)
 		}
-		if tb.Version != "1.7.2-dev" {
-			t.Errorf("tool %s version = %q, want %q", name, tb.Version, "1.7.2-dev")
+		if tb.Version != "1.9.0-dev" {
+			t.Errorf("tool %s version = %q, want %q", name, tb.Version, "1.9.0-dev")
 		}
 		if len(tb.Commands) == 0 {
 			t.Errorf("tool %s has empty commands", name)
@@ -211,7 +211,7 @@ func TestSelfState_DeltaComputation(t *testing.T) {
 			"a": {Files: 5, Lines: 250},
 		},
 		Tools: map[string]*ToolBlock{
-			"neo": {Version: "1.7.2-dev"},
+			"neo": {Version: "1.9.0-dev"},
 		},
 	}
 
@@ -242,17 +242,17 @@ func TestSelfState_DeltaComputation(t *testing.T) {
 	if vc.From != "1.7.0" {
 		t.Errorf("expected From=1.7.0, got %q", vc.From)
 	}
-	if vc.To != "1.7.2-dev" {
-		t.Errorf("expected To=1.7.2-dev, got %q", vc.To)
+	if vc.To != "1.9.0-dev" {
+		t.Errorf("expected To=1.9.0-dev, got %q", vc.To)
 	}
 }
 
 func TestSelfState_JSONSchemaShape(t *testing.T) {
 	root := t.TempDir()
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	state, errs := collectSelfState(root, stubFetchers())
 	state.CollectionErrors = errs
@@ -481,10 +481,10 @@ func TestSelfState_SymlinkFallbackToCopy(t *testing.T) {
 
 func TestSelfState_QuickMode(t *testing.T) {
 	root := t.TempDir()
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	state, errs := collectSelfState(root, stubFetchers())
 	state.CollectionErrors = errs
@@ -515,10 +515,10 @@ func TestSelfState_QuickMode(t *testing.T) {
 
 func TestSelfState_DetachedHEAD(t *testing.T) {
 	root := t.TempDir()
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	f := stubFetchers()
 	f.gitBranch = func(string) (string, error) { return "(detached)", nil }
@@ -536,10 +536,10 @@ func TestSelfState_DetachedHEAD(t *testing.T) {
 
 func TestSelfState_SyncedWithRemote(t *testing.T) {
 	root := t.TempDir()
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	f := stubFetchers()
 	f.gitAheadBehind = func(string) (int, int, error) { return 0, 0, nil }
@@ -564,10 +564,10 @@ func TestSelfState_SyncedWithRemote(t *testing.T) {
 
 func TestSelfState_BehindRemote(t *testing.T) {
 	root := t.TempDir()
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	f := stubFetchers()
 	f.gitAheadBehind = func(string) (int, int, error) { return 0, 3, nil }
@@ -587,10 +587,10 @@ func TestSelfState_BehindRemote(t *testing.T) {
 
 func TestSelfState_NoUpstream(t *testing.T) {
 	root := t.TempDir()
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	f := stubFetchers()
 	f.gitAheadBehind = func(string) (int, int, error) {
@@ -622,10 +622,10 @@ func TestSelfState_NoUpstream(t *testing.T) {
 
 func TestSelfState_NoAgentMemoryDir(t *testing.T) {
 	root := t.TempDir()
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	state, errs := collectSelfState(root, stubFetchers())
 
@@ -666,9 +666,9 @@ func TestSelfState_NoAgentMemoryDir(t *testing.T) {
 func TestSelfState_MissingToolBinary(t *testing.T) {
 	root := t.TempDir()
 	// Only create 3 of 4 tools — trinity missing.
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
 
 	state, errs := collectSelfState(root, stubFetchers())
 
@@ -706,10 +706,10 @@ func TestSelfState_MalformedPreviousSnapshot(t *testing.T) {
 		t.Fatalf("write pointer: %v", err)
 	}
 
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	state, errs := collectSelfState(root, stubFetchers())
 
@@ -734,10 +734,10 @@ func TestSelfState_MalformedPreviousSnapshot(t *testing.T) {
 
 func TestSelfState_GhNotAvailable(t *testing.T) {
 	root := t.TempDir()
-	writeTool(t, root, "neo", "1.7.2-dev")
-	writeTool(t, root, "morp", "1.7.2-dev")
-	writeTool(t, root, "oracle", "1.7.2-dev")
-	writeTool(t, root, "trinity", "1.7.2-dev")
+	writeTool(t, root, "neo", "1.9.0-dev")
+	writeTool(t, root, "morp", "1.9.0-dev")
+	writeTool(t, root, "oracle", "1.9.0-dev")
+	writeTool(t, root, "trinity", "1.9.0-dev")
 
 	f := stubFetchers()
 	f.prCount = func(string) (int, error) { return 0, errors.New("gh: command not found") }

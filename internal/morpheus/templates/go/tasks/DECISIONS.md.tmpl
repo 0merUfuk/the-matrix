@@ -123,7 +123,7 @@
 
 **Decision**: This service owns its tables with goose migrations in `migrations/`
 **Database**: Shared `internal_main_db`
-**Migration naming**: `NNN_description.sql` (e.g., `001_create_{{ lower (index .Entities 0) }}s.sql`)
+{{ if .Entities }}**Migration naming**: `NNN_description.sql` (e.g., `001_create_{{ lower (index .Entities 0) }}s.sql`){{ end }}
 
 ---
 

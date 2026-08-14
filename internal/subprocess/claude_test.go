@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
 )
 
 func TestDefaultOptions(t *testing.T) {
@@ -13,11 +15,75 @@ func TestDefaultOptions(t *testing.T) {
 	if opts.Model != "claude-sonnet-4-6" {
 		t.Errorf("Model = %q, want %q", opts.Model, "claude-sonnet-4-6")
 	}
+	if opts.ModelTier != agentruntime.ModelBalanced || !opts.ModelTierSet {
+		t.Errorf("ModelTier = %v, set = %t; want balanced and set", opts.ModelTier, opts.ModelTierSet)
+	}
 	if opts.MaxTurns != 5 {
 		t.Errorf("MaxTurns = %d, want %d", opts.MaxTurns, 5)
 	}
 	if opts.TimeoutMs != 300000 {
 		t.Errorf("TimeoutMs = %d, want %d", opts.TimeoutMs, 300000)
+	}
+}
+
+func TestInvokeForwardsModelTierAndOutputJSON(t *testing.T) {
+	binDir := t.TempDir()
+	writeRuntimeStub(t, binDir, "claude", "#!/bin/sh\nprintf '%s\\n' \"$@\"\n")
+	t.Setenv("PATH", binDir)
+
+	tests := []struct {
+		name       string
+		opts       Options
+		wantModel  string
+		wantOutput bool
+	}{
+		{
+			name: "explicit fast",
+			opts: Options{
+				ModelTier:    agentruntime.ModelFast,
+				ModelTierSet: true,
+			},
+			wantModel: "claude-haiku-4-5",
+		},
+		{
+			name: "explicit powerful",
+			opts: Options{
+				ModelTier:    agentruntime.ModelPowerful,
+				ModelTierSet: true,
+			},
+			wantModel: "claude-opus-4-1",
+		},
+		{
+			name:      "omitted tier defaults to balanced",
+			wantModel: "claude-sonnet-4-6",
+		},
+		{
+			name: "json output",
+			opts: Options{
+				OutputJSON: true,
+			},
+			wantModel:  "claude-sonnet-4-6",
+			wantOutput: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.opts.Runtime = "claude"
+			tt.opts.MaxTurns = 1
+			tt.opts.TimeoutMs = 5000
+			output, err := Invoke("test prompt", tt.opts)
+			if err != nil {
+				t.Fatalf("Invoke() error = %v", err)
+			}
+			if !strings.Contains(output, "--model\n"+tt.wantModel) {
+				t.Errorf("Invoke() output = %q, want model %q", output, tt.wantModel)
+			}
+			hasJSON := strings.Contains(output, "--output-format\njson")
+			if hasJSON != tt.wantOutput {
+				t.Errorf("Invoke() JSON flag = %t, want %t; output: %q", hasJSON, tt.wantOutput, output)
+			}
+		})
 	}
 }
 
@@ -187,4 +253,50 @@ func TestCallClaude_DefaultsFillIn(t *testing.T) {
 		return
 	}
 	// Any error is fine — we just confirm no panic with zero-value Options.
+}
+
+func TestInvokeCodexWorkingDirectory(t *testing.T) {
+	binDir := t.TempDir()
+	writeRuntimeStub(t, binDir, "codex", "pwd")
+	t.Setenv("PATH", binDir)
+
+	workingDir := t.TempDir()
+	got, err := Invoke("inspect", Options{
+		Runtime:    "codex",
+		WorkingDir: workingDir,
+		TimeoutMs:  5000,
+	})
+	if err != nil {
+		t.Fatalf("Invoke() error = %v", err)
+	}
+
+	resolvedGot, _ := filepath.EvalSymlinks(got)
+	resolvedWant, _ := filepath.EvalSymlinks(workingDir)
+	if resolvedGot != resolvedWant {
+		t.Fatalf("Invoke() working directory = %q, want %q", resolvedGot, resolvedWant)
+	}
+}
+
+func TestCallClaudeAlwaysUsesClaudeRuntime(t *testing.T) {
+	binDir := t.TempDir()
+	writeRuntimeStub(t, binDir, "claude", `printf 'claude\n'`)
+	writeRuntimeStub(t, binDir, "codex", `printf 'codex\n'`)
+	t.Setenv("PATH", binDir)
+
+	got, err := CallClaude("inspect", Options{Runtime: "codex", TimeoutMs: 5000})
+	if err != nil {
+		t.Fatalf("CallClaude() error = %v", err)
+	}
+	if got != "claude" {
+		t.Fatalf("CallClaude() = %q, want claude runtime", got)
+	}
+}
+
+func writeRuntimeStub(t *testing.T, dir, name, body string) {
+	t.Helper()
+	path := filepath.Join(dir, name)
+	content := "#!/bin/sh\n" + body + "\n"
+	if err := os.WriteFile(path, []byte(content), 0755); err != nil {
+		t.Fatalf("write %s stub: %v", name, err)
+	}
 }

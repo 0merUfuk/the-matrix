@@ -6,7 +6,7 @@ This document covers the-matrix's system design, tool boundaries, data flow, and
 
 ## Overview
 
-the-matrix is four Go CLIs that provision and maintain autonomous [Claude Code](https://docs.anthropic.com/en/docs/claude-code) agent ecosystems. Each tool has a single responsibility and clean boundaries. Neo provisions the ecosystem and guides the flow; oracle and trinity remain independently invoked commands, while neo invokes morp only for multi-repo service scaffolds.
+the-matrix is four Go CLIs that provision and maintain autonomous agent ecosystems. The Agent Runtime Abstraction Layer (ARAL) makes Claude Code and OpenAI Codex first-class runtime choices while preserving each tool's boundary. Neo provisions the ecosystem and guides the flow; oracle and trinity remain independently invoked commands, while neo invokes morp only for multi-repo service scaffolds.
 
 ```
 the-matrix (ecosystem name)
@@ -29,7 +29,7 @@ the-matrix (ecosystem name)
 
 > **You fix AI agent reliability at setup time, not at runtime.**
 
-Most Claude Code setups are hand-crafted, generic, and stale within weeks. the-matrix attacks the layer *around* the agent — permissions, tool allowlists, agent roles, ADRs, knowledge quality — at provisioning time. These are setup-time decisions that determine runtime reliability.
+Most agent-runtime setups are hand-crafted, generic, and stale within weeks. the-matrix attacks the layer *around* the agent — permissions, tool restrictions, role guidance, ADRs, and knowledge quality — at provisioning time. These are setup-time decisions that determine runtime reliability.
 
 ---
 
@@ -42,8 +42,8 @@ Each tool has a distinct operational shape:
 | Tool | Runtime | Duration | Replaced by? |
 |------|---------|----------|--------------|
 | **neo** | CLI wizard + ecosystem generation | 30–60s | — |
-| **oracle** | 4-cycle research loop with Claude | 3–8 min | Any tool that produces `.claude/knowledge/*.md` |
-| **morp** | Template rendering + `claude -p` subprocess | 10–30s | Any scaffolder that produces `.claude/` + `.autonomous/` |
+| **oracle** | 4-cycle research loop with the selected runtime | 3–8 min | Any tool that produces compatible knowledge docs |
+| **morp** | Template rendering + runtime-neutral agent invocation | 10–30s | Any scaffolder that produces runtime context + `.autonomous/` |
 | **trinity** | File I/O + staleness calculation | <2s | Any tool that syncs knowledge docs |
 
 Oracle's research loop runs for minutes and is embarrassingly parallel. Trinity's sync is sub-second. Mixing them in one binary would create a tool with unclear scope and incompatible operational shapes. The contract between them is the **output directory layout** — not a protocol, not an API.
@@ -54,7 +54,7 @@ The original ADR rationale behind this split is maintainer-local; the public bou
 
 ## Data Flow
 
-The `.claude/` paths below are generated target-project ecosystem paths, not root files expected to exist in this public repository.
+The `.claude/` paths below are generated target-project knowledge or Claude-integration paths, not root files expected to exist in this public repository.
 
 ```
 Step 1: oracle researches target stack
@@ -67,9 +67,10 @@ Step 2: trinity syncs into agent ecosystem
   → .claude/knowledge/go-rules/*.md (fresh, versioned)
 
 Step 3: morp scaffolds a service
-  morp init
+  morp init --runtime claude|codex
   → reads .claude/knowledge/ (gold standards from oracle output)
-  → generates service/ with .autonomous/loop.sh + .claude/ + tasks/
+  → generates service/ with .autonomous/loop.sh + tasks/
+  → writes CLAUDE.md + .claude/ integration, or AGENTS.md for Codex
 
 Step 4: autonomous loop builds the service
   bash .autonomous/loop.sh
@@ -86,10 +87,11 @@ Step 5: trinity maintains freshness
   → prints oracle re-research and trinity sync guidance
 
 Step 6: neo detects and guides
-  neo init → provisions the ecosystem and prints oracle/trinity commands
+  neo init --runtime claude|codex
+           → provisions runtime context and prints oracle/trinity commands
            → invokes morp only for multi-repo service scaffolds
   neo update → detects staleness and prints suggested refresh commands
-  neo doctor → validates ecosystem integrity at any point
+  neo doctor → detects the runtime and validates supported integration files
 ```
 
 ---
@@ -108,12 +110,16 @@ the-matrix/
 │   ├── config/        # JSON/file I/O
 │   ├── tmpl/          # Template engine (text/template + 17 FuncMap helpers)
 │   ├── wizard/        # Interactive prompts (huh v2)
-│   ├── subprocess/    # Claude subprocess wrapper
+│   ├── runtime/       # ARAL interface, registry, detection, and adapters
+│   │   ├── builtin/   # Registers built-in adapters
+│   │   ├── claude/    # Claude Code adapter
+│   │   └── codex/     # OpenAI Codex adapter
+│   ├── subprocess/    # Runtime-neutral invocation + legacy CallClaude wrapper
 │   ├── staleness/     # Document age calculation
-│   ├── matrixcfg/     # .matrix.yaml unified Config + per-tool options
-│   ├── neo/           # neo implementation + 23 .tmpl files (go:embed)
-│   ├── morpheus/      # morp CLI implementation (internal package: morpheus) + 93 artifacts (92 .tmpl + loop.sh)
-│   ├── oracle/        # oracle implementation + export/ + 7 artifacts (5 .tmpl + loop.sh + update.sh)
+│   ├── matrixcfg/     # .matrix.yaml schema and runtime persistence
+│   ├── neo/           # neo implementation + embedded runtime templates
+│   ├── morpheus/      # morp implementation + shared/runtime template layers
+│   ├── oracle/        # oracle implementation + export/runtime templates
 │   │   └── export/    # Format adapter pattern: Cursor, Copilot, Windsurf, AGENTS.md
 │   ├── registry/      # Knowledge registry (pack catalog + validation)
 │   └── trinity/       # trinity implementation (no templates)
@@ -123,7 +129,7 @@ the-matrix/
 └── .goreleaser.yml    # Cross-platform binary builds + Homebrew tap
 ```
 
-Tracked `internal/**/templates/.claude/` paths are embedded generation assets. A root `.claude/` directory in a maintainer checkout is ignored local/private agent state and is absent from a fresh public clone.
+Template trees use `shared/` for runtime-independent content and `runtimes/<name>/` for adapter-specific wrappers and shell configuration. Tracked `internal/**/templates/.claude/` paths that remain are embedded Claude target-project assets. A root `.claude/` directory in a maintainer checkout is ignored local/private agent state and is absent from a fresh public clone.
 
 ---
 
@@ -131,11 +137,33 @@ Tracked `internal/**/templates/.claude/` paths are embedded generation assets. A
 
 ### go:embed for Template Distribution
 
-All 123 template artifacts (120 `.tmpl` files and 3 shell scripts) are compiled into the binaries via `go:embed`. No external template files are required at runtime; Claude-powered workflows still require the Claude Code CLI and Bash. Template changes require recompilation, but embedding eliminates the "template not found" failure mode common in filesystem-based template loaders.
+All template artifacts are compiled into the binaries via `go:embed`. No external template files are required at runtime; agent-powered workflows require the selected runtime CLI and the script loops require Bash. Template changes require recompilation, but embedding eliminates the "template not found" failure mode common in filesystem-based template loaders.
 
 ### Shared Internal Packages
 
-All 4 tools share `cli/`, `config/`, `tmpl/`, `wizard/`, `subprocess/`, `staleness/`, `matrixcfg/`. This reduces duplication and ensures consistent behavior across tools (e.g., the same wizard library, the same staleness calculation).
+All 4 tools share `cli/`, `config/`, `tmpl/`, `wizard/`, `runtime/`, `subprocess/`, `staleness/`, and `matrixcfg/`. This reduces duplication and ensures consistent behavior across tools (for example, the same runtime selection and staleness calculation).
+
+### Agent Runtime Abstraction Layer (ARAL)
+
+`internal/runtime.Runtime` defines identity, capabilities, command construction, authentication, context-file layout, agent/skill/settings formats, tool translation, environment changes, and model-tier resolution. Adapters register themselves in `init()`; `internal/runtime/builtin` imports the built-in Claude Code and Codex adapters so binaries can select either without central switch statements.
+
+Runtime selection follows this order:
+
+1. An explicit `--runtime claude|codex` flag.
+2. A project-local `.matrix.yaml` or `.matrix.yml` `runtime:` value.
+3. Context-file detection: `CLAUDE.md` before `AGENTS.md`.
+4. Claude Code as the compatibility default.
+
+Only an explicit flag is persisted. `neo init`, `morp init`, `morp loop`, and `oracle research` write that selection to the target project's Matrix config; inferred/default selection leaves config untouched. Global Matrix config does not participate in runtime detection.
+
+| Adapter | Context contract | Product capabilities used |
+|---------|------------------|---------------------------|
+| Claude Code | `CLAUDE.md`, `.claude/agents/`, `.claude/skills/`, rules, JSON settings | Named agents, skills, per-call tool allowlists, turn limits, worktree isolation |
+| OpenAI Codex | `AGENTS.md`, shared `.claude/knowledge/`, no separate generated agent/skill files | Consolidated role guidance, sandbox modes, model selection, JSONL event output |
+
+The runtime-specific `config.sh` defines `check_auth()`, `run_agent()`, and where needed `run_finalizer()`. Shared `loop.sh`, `finalizer.sh`, and oracle scripts call those functions without knowing the CLI syntax. Go call sites use `subprocess.Invoke`; `subprocess.CallClaude` remains as a backward-compatible wrapper that always selects Claude.
+
+To add a runtime, implement `Runtime`, register the adapter from `init()`, include it in `runtime/builtin`, add runtime-specific context/config templates, and cover selection, generation, health, and subprocess behavior with tests. Shared prompts should refer to runtime-derived context paths rather than hardcoded CLI-specific files.
 
 ### Oracle Source Quality Tiers
 
@@ -165,7 +193,7 @@ Architecture: format adapter pattern with `init()`-based auto-registration. New 
 
 ### Unified Configuration
 
-`.matrix.yaml` — optional YAML config file at the project root (or `~/.config/the-matrix/config.yaml` globally). Priority chain: CLI flag > config file > hardcoded default. Only oracle and trinity consume config in v1; neo and morp will be wired when they gain configurable flags.
+`.matrix.yaml` is the optional unified project config; `.matrix.yml` is also recognized. General tool configuration still follows each command's documented precedence. ARAL adds a project-local `runtime:` field consumed by runtime selection, `neo doctor`, and `trinity health`, and written when a supported command receives an explicit `--runtime` flag.
 
 The configuration contract is public in code and command behavior; deeper ADR notes are maintainer-local.
 
@@ -173,14 +201,14 @@ The configuration contract is public in code and command behavior; deeper ADR no
 
 ## Agent Ecosystem
 
-The-matrix has two related `.claude/` concepts:
+The-matrix has two related `.claude/` concepts even when Codex is selected:
 
-1. **Generated target-project ecosystems** — public product output created by `neo` or `morp` from embedded templates.
+1. **Generated target-project integration and knowledge** — Claude uses `.claude/` for agents, skills, rules, settings, and knowledge; Codex uses it only as the shared knowledge location.
 2. **This repo's maintainer-local ecosystem** — ignored private state in the root `.claude/` directory when present locally. It is not tracked and is absent from fresh public clones.
 
 ### Generated Core Agents
 
-Neo embeds 6 core Claude Code agent templates for generated ecosystems:
+Neo embeds 6 core roles for generated ecosystems. Claude writes them as separate agent definitions; Codex consolidates the role guidance into `AGENTS.md`:
 
 | Agent | Role |
 |-------|------|
@@ -193,7 +221,7 @@ Neo embeds 6 core Claude Code agent templates for generated ecosystems:
 
 ### Generated Skills And Rules
 
-Neo embeds 10 core skills for generated ecosystems: `/audit`, `/commit`, `/continue`, `/dep-audit`, `/doublecheck`, `/fix`, `/issue`, `/owasp-review`, `/secret-scan`, and `/security-scan`.
+Claude ecosystems receive 10 core skills: `/audit`, `/commit`, `/continue`, `/dep-audit`, `/doublecheck`, `/fix`, `/issue`, `/owasp-review`, `/secret-scan`, and `/security-scan`. The current Codex product contract does not generate separate skill files.
 
 Neo also generates a session protocol rule plus per-stack service rules. Morpheus adds service-loop-specific agents, prompts, skills, and rules when scaffolding a service or installing the autonomous loop.
 
@@ -260,7 +288,7 @@ Triggered by `v*` tag push:
 3. Homebrew formulae pushed to `0merUfuk/homebrew-thematrix`
 
 ```bash
-make release VERSION=1.8.0 SUMMARY="public launch"
+make release VERSION=X.Y.Z SUMMARY="one-line release summary"
 ```
 
 ---

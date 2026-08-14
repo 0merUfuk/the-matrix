@@ -1,0 +1,40 @@
+**Version**: 1.0
+**Created**: {{ .CreatedDate }}
+**Last Updated**: {{ .CreatedDate }}
+**Authors:** morp-cli
+
+---
+
+# {{ .ServiceName }}
+
+{{ .Description }}
+
+| Field | Value |
+|-------|-------|
+| Module | `{{ .ModulePath }}` |
+| Technology | {{ .Tech }} |
+| Project type | {{ .ProjectType }} |
+| API port | {{ .ApiPort }} |
+| Worker | {{ if .HasWorker }}yes{{ else }}no{{ end }} |
+
+## Working Roles
+
+Codex uses these role sections as project guidance. Apply the role that best matches the current task.
+
+### Manager
+{{ template "shared/prompts/manager.md" . }}
+
+### Strategist
+{{ template "shared/prompts/strategist.md" . }}
+
+### Developer
+{{ template "shared/prompts/developer.md" . }}
+
+### Tester
+{{ template "shared/prompts/tester.md" . }}
+
+### Reviewer
+{{ template "shared/prompts/reviewer.md" . }}
+
+### Security Reviewer
+{{ template "shared/prompts/security-reviewer.md" . }}

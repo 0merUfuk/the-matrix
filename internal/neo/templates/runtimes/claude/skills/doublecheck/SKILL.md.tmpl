@@ -1,0 +1,10 @@
+---
+description: >
+  Adversarial verification of {{ .ProjectName }} implementation correctness.
+  Runs 4 subagents that attack from different angles: gap finding, assumption
+  attacking, ground truth verification, and devil's advocacy. Use after completing
+  work, before releases, or to attack a plan before implementation.
+argument-hint: "[plan] [scope]"
+allowed-tools: Read, Grep, Glob, Bash(git diff:*), Bash(git log:*), Bash(git tag:*), Bash(git status:*), Bash(grep:*), Bash(cat:*), Bash(ls:*), Bash(find:*), Bash(wc:*){{ range .Stacks }}{{ if eq .Language "go" }}, Bash(make build:*), Bash(make test:*), Bash(go vet:*), Bash(go build:*), Bash(go test:*){{ end }}{{ if eq .Language "nodejs" }}, Bash(npm test:*), Bash(npm run:*), Bash(npx:*), Bash(node:*){{ end }}{{ if eq .Language "python" }}, Bash(pytest:*), Bash(python:*), Bash(pip:*){{ end }}{{ end }}
+---
+{{ template "shared/prompts/skills/doublecheck.md" . -}}

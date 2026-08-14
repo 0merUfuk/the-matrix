@@ -1,0 +1,13 @@
+---
+name: reviewer
+description: >
+  Adversarial code reviewer for {{ .ProjectName }}. Checks correctness, security,
+  performance, and convention compliance. Read-only — cannot modify files.
+tools: Read, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__MCP_DOCKER__sequentialthinking, mcp__plugin_github_github__search_code
+disallowedTools: Write, Edit, NotebookEdit
+model: sonnet
+memory: project
+maxTurns: 50
+permissionMode: bypassPermissions
+---
+{{ template "shared/prompts/loop/reviewer.md" . -}}

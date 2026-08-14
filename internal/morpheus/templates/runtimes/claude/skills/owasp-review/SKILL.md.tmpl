@@ -1,0 +1,11 @@
+{{if .IsNode}}---
+description: >
+  On-demand OWASP Top 10:2025 and ASI01-ASI10 security audit for {{ .ServiceName }}.
+  Spawns the security-reviewer agent against the current branch diff.
+---
+{{else}}---
+description: >
+  On-demand OWASP Top 10:2025 and ASI01-ASI10 security audit for {{ .ServiceName }}.
+  Spawns the security-reviewer agent against the current branch diff.
+---
+{{end}}{{ template "shared/prompts/skills/owasp-review.md" . -}}

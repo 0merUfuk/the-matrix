@@ -21,6 +21,7 @@ import (
 
 // Config is the top-level .matrix.yaml schema.
 type Config struct {
+	Runtime  *string        `yaml:"runtime,omitempty"`
 	Models   ModelsConfig   `yaml:"models"`
 	Neo      NeoConfig      `yaml:"neo"`
 	Morpheus MorpheusConfig `yaml:"morpheus"`
@@ -70,9 +71,19 @@ type TrinityConfig struct {
 // Discovery order: .matrix.yaml in root, .matrix.yml in root, ~/.config/the-matrix/config.yaml.
 // Returns a zero-value Config (no error) if no config file is found.
 func Load(root string) (Config, error) {
+	path := findConfigFile(root)
+	return loadConfigFile(path)
+}
+
+// LoadProject discovers and parses only project-level configuration.
+// Unlike Load, it never falls back to the user's global configuration.
+func LoadProject(root string) (Config, error) {
+	return loadConfigFile(findProjectConfigFile(root))
+}
+
+func loadConfigFile(path string) (Config, error) {
 	var cfg Config
 
-	path := findConfigFile(root)
 	if path == "" {
 		return cfg, nil
 	}
@@ -96,16 +107,8 @@ func Load(root string) (Config, error) {
 // findConfigFile checks for config files in priority order and returns
 // the first one found, or empty string if none exist.
 func findConfigFile(root string) string {
-	// Project-level configs
-	candidates := []string{
-		filepath.Join(root, ".matrix.yaml"),
-		filepath.Join(root, ".matrix.yml"),
-	}
-
-	for _, c := range candidates {
-		if _, err := os.Stat(c); err == nil {
-			return c
-		}
+	if path := findProjectConfigFile(root); path != "" {
+		return path
 	}
 
 	// Global fallback
@@ -116,6 +119,21 @@ func findConfigFile(root string) string {
 	global := filepath.Join(home, ".config", "the-matrix", "config.yaml")
 	if _, err := os.Stat(global); err == nil {
 		return global
+	}
+
+	return ""
+}
+
+func findProjectConfigFile(root string) string {
+	candidates := []string{
+		filepath.Join(root, ".matrix.yaml"),
+		filepath.Join(root, ".matrix.yml"),
+	}
+
+	for _, candidate := range candidates {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
 	}
 
 	return ""

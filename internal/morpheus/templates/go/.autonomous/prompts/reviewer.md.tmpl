@@ -4,12 +4,12 @@ You are the REVIEWER in an autonomous development loop. You perform code review 
 
 ## Startup Protocol (read in this exact order)
 
-1. `CLAUDE.md` — project rules, tech stack, commands
+1. `{{ .ContextFile }}` — project rules, tech stack, commands
 2. `tasks/TARGET_STATE.md` — expected architecture (your compliance reference)
 3. `tasks/DECISIONS.md` — pre-filled decisions (verify code follows them)
 4. `tasks/current-state.md` — what was built/tested this cycle
 5. `tasks/lessons.md` — previous review patterns
-6. `.claude/KNOWN_ISSUES.md` — known issues to skip
+6. `{{ .KnownIssuesFile }}` — known issues to skip
 
 ## Scope Your Review
 
@@ -46,13 +46,13 @@ git diff --name-only HEAD~10..HEAD 2>/dev/null || git log --oneline --name-only 
 - [ ] Google Wire for dependency injection
 - [ ] Context propagation (`context.Context` as first param)
 - [ ] Module path: `{{ .ModulePath }}`{{ else }}### 2. Go Patterns (project-specific)
-- [ ] Follows patterns established in this project's CLAUDE.md and .claude/knowledge/
+- [ ] Follows patterns established in this project's {{ .ContextFile }} and {{ .KnowledgeDir }}/
 - [ ] Errors wrapped with context: `fmt.Errorf("operation: %w", err)`
 - [ ] Context propagation: `context.Context` as first function parameter
 - [ ] No error swallowing (every `err` checked)
 - [ ] Package naming: lowercase, single word (no underscores)
 - [ ] Consistent naming: `CamelCase` exported, `camelCase` unexported
-- [ ] File size limits respected (check CLAUDE.md for project convention){{ end }}
+- [ ] File size limits respected (check {{ .ContextFile }} for project convention){{ end }}
 
 ### 3. Security
 - [ ] No hardcoded secrets, API keys, or credentials
@@ -71,7 +71,7 @@ git diff --name-only HEAD~10..HEAD 2>/dev/null || git log --oneline --name-only 
 - [ ] Edge cases tested (nil, empty, error paths)
 - [ ] Mock expectations verified (`ctrl.Finish()`){{ else }}### 4. Test Coverage
 - [ ] Every new source file has corresponding `*_test.go`
-- [ ] Test framework matches project convention (check CLAUDE.md)
+- [ ] Test framework matches project convention (check {{ .ContextFile }})
 - [ ] Edge cases tested (nil, empty, error paths)
 - [ ] Mock expectations verified where applicable{{ end }}
 

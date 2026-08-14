@@ -1,0 +1,7 @@
+---
+description: >
+  Smart commit — review staged changes, draft a conventional commit message,
+  and commit with proper formatting.
+allowed-tools: Read, Grep, Glob, Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(git rev-parse:*){{ range .Stacks }}{{ if eq .Language "go" }}, Bash(make build:*), Bash(make test:*), Bash(go vet:*){{ end }}{{ if eq .Language "nodejs" }}, Bash(npm test:*), Bash(npm run:*){{ end }}{{ if eq .Language "python" }}, Bash(pytest:*){{ end }}{{ end }}
+---
+{{ template "shared/prompts/skills/commit.md" . -}}

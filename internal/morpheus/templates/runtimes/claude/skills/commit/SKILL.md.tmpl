@@ -1,0 +1,7 @@
+{{if .IsNode}}---
+description: Smart commit — runs build gates, stages changes, and creates a conventional commit
+---
+{{else}}---
+description: Smart commit — runs build gates, stages changes, and creates a conventional commit
+---
+{{end}}{{ template "shared/prompts/skills/commit.md" . -}}

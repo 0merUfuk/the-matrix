@@ -10,6 +10,8 @@ import (
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 	"github.com/0merUfuk/the-matrix/internal/config"
+	agentruntime "github.com/0merUfuk/the-matrix/internal/runtime"
+	_ "github.com/0merUfuk/the-matrix/internal/runtime/builtin"
 )
 
 // hasReviewerApproval checks if the latest review file in the cycles directory
@@ -98,7 +100,7 @@ func cycleNumber(filename, kind string) (string, bool) {
 	return cycle, true
 }
 
-// RunFinalize populates .claude/ context files after the loop completes.
+// RunFinalize populates runtime context files after the loop completes.
 func RunFinalize() {
 	cwd, _ := os.Getwd()
 
@@ -152,9 +154,33 @@ func RunFinalize() {
 	// Summary
 	fmt.Printf("\n  %s\n\n", cli.Bold(cli.Green("✓ Finalize complete")))
 	cli.PrintDim("Review these files:")
-	cli.PrintDim("  .claude/SERVICE_CONTEXT.md  — current state")
-	cli.PrintDim("  .claude/DECISIONS.md        — architectural decisions")
-	cli.PrintDim("  .claude/KNOWN_ISSUES.md     — open issues")
-	cli.PrintDim("  .claude/NEXT_STEPS.md       — remaining work")
+	for _, reviewFile := range finalizeReviewFiles(cwd) {
+		cli.PrintDim(fmt.Sprintf("  %-27s — %s", reviewFile.path, reviewFile.description))
+	}
 	fmt.Println()
+}
+
+type finalizeReviewFile struct {
+	path        string
+	description string
+}
+
+func finalizeReviewFiles(cwd string) []finalizeReviewFile {
+	rt := agentruntime.Registry.Get(agentruntime.DetectRuntime(cwd))
+	if rt == nil {
+		return nil
+	}
+	contextFiles := rt.ContextFiles()
+	if contextFiles.ContextDir == "" {
+		if contextFiles.PrimaryContext == "" {
+			return nil
+		}
+		return []finalizeReviewFile{{path: contextFiles.PrimaryContext, description: "project context"}}
+	}
+	return []finalizeReviewFile{
+		{path: filepath.Join(contextFiles.ContextDir, "SERVICE_CONTEXT.md"), description: "current state"},
+		{path: filepath.Join(contextFiles.ContextDir, "DECISIONS.md"), description: "architectural decisions"},
+		{path: filepath.Join(contextFiles.ContextDir, "KNOWN_ISSUES.md"), description: "open issues"},
+		{path: filepath.Join(contextFiles.ContextDir, "NEXT_STEPS.md"), description: "remaining work"},
+	}
 }

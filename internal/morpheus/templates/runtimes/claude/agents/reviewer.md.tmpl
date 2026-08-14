@@ -1,0 +1,25 @@
+{{if .IsNode}}---
+name: reviewer
+description: >
+  Adversarial code reviewer for {{ .ServiceName }}. Checks correctness, security,
+  4-layer compliance, and convention adherence. Read-only.
+tools: Read, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__MCP_DOCKER__sequentialthinking, mcp__plugin_github_github__search_code
+disallowedTools: Write, Edit, NotebookEdit
+model: sonnet
+memory: project
+maxTurns: 50
+permissionMode: bypassPermissions
+---
+{{else}}---
+name: reviewer
+description: >
+  Adversarial code reviewer for {{ .ServiceName }}. Checks correctness, security,
+  Go idioms, 4-layer compliance, and convention adherence. Read-only.
+tools: Read, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs, mcp__MCP_DOCKER__sequentialthinking, mcp__plugin_github_github__search_code
+disallowedTools: Write, Edit, NotebookEdit
+model: sonnet
+memory: project
+maxTurns: 50
+permissionMode: bypassPermissions
+---
+{{end}}{{ template "shared/prompts/reviewer.md" . -}}

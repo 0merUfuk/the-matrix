@@ -1,0 +1,10 @@
+---
+description: >
+  Audits {{ .ProjectName }} context files against ground truth (git, code, filesystem).
+  Verifies versions, code claims, docs accuracy, and project structure.
+  Use when context files may have drifted from reality, after implementations,
+  or before releases.
+argument-hint: "[scope]"
+allowed-tools: Read, Grep, Glob, Bash(git tag:*), Bash(git log:*), Bash(git diff:*), Bash(git status:*), Bash(grep:*), Bash(find:*), Bash(wc:*), Bash(cat:*), Bash(ls:*){{ range .Stacks }}{{ if eq .Language "go" }}, Bash(make build:*), Bash(make test:*), Bash(go vet:*){{ end }}{{ if eq .Language "nodejs" }}, Bash(npm test:*), Bash(npm run:*), Bash(npx:*){{ end }}{{ if eq .Language "python" }}, Bash(pytest:*), Bash(python:*){{ end }}{{ end }}
+---
+{{ template "shared/prompts/skills/audit.md" . -}}

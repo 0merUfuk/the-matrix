@@ -1,0 +1,31 @@
+**Version**: 1.0
+**Created**: {{ .CreatedDate }}
+**Last Updated**: {{ .CreatedDate }}
+**Authors:** oracle-cli
+
+---
+
+# Oracle Knowledge Workspace: {{ .StackName }}
+
+Research and synthesize current engineering knowledge for **{{ .StackName }}** ({{ .FrameworkVersion }}).
+
+## Stack Configuration
+
+| Field | Value |
+|-------|-------|
+| Stack name | `{{ .StackName }}` |
+| Framework version | {{ .FrameworkVersion }} |
+| App type | {{ .AppType }} |
+| Architecture style | {{ .ArchStyle }} |
+| State management | {{ .StateApproach }} |
+| Data layer | {{ .DataLayer }} |
+| Testing framework | {{ .TestingFramework }} |
+| Queue/async | {{ if .HasQueue }}yes{{ else }}no{{ end }} |
+
+## Workflow
+
+1. Researchers gather official documentation, maintained repositories, specifications, and changelogs.
+2. Reviewers validate source quality and request more evidence when needed.
+3. The synthesizer writes concise knowledge documents to `output/{{ .StackName }}/`.
+
+Use the role prompts under `.autonomous/prompts/` as the detailed contract for each phase.

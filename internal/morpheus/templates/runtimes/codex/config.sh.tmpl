@@ -1,0 +1,93 @@
+#!/bin/bash
+# Runtime configuration for OpenAI Codex
+
+MAX_CYCLES={{ .MaxCycles }}
+MANAGER_MAX_TURNS=15
+STRATEGIST_MAX_TURNS=20
+DEVELOPER_MAX_TURNS={{ .DeveloperMaxTurns }}
+TESTER_MAX_TURNS={{ .TesterMaxTurns }}
+REVIEWER_MAX_TURNS={{ .ReviewerMaxTurns }}
+SECURITY_MAX_TURNS=40
+
+MODEL="gpt-5.6-terra"
+CONTEXT_FILE="AGENTS.md"
+CONTEXT_DIR=""
+
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TASKS_DIR="${PROJECT_DIR}/tasks"
+CYCLES_DIR="${TASKS_DIR}/cycles"
+PROMPTS_DIR="${PROJECT_DIR}/.autonomous/prompts"
+
+# Shared loop role inputs. Codex enforces filesystem access through its sandbox,
+# so Claude-format command patterns are intentionally not translated here.
+BASE_TOOLS="Read,Write,Edit,Glob,Grep,Bash"
+DEVELOPER_TOOLS="${BASE_TOOLS}"
+TESTER_TOOLS="${BASE_TOOLS}"
+REVIEWER_TOOLS="Read,Write,Glob,Grep,Bash"
+MANAGER_TOOLS="Read,Glob,Grep,Bash"
+STRATEGIST_TOOLS="Read,Glob,Grep,WebSearch,WebFetch,Bash"
+SECURITY_TOOLS="Read,Write,Glob,Grep,Bash"
+
+check_auth() {
+  if ! command -v codex &>/dev/null; then
+    log "FATAL: 'codex' CLI not found in PATH."
+    exit 1
+  fi
+  if [ -z "${CODEX_API_KEY:-}" ] && [ -z "${CODEX_ACCESS_TOKEN:-}" ]; then
+    if ! codex login status &>/dev/null 2>&1; then
+      log "FATAL: Not authenticated. Run 'codex login' first."
+      exit 1
+    fi
+  fi
+}
+
+# Classify a runtime exit code. Codex has no max-turn concept - any non-zero is an error.
+classify_exit() {
+  local exit_code=$1
+  if [ $exit_code -eq 0 ]; then
+    return 0
+  else
+    return 2  # genuine error - Codex does not have max-turns
+  fi
+}
+
+run_agent() {
+  local prompt="$1"
+  local allowed_tools="$2"
+  local _max_turns="$3"
+  local output_file="$4"
+  local sandbox_mode="workspace-write"
+  local search_args=()
+
+  case "$allowed_tools" in
+    "$REVIEWER_TOOLS"|"$SECURITY_TOOLS"|"$MANAGER_TOOLS"|"$STRATEGIST_TOOLS")
+      sandbox_mode="read-only"
+      ;;
+  esac
+  case "$allowed_tools" in
+    *WebSearch*|*WebFetch*)
+      search_args=(--search)
+      ;;
+  esac
+
+  codex "${search_args[@]}" -a never exec \
+    --ephemeral \
+    --skip-git-repo-check \
+    --sandbox "$sandbox_mode" \
+    --model "$MODEL" \
+    --json \
+    "$prompt" \
+    > "$output_file" 2>&1
+}
+
+run_finalizer() {
+  local prompt="$1"
+  local _allowed_tools="$2"
+  local _max_turns="$3"
+  codex -a never exec \
+    --ephemeral \
+    --skip-git-repo-check \
+    --sandbox workspace-write \
+    --model "$MODEL" \
+    "$prompt"
+}

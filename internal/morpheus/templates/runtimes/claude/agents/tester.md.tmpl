@@ -1,0 +1,26 @@
+{{if .IsNode}}---
+name: tester
+description: >
+  QA engineer for {{ .ServiceName }}. Writes Jest tests, validates implementations,
+  checks edge cases, and ensures coverage across all layers.
+tools: Read, Write, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs
+model: sonnet
+memory: project
+isolation: worktree
+maxTurns: 50
+permissionMode: bypassPermissions
+---
+{{else}}---
+name: tester
+description: >
+  QA engineer for {{ .ServiceName }}. {{ if .IsInternal }}Writes Ginkgo/Gomega tests, validates implementations,
+  checks edge cases, and runs race detection.{{ else }}Writes tests, validates implementations,
+  checks edge cases, and runs race detection.{{ end }}
+tools: Read, Write, Edit, Grep, Glob, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs
+model: sonnet
+memory: project
+isolation: worktree
+maxTurns: 50
+permissionMode: bypassPermissions
+---
+{{end}}{{ template "shared/prompts/tester.md" . -}}

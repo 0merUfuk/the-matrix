@@ -1,0 +1,11 @@
+{{if .IsNode}}---
+description: >
+  Static application security testing for {{ .ServiceName }} using semgrep.
+  Ranks findings by severity (impact x exploitability x blast_radius).
+---
+{{else}}---
+description: >
+  Static application security testing for {{ .ServiceName }} using gosec and semgrep.
+  Ranks findings by severity (impact x exploitability x blast_radius).
+---
+{{end}}{{ template "shared/prompts/skills/security-scan.md" . -}}
