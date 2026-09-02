@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/0merUfuk/the-matrix/internal/cli"
 )
@@ -26,7 +27,8 @@ func createTestEcosystem(t *testing.T) string {
 	os.MkdirAll(knowledgeDir, 0755)
 
 	// Create a valid knowledge doc (>= 50 lines)
-	validDoc := "**Version**: 1.0\n**Created**: 2026-03-01\n**Last Updated**: 2026-03-01\n**Authors:** Test\n\n---\n\n"
+	created := time.Now().AddDate(0, 0, -1).Format(time.DateOnly)
+	validDoc := "**Version**: 1.0\n**Created**: " + created + "\n**Last Updated**: " + created + "\n**Authors:** Test\n\n---\n\n"
 	validDoc += strings.Repeat("Content line for testing purposes.\n", 50)
 	os.WriteFile(filepath.Join(knowledgeDir, "01-test-doc.md"), []byte(validDoc), 0644)
 

@@ -5,13 +5,15 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestFindStaleDocs_Fresh(t *testing.T) {
 	dir := t.TempDir()
 
-	// Doc created recently (2026-03-01) — should be fresh at 6 months
-	content := "**Version**: 1.0\n**Created**: 2026-03-01\n\n" + strings.Repeat("line\n", 55)
+	// Doc created recently — should be fresh at 6 months.
+	created := time.Now().AddDate(0, 0, -1).Format(time.DateOnly)
+	content := "**Version**: 1.0\n**Created**: " + created + "\n\n" + strings.Repeat("line\n", 55)
 	os.WriteFile(filepath.Join(dir, "01-test.md"), []byte(content), 0644)
 
 	stale := findStaleDocs(dir, 6, nil)
