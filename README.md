@@ -17,7 +17,7 @@ Most agent setups are hand-crafted, generic, and stale within weeks. The-matrix 
 
 ## Install
 
-> **Current public release**: v1.9.0 (released 2026-08-11). Source builds currently report `1.9.0-dev`. The `v1.8.0` tag marks the clean root commit; `main` continues from that public baseline.
+> **Current public release**: v1.9.0 (released 2026-08-14). Source builds currently report `1.9.0-dev`. The `v1.8.0` tag marks the clean root commit; `main` continues from that public baseline.
 
 ### Homebrew
 
