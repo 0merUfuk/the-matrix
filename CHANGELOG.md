@@ -5,7 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer](https
 
 ## [Unreleased]
 
-## [1.9.0] - 2026-08-11
+## [1.9.0] - 2026-08-14
 
 ### Added
 - **runtime**: Agent Runtime Abstraction Layer (ARAL) with a registered `Runtime` interface, Claude Code adapter, and OpenAI Codex adapter
