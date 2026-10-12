@@ -15,6 +15,12 @@ Most agent setups are hand-crafted, generic, and stale within weeks. The-matrix 
 - **Knowledge is first-class.** Oracle synthesizes best-practice docs from official sources; trinity flags when they go stale and prints the re-research commands to run.
 - **Multi-repo aware.** Got six services? Neo treats it that way, with per-service agent configs that share a common knowledge base.
 
+## Project film
+
+https://github.com/user-attachments/assets/f4228e7d-0437-485a-b958-9c60e171406c
+
+An illustrative project film connecting neo, oracle, morp, and trinity: explicit setup, invoked research and development loops, review gates, and manual freshness checks. The workflow and artifacts are constructed examples, not a recording of executed commands.
+
 ## Install
 
 > **Current public release**: v1.9.0 (released 2026-08-11). Source builds currently report `1.9.0-dev`. The `v1.8.0` tag marks the clean root commit; `main` continues from that public baseline.
