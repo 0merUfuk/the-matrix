@@ -17,6 +17,8 @@ Most agent setups are hand-crafted, generic, and stale within weeks. The-matrix 
 
 ## Project film
 
+https://github.com/user-attachments/assets/f4228e7d-0437-485a-b958-9c60e171406c
+
 An illustrative project film connecting neo, oracle, morp, and trinity: explicit setup, invoked research and development loops, review gates, and manual freshness checks. The workflow and artifacts are constructed examples, not a recording of executed commands.
 
 ## Install
