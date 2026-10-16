@@ -691,14 +691,10 @@ func pruneSnapshots(stateDir string, keep int) error {
 		if e.IsDir() {
 			continue
 		}
-		name := e.Name()
-		if name == "state-latest.json" || name == "state-quick-latest.json" || name == "README.md" || name == ".gitkeep" {
+		if !isSnapshotFile(e.Name()) {
 			continue
 		}
-		if !strings.HasPrefix(name, "state-") || !strings.HasSuffix(name, ".json") {
-			continue
-		}
-		snaps = append(snaps, snap{name: name})
+		snaps = append(snaps, snap{name: e.Name()})
 	}
 
 	// Sort newest-first by filename (lexicographic descending). Snapshot filenames

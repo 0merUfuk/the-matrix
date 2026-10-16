@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>The Matrix</title>
+  <link rel="icon" href="mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <a class="brand" href="#/"><img src="mark.svg" alt="">The Matrix</a>
+  </header>
+  <main id="main" tabindex="-1"></main>
+  <dialog id="picker" class="sheet" aria-labelledby="picker-title">
+    <div class="sheet-bar">
+      <button class="bar-btn" type="button" id="picker-cancel">Cancel</button>
+      <h2 id="picker-title">Choose a folder</h2>
+      <button class="bar-btn strong" type="button" id="picker-use">Use</button>
+    </div>
+    <div class="sheet-body">
+      <div class="crumb" id="picker-path"></div>
+      <ul class="folders" id="picker-list"></ul>
+    </div>
+  </dialog>
+  <dialog id="confirm" class="alert" aria-labelledby="confirm-title">
+    <form method="dialog">
+      <div class="alert-text">
+        <h2 id="confirm-title"></h2>
+        <p id="confirm-text"></p>
+      </div>
+      <div class="alert-actions">
+        <button value="cancel">Cancel</button>
+        <button value="ok" id="confirm-ok" class="strong">Continue</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="reader" class="sheet wide" aria-labelledby="reader-title">
+    <div class="sheet-bar">
+      <span></span>
+      <h2 id="reader-title"></h2>
+      <button class="bar-btn strong" type="button" id="reader-close">Done</button>
+    </div>
+    <div class="sheet-body">
+      <pre id="reader-text" class="reader"></pre>
+    </div>
+  </dialog>
+  <script src="app.js" defer></script>
+</body>
+</html>

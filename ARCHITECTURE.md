@@ -191,6 +191,21 @@ Oracle's knowledge docs can be exported to formats consumed by all major AI codi
 
 Architecture: format adapter pattern with `init()`-based auto-registration. New formats are added by implementing the `Format` interface and calling `Register()` in `init()`.
 
+### The Matrix App
+
+`matrix` (`cmd/matrix`, `internal/matrixapp`) is a fifth binary for people who do not use the command line. It is not part of any single tool: it is the browser face of the whole ecosystem and runs the four installed binaries as separate processes. Its Homebrew formula depends on the four tool formulas and can run as a `brew services` service.
+
+The app offers a fixed table of tasks (`tasks.go`) rather than arbitrary commands. Wizards run through their existing non-interactive paths: setup is `neo init --preset <preset> --runtime <runtime>`, with the preset and runtime chosen in a form and validated against the public presets. Because `neo init` overwrites `CLAUDE.md` and `.claude/` files without asking, the app only offers setup for projects that are not set up yet; setting up again requires an explicit replace confirmation. Sync is offered only when a stack's oracle output (from `.trinity.json`) exists. Data shown in the app comes from trinity's structured collectors (`CollectHealth`, `CollectDashboard`).
+
+Short tasks run in the project folder without a shell, with a 60 s timeout, a 256 KB output cap and at most two at a time.
+
+Research and building are long jobs (`jobs.go`) with their own model: no time limit, a sequence of steps (a tool command, then the generated `.autonomous/loop.sh`), state in `~/.the-matrix/jobs/<id>/job.json` and output streamed straight to `log.txt` beside it (0700 folders, 0600 files, last 20 jobs kept), at most one per project and three in total. Each command runs in its own process group, so stopping a job, or quitting the app, ends the loop and the agent it started. A job still marked running after a crash is marked interrupted on the next start and its loop gets a `tasks/STOP` file, which the loops already honour; the next build job clears it.
+
+- **Research** (`research.go`) turns a short form, prefilled from the stack in `.neo.json`, into an oracle `StackContext`, runs `oracle research --config … --output-dir … --force --runtime …`, then the research loop. The workspace lives in `~/.the-matrix/research/<project>-<hash>/<stack>/` so the project only receives finished docs. The app shows the loop's `tasks/status.txt` as plain progress, lists the findings for reading at the review gate and opens the gate (`tasks/SYNTHESIZE_APPROVED`) when the user approves; the review can also be skipped up front. Finished docs from `output/<stack>/` are added with `trinity sync --from … --to .claude/knowledge/<stack> --path …`.
+- **Build** (`build.go`) runs `morp loop --path … --non-interactive --goal … --max-cycles 3|6|10 --runtime …` and then the build loop, or only the loop to continue. Progress comes from the job log (round, current role, exit reason), `tasks/todo.md` checkboxes and `tasks/decisions-pending.md`. The project must be a Git repository because the loop commits each step.
+
+The runtime is the project's detected one; long jobs start only when its CLI is installed. Commands get a PATH of the tools' folders, the app's own PATH and the usual install places, because a Homebrew service starts with a very short PATH. The server listens on loopback only, answers only loopback hosts, requires a same-origin JSON request for every change, refuses write tasks without confirmation and only accepts project folders inside the home directory. The project list lives in `~/.the-matrix/projects.json` (0600). The UI is plain HTML/CSS/JS embedded with `go:embed`.
+
 ### Unified Configuration
 
 `.matrix.yaml` is the optional unified project config; `.matrix.yml` is also recognized. General tool configuration still follows each command's documented precedence. ARAL adds a project-local `runtime:` field consumed by runtime selection, `neo doctor`, and `trinity health`, and written when a supported command receives an explicit `--runtime` flag.

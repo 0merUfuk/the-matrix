@@ -1,4 +1,4 @@
-.PHONY: build build-all clean test test-race lint vet fmt fmt-check check tidy neo morp oracle trinity release
+.PHONY: build build-all clean test test-race lint vet fmt fmt-check check tidy neo morp oracle trinity matrix release
 
 # Build output directory
 BIN_DIR := bin
@@ -8,16 +8,18 @@ NEO_VERSION := 1.9.0-dev
 MORP_VERSION := 1.9.0-dev
 ORACLE_VERSION := 1.9.0-dev
 TRINITY_VERSION := 1.9.0-dev
+MATRIX_VERSION := 1.9.0-dev
 
 LDFLAGS_NEO := -ldflags "-X main.version=$(NEO_VERSION)"
 LDFLAGS_MORP := -ldflags "-X main.version=$(MORP_VERSION)"
 LDFLAGS_ORACLE := -ldflags "-X main.version=$(ORACLE_VERSION)"
 LDFLAGS_TRINITY := -ldflags "-X main.version=$(TRINITY_VERSION)"
+LDFLAGS_MATRIX := -ldflags "-X main.version=$(MATRIX_VERSION)"
 
 ## build: Build all 4 binaries
 build: build-all
 
-build-all: neo morp oracle trinity
+build-all: neo morp oracle trinity matrix
 
 neo:
 	go build $(LDFLAGS_NEO) -o $(BIN_DIR)/neo ./cmd/neo
@@ -30,6 +32,9 @@ oracle:
 
 trinity:
 	go build $(LDFLAGS_TRINITY) -o $(BIN_DIR)/trinity ./cmd/trinity
+
+matrix:
+	go build $(LDFLAGS_MATRIX) -o $(BIN_DIR)/matrix ./cmd/matrix
 
 ## test: Run all tests (with race detection)
 test: test-race

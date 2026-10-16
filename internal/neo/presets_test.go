@@ -282,3 +282,12 @@ func TestGetPreset_AllPresetsHaveNonEmptyStackName(t *testing.T) {
 
 // runPresetFlow is directly unit-tested in init_test.go. Tests here cover
 // preset map correctness and stack resolution only.
+
+func TestPresetDisplayName(t *testing.T) {
+	if got := PresetDisplayName("go-service"); got != "Go Microservice" {
+		t.Errorf("PresetDisplayName(go-service) = %q", got)
+	}
+	if got := PresetDisplayName("nope"); got != "" {
+		t.Errorf("PresetDisplayName(nope) = %q, want empty", got)
+	}
+}

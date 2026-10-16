@@ -51,6 +51,18 @@ builds:
       - amd64
       - arm64
 
+  - id: matrix
+    main: ./cmd/matrix
+    binary: matrix
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
 archives:
   - id: neo
     builds: [neo]
@@ -64,6 +76,9 @@ archives:
   - id: trinity
     builds: [trinity]
     name_template: "trinity_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - id: matrix
+    builds: [matrix]
+    name_template: "matrix_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 brews:
   - name: neo
@@ -109,6 +124,29 @@ brews:
     directory: Formula
     homepage: https://github.com/0merUfuk/the-matrix
     description: Maintenance runtime for Claude Code agent ecosystems
+
+  # The Matrix app: installing it installs the four tools too, and
+  # `brew services start matrix` keeps it running for people who never open a terminal.
+  - name: matrix
+    ids: [matrix]
+    skip_upload: auto
+    repository:
+      owner: 0merUfuk
+      name: homebrew-thematrix
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/0merUfuk/the-matrix
+    description: The Matrix app - set up and look after agent ecosystems from your browser
+    dependencies:
+      - name: neo
+      - name: morp
+      - name: oracle
+      - name: trinity
+    service: |
+      run [opt_bin/"matrix", "--no-open"]
+      keep_alive true
+      log_path var/"log/matrix.log"
+      error_log_path var/"log/matrix.log"
 
 release:
   prerelease: auto

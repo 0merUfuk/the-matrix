@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer](https
 
 ## [Unreleased]
 
+### Added
+- **matrix**: new `matrix` binary, The Matrix app — a local browser UI (embedded via `go:embed`, loopback-only) for people who do not use the CLI. Choose a project folder with a folder picker, set up its AI agents through a two-question form (runs `neo init --preset … --runtime …`), see health and out-of-date knowledge in plain language, run a health check, save status snapshots and add finished research. Research best practices for a stack (form → `oracle research` + research loop, findings readable at the review gate, docs added with `trinity sync`) and let the agents build a described goal (`morp loop --non-interactive` + build loop) as long jobs: no time limit, progress in plain words, stop at any time, logs and state under `~/.the-matrix/jobs/`, still there after a page reload, stopped when the app quits. Changes require confirmation; setup is only offered for projects that are not set up yet, because `neo init` overwrites `CLAUDE.md`. Homebrew formula `matrix` depends on the four tools and can run as a service
+- **neo**: `PresetDisplayName` exposes a preset's human-readable name
+- **trinity**: `CollectDashboard` exposes ecosystem state (health, knowledge freshness, self-state snapshots, sync log) as structured data for the dashboard
+
+### Changed
+- **health**: `trinity health` checks are now collected as structured data (`CollectHealth`) and rendered from it; terminal output and exit codes are unchanged
+
 ## [1.9.0] - 2026-08-11
 
 ### Added
