@@ -198,6 +198,7 @@ func readSyncLog(path string, limit int) ([]SyncLogEntry, error) {
 
 	var entries []SyncLogEntry
 	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024) // a long details line must not hide the whole history
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if !syncLogLine.MatchString(line) {

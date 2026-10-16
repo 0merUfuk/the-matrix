@@ -142,6 +142,8 @@ func (rn *Runner) Start(tool, action, title, display, bin string, args []string,
 		case context.DeadlineExceeded:
 			status = "timeout"
 		case context.Canceled:
+			// CommandContext kills with SIGKILL, so exit 0 here means the tool
+			// finished before the cancel landed: report what actually happened.
 			if status != "ok" {
 				status = "canceled"
 			}

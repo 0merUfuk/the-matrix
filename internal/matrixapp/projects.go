@@ -98,7 +98,20 @@ func resolve(home, raw string) (string, error) {
 	if home == "" || (p != home && !strings.HasPrefix(p, home+string(os.PathSeparator))) {
 		return "", errors.New("projects must be inside your home folder")
 	}
-	if info, err := os.Stat(p); err != nil || !info.IsDir() { // #nosec G703 -- p was cleaned and checked to be inside $HOME just above
+	// Clean does not follow symlinks: check the real location too, so a link
+	// inside home cannot lead outside it.
+	real, err := filepath.EvalSymlinks(p)
+	if err != nil {
+		return "", fmt.Errorf("%s is not a folder", cli.PathToHome(p))
+	}
+	realHome, err := filepath.EvalSymlinks(home)
+	if err != nil {
+		realHome = home
+	}
+	if real != realHome && !strings.HasPrefix(real, realHome+string(os.PathSeparator)) {
+		return "", errors.New("projects must be inside your home folder")
+	}
+	if info, err := os.Stat(real); err != nil || !info.IsDir() { // #nosec G703 -- real was resolved and checked to be inside $HOME just above
 		return "", fmt.Errorf("%s is not a folder", cli.PathToHome(p))
 	}
 	return p, nil

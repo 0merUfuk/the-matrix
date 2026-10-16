@@ -269,3 +269,32 @@ func TestServeRejectsNonLoopbackAndStops(t *testing.T) {
 		t.Fatal("Serve did not stop")
 	}
 }
+
+// A symlink inside home must not lead outside it; one that stays inside works.
+func TestResolveFollowsSymlinksForHomeConfinement(t *testing.T) {
+	home, outside := t.TempDir(), t.TempDir()
+	inside := filepath.Join(home, "code", "app")
+	if err := os.MkdirAll(inside, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(home, "escape")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(inside, filepath.Join(home, "shortcut")); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := resolve(home, "~/escape"); err == nil || !strings.Contains(err.Error(), "inside your home folder") {
+		t.Fatalf("link to a folder outside home: err = %v, want refusal", err)
+	}
+	got, err := resolve(home, "~/shortcut")
+	if err != nil {
+		t.Fatalf("link to a folder inside home: %v", err)
+	}
+	if got != filepath.Join(home, "shortcut") {
+		t.Fatalf("resolve kept %q, want the path the user chose", got)
+	}
+	if _, err := resolve(home, "~/code/app"); err != nil {
+		t.Fatalf("plain folder: %v", err)
+	}
+}

@@ -233,7 +233,7 @@ func runHealthChecks(theme *cli.Theme, root string, maxAgeMonths float64, result
 	// 4. Scan knowledge subdirectories
 	entries, err := os.ReadDir(knowledgeDir)
 	if err != nil {
-		results.record(theme, SectionKnowledge, cli.Fail, ".claude/knowledge/", fmt.Sprintf("read error: %v", err))
+		results.record(theme, SectionKnowledge, cli.Fail, knowledgeLabel, fmt.Sprintf("read error: %v", err))
 	} else {
 		var subdirs []string
 		for _, e := range entries {
@@ -244,7 +244,7 @@ func runHealthChecks(theme *cli.Theme, root string, maxAgeMonths float64, result
 		sort.Strings(subdirs)
 
 		if len(subdirs) == 0 {
-			results.record(theme, SectionKnowledge, cli.Warn, ".claude/knowledge/", "no subdirectories found")
+			results.record(theme, SectionKnowledge, cli.Warn, knowledgeLabel, "no subdirectories found")
 		}
 
 		for _, name := range subdirs {

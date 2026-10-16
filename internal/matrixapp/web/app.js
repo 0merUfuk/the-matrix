@@ -365,7 +365,7 @@
 
   function jobDetails(job) {
     if (!job) return null;
-    const log = (logs[job.id] ??= { open: job.status === "fail", text: "", next: 0 });
+    const log = (logs[job.id] ??= { open: job.status === "fail" || job.status === "interrupted", text: "", next: 0 });
     if (log.open && !log.next) loadLog(job.id);
     return h("details", { open: log.open || null, ontoggle: (e) => { log.open = e.target.open; if (log.open) loadLog(job.id); } },
       h("summary", null, "Details"),
@@ -459,23 +459,29 @@
   const shownTasks = new Set();
 
   async function runTask(task, step, params) {
+    // Stop quietly if the user leaves this project while the task runs.
+    const path = project.path, here = () => project?.path === path;
     try {
-      let view = await api("/api/tasks", { task, path: project.path, params, confirm: true });
+      let view = await api("/api/tasks", { task, path, params, confirm: true });
+      if (!here()) return;
       let out = view.output;
       tasksByStep[step] = { ...view, output: out };
       renderProject();
       while (view.status === "running") {
         await new Promise((r) => setTimeout(r, 300));
         view = await api(`/api/tasks/${view.id}?from=${view.next}`);
+        if (!here()) return;
         out += view.output;
         tasksByStep[step] = { ...view, output: out };
         if (view.status === "running") renderProject();
       }
       if (task === "setup") setupForm.open = false;
-      const fresh = await api("/api/project?path=" + encodeURIComponent(project.path));
+      const fresh = await api("/api/project?path=" + encodeURIComponent(path));
+      if (!here()) return;
       project = fresh;
       renderProject();
     } catch (e) {
+      if (!here()) return;
       tasksByStep[step] = { action: task, status: "fail", output: e.message };
       renderProject();
     }

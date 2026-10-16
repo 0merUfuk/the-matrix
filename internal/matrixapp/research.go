@@ -238,7 +238,9 @@ func (s *server) researchStates(dir string) []ResearchState {
 		case running:
 			rs.Phase = "running"
 		case rs.Job != nil && (rs.Job.Status == "stopped" || rs.Job.Status == "interrupted"), status == "STOPPED_BY_USER":
-			rs.Phase = "stopped" // checked first: a stopped loop leaves its last status behind
+			// Checked before the review-timeout and failed fallbacks, because a
+			// stopped loop leaves its last status behind. Finished docs still win.
+			rs.Phase = "stopped"
 		case status == "RESEARCH_COMPLETE":
 			rs.Phase = "review-timeout"
 		default:
