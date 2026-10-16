@@ -88,10 +88,10 @@ func RenderToFile(name, tmplStr string, data any, outPath string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil { // #nosec G301 -- 0755 output directories per security-baseline
 		return fmt.Errorf("creating directory for %s: %w", outPath, err)
 	}
-	return os.WriteFile(outPath, []byte(content), 0644)
+	return os.WriteFile(outPath, []byte(content), 0644) // #nosec G306 -- rendered template, regular 0644 output file
 }
 
 // --- Helper functions for templates ---

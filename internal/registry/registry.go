@@ -186,13 +186,13 @@ func Pull(packName string, targetDir string, validateFn func(filename, content s
 	}
 
 	// All files downloaded and validated — write them.
-	if err := os.MkdirAll(targetDir, 0755); err != nil {
+	if err := os.MkdirAll(targetDir, 0755); err != nil { // #nosec G301 -- 0755 target knowledge directory per security-baseline
 		return fmt.Errorf("creating target directory: %w", err)
 	}
 
 	for _, f := range files {
 		path := filepath.Join(targetDir, f.filename)
-		if err := os.WriteFile(path, []byte(f.content), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(f.content), 0644); err != nil { // #nosec G306 -- validated knowledge doc (sanitized filename), regular 0644 output file
 			return fmt.Errorf("writing %s: %w", f.filename, err)
 		}
 	}

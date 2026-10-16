@@ -1,4 +1,4 @@
-# golangci-lint configuration for the-matrix
+# golangci-lint configuration for the-matrix (golangci-lint v2 format)
 #
 # Intentionally minimal — gosec runs as its own job in .github/workflows/security.yml
 # so it is excluded here to avoid double-running.
@@ -6,24 +6,38 @@
 # Linters enabled:
 #   - govet       — Go vet (reports suspicious constructs)
 #   - errcheck    — unchecked errors
-#   - staticcheck — static analysis (replaces golint, deadcode, etc.)
+#   - staticcheck — static analysis (includes the former gosimple/stylecheck)
 #   - unused      — unused code (variables, constants, functions, types)
+
+version: "2"
 
 run:
   timeout: 5m
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - govet
     - errcheck
     - staticcheck
     - unused
-
-issues:
-  # Skip embedded template directories — they contain scaffolding that is
-  # not real Go code in this module.
-  exclude-dirs:
-    - internal/morpheus/templates
-    - internal/neo/templates
-    - internal/oracle/templates
+  settings:
+    staticcheck:
+      # v2 folds gosimple (S*), stylecheck (ST*) and quickfix (QF*) into
+      # staticcheck. Keep the v1 scope: the SA* correctness checks only.
+      checks:
+        - "SA*"
+  exclusions:
+    generated: lax
+    # Same default exclusions v1 applied implicitly (exclude-use-default).
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    # Skip embedded template directories — they contain scaffolding that is
+    # not real Go code in this module.
+    paths:
+      - internal/morpheus/templates
+      - internal/neo/templates
+      - internal/oracle/templates

@@ -41,7 +41,7 @@ type ContextStack struct {
 // Other values (e.g. "python", "dart") are accepted but will not pre-fill
 // the tech stack — the wizard collects it instead.
 func LoadContextProfile(path string) (*ContextProfile, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- context profile path is the user's own --context flag
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil, fmt.Errorf("context file not found: %s", path)

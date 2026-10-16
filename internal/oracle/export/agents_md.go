@@ -57,7 +57,7 @@ func (f *agentsMDFormat) Export(docs []KnowledgeDoc, targetDir string, opts Expo
 	}
 
 	outPath := filepath.Join(targetDir, "AGENTS.md")
-	return os.WriteFile(outPath, []byte(b.String()), 0644)
+	return os.WriteFile(outPath, []byte(b.String()), 0644) // #nosec G306 -- exported AGENTS.md, regular 0644 output file
 }
 
 // promoteToSection replaces the first # heading with ## or prepends ## if no heading found.

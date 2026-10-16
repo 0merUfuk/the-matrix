@@ -132,7 +132,7 @@ func syncOnePair(pair SyncPair, projectRoot string, dryRun bool) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "oracle", "inject", "--from", pair.From, "--to", pair.To)
+	cmd := exec.CommandContext(ctx, "oracle", "inject", "--from", pair.From, "--to", pair.To) // #nosec G204 -- argv-only exec of the known oracle binary, no shell string
 	env := os.Environ()
 	env = append(env, "FORCE_COLOR=1")
 	cmd.Env = env

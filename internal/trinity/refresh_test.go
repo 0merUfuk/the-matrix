@@ -14,7 +14,9 @@ func TestFindStaleDocs_Fresh(t *testing.T) {
 	// Doc created recently — should be fresh at 6 months.
 	created := time.Now().AddDate(0, 0, -1).Format(time.DateOnly)
 	content := "**Version**: 1.0\n**Created**: " + created + "\n\n" + strings.Repeat("line\n", 55)
-	os.WriteFile(filepath.Join(dir, "01-test.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "01-test.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	stale := findStaleDocs(dir, 6, nil)
 	if len(stale) != 0 {
@@ -27,7 +29,9 @@ func TestFindStaleDocs_Stale(t *testing.T) {
 
 	// Doc created long ago — should be stale at 6 months
 	content := "**Version**: 1.0\n**Created**: 2024-01-01\n\n" + strings.Repeat("line\n", 55)
-	os.WriteFile(filepath.Join(dir, "01-old.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "01-old.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	stale := findStaleDocs(dir, 6, nil)
 	if len(stale) != 1 {
@@ -46,7 +50,9 @@ func TestFindStaleDocs_NoDate(t *testing.T) {
 
 	// Doc with no date frontmatter
 	content := strings.Repeat("no date frontmatter\n", 55)
-	os.WriteFile(filepath.Join(dir, "01-nodate.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "01-nodate.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	stale := findStaleDocs(dir, 6, nil)
 	if len(stale) != 1 {
@@ -65,9 +71,15 @@ func TestFindStaleDocs_TopicFilter(t *testing.T) {
 
 	// Two docs, both stale
 	oldContent := "**Created**: 2024-01-01\n\n" + strings.Repeat("line\n", 55)
-	os.WriteFile(filepath.Join(dir, "08-api-design.md"), []byte(oldContent), 0644)
-	os.WriteFile(filepath.Join(dir, "14-api-gateway.md"), []byte(oldContent), 0644)
-	os.WriteFile(filepath.Join(dir, "05-testing.md"), []byte(oldContent), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "08-api-design.md"), []byte(oldContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "14-api-gateway.md"), []byte(oldContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "05-testing.md"), []byte(oldContent), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Filter by "api" — should match 08-api-design and 14-api-gateway (substring match)
 	stale := findStaleDocs(dir, 6, []string{"api"})
@@ -87,7 +99,9 @@ func TestFindStaleDocs_TopicFilter_NoMatch(t *testing.T) {
 	dir := t.TempDir()
 
 	oldContent := "**Created**: 2024-01-01\n\n" + strings.Repeat("line\n", 55)
-	os.WriteFile(filepath.Join(dir, "05-testing.md"), []byte(oldContent), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "05-testing.md"), []byte(oldContent), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	stale := findStaleDocs(dir, 6, []string{"nonexistent-topic"})
 	if len(stale) != 0 {
@@ -100,7 +114,9 @@ func TestFindStaleDocs_MaxAgeZero(t *testing.T) {
 
 	// Even a very recent doc should be stale at maxAge=0
 	content := "**Created**: 2026-03-15\n\n" + strings.Repeat("line\n", 55)
-	os.WriteFile(filepath.Join(dir, "01-recent.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "01-recent.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	stale := findStaleDocs(dir, 0, nil)
 	if len(stale) != 1 {
@@ -112,8 +128,12 @@ func TestFindStaleDocs_ExcludesIndexMD(t *testing.T) {
 	dir := t.TempDir()
 
 	oldContent := "**Created**: 2024-01-01\n\n" + strings.Repeat("line\n", 55)
-	os.WriteFile(filepath.Join(dir, "_index.md"), []byte(oldContent), 0644)
-	os.WriteFile(filepath.Join(dir, "01-real.md"), []byte(oldContent), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "_index.md"), []byte(oldContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "01-real.md"), []byte(oldContent), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	stale := findStaleDocs(dir, 6, nil)
 	if len(stale) != 1 {

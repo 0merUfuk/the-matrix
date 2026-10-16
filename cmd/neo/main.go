@@ -241,7 +241,7 @@ func registryPullCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&toDir, "to", "", "Target directory for knowledge docs (required)")
-	cmd.MarkFlagRequired("to")
+	cobra.CheckErr(cmd.MarkFlagRequired("to"))
 
 	return cmd
 }

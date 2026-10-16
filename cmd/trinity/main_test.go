@@ -49,7 +49,11 @@ trinity:
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Chdir(origDir) })
+	t.Cleanup(func() {
+		if err := os.Chdir(origDir); err != nil {
+			t.Error(err)
+		}
+	})
 
 	if err := os.Chdir(dir); err != nil {
 		t.Fatal(err)
@@ -94,7 +98,11 @@ trinity:
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Chdir(origDir) })
+	t.Cleanup(func() {
+		if err := os.Chdir(origDir); err != nil {
+			t.Error(err)
+		}
+	})
 
 	if err := os.Chdir(cwdDir); err != nil {
 		t.Fatal(err)

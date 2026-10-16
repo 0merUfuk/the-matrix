@@ -242,7 +242,7 @@ func TestLoad_StaleCache_NetworkAvailable(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(freshData)
+		_, _ = w.Write(freshData)
 	}))
 	defer server.Close()
 
@@ -419,11 +419,11 @@ func TestPull_TargetDirCreated(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/pack.json"):
-			w.Write(detailData)
+			_, _ = w.Write(detailData)
 		case strings.HasSuffix(r.URL.Path, "/01-project-structure.md"):
-			w.Write([]byte(doc1))
+			_, _ = w.Write([]byte(doc1))
 		case strings.HasSuffix(r.URL.Path, "/02-layered-architecture.md"):
-			w.Write([]byte(doc2))
+			_, _ = w.Write([]byte(doc2))
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -493,9 +493,9 @@ func TestPull_ValidationRejection(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/pack.json"):
-			w.Write(detailData)
+			_, _ = w.Write(detailData)
 		default:
-			w.Write([]byte(doc))
+			_, _ = w.Write([]byte(doc))
 		}
 	}))
 	defer server.Close()
@@ -778,7 +778,7 @@ func TestFetchRegistryIndex_ServerError(t *testing.T) {
 // TestFetchPackDetail_InvalidJSON verifies that malformed pack.json produces an error.
 func TestFetchPackDetail_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("not json at all"))
+		_, _ = w.Write([]byte("not json at all"))
 	}))
 	defer server.Close()
 
@@ -860,7 +860,7 @@ func TestInfo_StaleCache_NetworkAvailable(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(freshData)
+		_, _ = w.Write(freshData)
 	}))
 	defer server.Close()
 
@@ -904,7 +904,7 @@ func TestInfo_CorruptCache_NetworkFallback(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(freshData)
+		_, _ = w.Write(freshData)
 	}))
 	defer server.Close()
 
@@ -939,11 +939,11 @@ func TestPull_EndToEnd(t *testing.T) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/go-chi/pack.json"):
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(detailData)
+			_, _ = w.Write(detailData)
 		case strings.HasSuffix(r.URL.Path, "/go-chi/01-project-structure.md"):
-			w.Write([]byte(doc1))
+			_, _ = w.Write([]byte(doc1))
 		case strings.HasSuffix(r.URL.Path, "/go-chi/02-layered-architecture.md"):
-			w.Write([]byte(doc2))
+			_, _ = w.Write([]byte(doc2))
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -1023,10 +1023,10 @@ func TestPull_PathTraversalRejected(t *testing.T) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/pack.json"):
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(detailData)
+			_, _ = w.Write(detailData)
 		default:
 			// Serve valid doc content for any file request.
-			w.Write([]byte(sampleDocContent("Evil Doc")))
+			_, _ = w.Write([]byte(sampleDocContent("Evil Doc")))
 		}
 	}))
 	defer server.Close()
@@ -1078,7 +1078,7 @@ func TestPull_DotDotFilenameRejected(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(detailData)
+		_, _ = w.Write(detailData)
 	}))
 	defer server.Close()
 
@@ -1112,9 +1112,9 @@ func TestPull_ValidationRejection_ViaFullPull(t *testing.T) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/pack.json"):
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(detailData)
+			_, _ = w.Write(detailData)
 		default:
-			w.Write([]byte(doc))
+			_, _ = w.Write([]byte(doc))
 		}
 	}))
 	defer server.Close()
@@ -1173,9 +1173,9 @@ func TestPull_UserAgentIncludesVersion(t *testing.T) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/pack.json"):
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(detailData)
+			_, _ = w.Write(detailData)
 		default:
-			w.Write([]byte(doc))
+			_, _ = w.Write([]byte(doc))
 		}
 	}))
 	defer server.Close()
@@ -1295,10 +1295,10 @@ func TestPull_URLUsesSafeNameNotTopicFile(t *testing.T) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/pack.json"):
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(detailData)
+			_, _ = w.Write(detailData)
 		default:
 			// Serve valid doc content for any file request.
-			w.Write([]byte(sampleDocContent("Safe Doc")))
+			_, _ = w.Write([]byte(sampleDocContent("Safe Doc")))
 		}
 	}))
 	defer server.Close()

@@ -73,7 +73,7 @@ func RunMorpheusIntegration(profile *ProjectProfile, outputDir string, runtimeNa
 		if len(runtimeNames) > 0 && strings.TrimSpace(runtimeNames[0]) != "" {
 			args = append(args, "--runtime", strings.TrimSpace(runtimeNames[0]))
 		}
-		cmd := exec.Command("morp", args...)
+		cmd := exec.Command("morp", args...) // #nosec G204 -- argv-only exec of the known morp binary, no shell string
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

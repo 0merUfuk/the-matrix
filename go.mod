@@ -1,6 +1,6 @@
 module github.com/0merUfuk/the-matrix
 
-go 1.25.8
+go 1.26.9
 
 require (
 	charm.land/bubbles/v2 v2.0.0

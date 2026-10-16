@@ -98,7 +98,7 @@ func LoadGoldStandardsFromDir(dir string) map[string]string {
 	for i := 0; i < count; i++ {
 		filename := mdFiles[i]
 		filePath := filepath.Join(dir, filename)
-		data, err := os.ReadFile(filePath)
+		data, err := os.ReadFile(filePath) // #nosec G304 -- reads gold-standard docs enumerated from the given knowledge dir
 		if err != nil {
 			continue
 		}

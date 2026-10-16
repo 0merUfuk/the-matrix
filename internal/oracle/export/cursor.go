@@ -43,7 +43,7 @@ func (f *cursorFormat) Export(docs []KnowledgeDoc, targetDir string, opts Export
 			// Single file
 			content := buildMDC(description, glob, body)
 			outPath := filepath.Join(rulesDir, doc.Topic+".mdc")
-			if err := os.WriteFile(outPath, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(outPath, []byte(content), 0644); err != nil { // #nosec G306 -- exported Cursor rule, regular 0644 output file
 				return fmt.Errorf("writing %s: %w", outPath, err)
 			}
 		} else {
@@ -53,7 +53,7 @@ func (f *cursorFormat) Export(docs []KnowledgeDoc, targetDir string, opts Export
 				content := buildMDC(description, glob, chunk)
 				suffix := fmt.Sprintf("-%d", i+1)
 				outPath := filepath.Join(rulesDir, doc.Topic+suffix+".mdc")
-				if err := os.WriteFile(outPath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(outPath, []byte(content), 0644); err != nil { // #nosec G306 -- exported Cursor rule, regular 0644 output file
 					return fmt.Errorf("writing %s: %w", outPath, err)
 				}
 			}

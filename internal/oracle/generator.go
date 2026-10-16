@@ -88,7 +88,7 @@ func GenerateFiles(ctx *StackContext, outputDir string, runtimeNames ...string) 
 			if err != nil {
 				return nil, fmt.Errorf("reading embedded file %s: %w", entry.TemplatePath, err)
 			}
-			if err := os.WriteFile(entry.OutputPath, data, 0755); err != nil {
+			if err := os.WriteFile(entry.OutputPath, data, 0755); err != nil { // #nosec G306 -- static workspace files are the loop's shell scripts, which must be 0755
 				return nil, fmt.Errorf("writing %s: %w", entry.OutputPath, err)
 			}
 		} else {
@@ -103,13 +103,13 @@ func GenerateFiles(ctx *StackContext, outputDir string, runtimeNames ...string) 
 				return nil, fmt.Errorf("EJS render failed for %s: %w", entry.TemplatePath, err)
 			}
 
-			if err := os.WriteFile(entry.OutputPath, []byte(rendered), 0644); err != nil {
+			if err := os.WriteFile(entry.OutputPath, []byte(rendered), 0644); err != nil { // #nosec G306 -- rendered template, regular 0644 output file
 				return nil, fmt.Errorf("writing %s: %w", entry.OutputPath, err)
 			}
 
 			// Make .sh files executable
 			if strings.HasSuffix(entry.OutputPath, ".sh") {
-				if err := os.Chmod(entry.OutputPath, 0755); err != nil {
+				if err := os.Chmod(entry.OutputPath, 0755); err != nil { // #nosec G302 -- rendered .sh scripts must be executable (0755)
 					return nil, fmt.Errorf("chmod %s: %w", entry.OutputPath, err)
 				}
 			}
@@ -133,14 +133,14 @@ func GenerateFiles(ctx *StackContext, outputDir string, runtimeNames ...string) 
 
 	// Write status.txt
 	statusPath := filepath.Join(outputDir, "tasks", "status.txt")
-	if err := os.WriteFile(statusPath, []byte("INITIALIZED\n"), 0644); err != nil {
+	if err := os.WriteFile(statusPath, []byte("INITIALIZED\n"), 0644); err != nil { // #nosec G306 -- loop status marker, regular 0644 output file
 		return nil, fmt.Errorf("writing status.txt: %w", err)
 	}
 
 	// Write .gitignore
 	gitignore := "tasks/\noutput/\n.autonomous/cycles/\nnode_modules/\n*.log\n"
 	gitignorePath := filepath.Join(outputDir, ".gitignore")
-	if err := os.WriteFile(gitignorePath, []byte(gitignore), 0644); err != nil {
+	if err := os.WriteFile(gitignorePath, []byte(gitignore), 0644); err != nil { // #nosec G306 -- workspace .gitignore, regular 0644 output file
 		return nil, fmt.Errorf("writing .gitignore: %w", err)
 	}
 

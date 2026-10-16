@@ -342,7 +342,9 @@ func TestReadDocs(t *testing.T) {
 	t.Run("skips _index.md", func(t *testing.T) {
 		dir := t.TempDir()
 		// _index.md should be skipped by ListMDFiles
-		os.WriteFile(filepath.Join(dir, "_index.md"), []byte("index content"), 0644)
+		if err := os.WriteFile(filepath.Join(dir, "_index.md"), []byte("index content"), 0644); err != nil {
+			t.Fatal(err)
+		}
 		createValidDoc(t, dir, "01-topic.md")
 
 		result, err := ReadDocs(dir)
@@ -361,7 +363,9 @@ func TestReadDocs(t *testing.T) {
 		dir := t.TempDir()
 		// Too short — will fail validation
 		shortContent := "**Version**: 1.0\n**Created**: 2026-03-15\n**Authors:** Test\n\n# Short\n\nToo short.\n"
-		os.WriteFile(filepath.Join(dir, "short.md"), []byte(shortContent), 0644)
+		if err := os.WriteFile(filepath.Join(dir, "short.md"), []byte(shortContent), 0644); err != nil {
+			t.Fatal(err)
+		}
 		// Valid doc also in same dir
 		createValidDoc(t, dir, "01-valid.md")
 
@@ -391,7 +395,9 @@ func TestReadDocs(t *testing.T) {
 		ejsContent := "**Version**: 1.0\n**Created**: 2026-03-15\n**Authors:** Test\n\n---\n\n# EJS Doc\n\n"
 		ejsContent += strings.Repeat("Line.\n", 48)
 		ejsContent += "<% someEJSTag %>\n"
-		os.WriteFile(filepath.Join(dir, "ejs.md"), []byte(ejsContent), 0644)
+		if err := os.WriteFile(filepath.Join(dir, "ejs.md"), []byte(ejsContent), 0644); err != nil {
+			t.Fatal(err)
+		}
 		createValidDoc(t, dir, "01-valid.md")
 
 		result, err := ReadDocs(dir)

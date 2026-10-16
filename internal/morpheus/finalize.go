@@ -33,24 +33,6 @@ func hasReviewerApproval(cyclesDir string) bool {
 	return hasVerdict(content, "APPROVED")
 }
 
-// hasSecurityApproval checks if the latest security file in the cycles directory
-// contains a SECURITY_APPROVED verdict. Only the most recent cycle is checked.
-func hasSecurityApproval(cyclesDir string) bool {
-	matches, err := filepath.Glob(filepath.Join(cyclesDir, "cycle-*-security.md"))
-	if err != nil || len(matches) == 0 {
-		return false
-	}
-
-	// Sort descending — check the latest security review first
-	sort.Sort(sort.Reverse(sort.StringSlice(matches)))
-
-	content, err := config.ReadFileString(matches[0])
-	if err != nil {
-		return false
-	}
-	return hasVerdict(content, "SECURITY_APPROVED")
-}
-
 // hasDualApproval confirms that reviewer and security approvals come from the
 // same latest review cycle.
 func hasDualApproval(cyclesDir string) bool {
@@ -126,7 +108,7 @@ func RunFinalize() {
 	cli.PrintDim("Running .autonomous/finalizer.sh...")
 	fmt.Println()
 
-	cmd := exec.Command("bash", finalizerPath)
+	cmd := exec.Command("bash", finalizerPath) // #nosec G204 -- argv-only exec of bash on the project's .autonomous/finalizer.sh, no shell string
 	cmd.Dir = cwd
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
