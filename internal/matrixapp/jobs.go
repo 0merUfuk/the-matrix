@@ -244,11 +244,12 @@ func (js *Jobs) Start(kind, title, project, subject, stopFile string, prepare fu
 	js.jobs = append(js.jobs, j)
 	js.prune()
 
-	go js.run(ctx, j, steps, logFile)
+	go js.run(ctx, cancel, j, steps, logFile)
 	return j, nil
 }
 
-func (js *Jobs) run(ctx context.Context, j *Job, steps []step, logFile *os.File) {
+func (js *Jobs) run(ctx context.Context, cancel context.CancelFunc, j *Job, steps []step, logFile *os.File) {
+	defer cancel() // release the context when the job ends on its own, not only on Stop
 	defer close(j.done)
 	defer logFile.Close()
 	status, code := "ok", 0
