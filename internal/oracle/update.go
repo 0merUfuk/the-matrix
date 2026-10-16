@@ -320,7 +320,7 @@ func scaffoldUpdateWorkspace(originalWorkspace, updateDir string, topics []strin
 	// Write topics.txt
 	topicsContent := strings.Join(topics, "\n") + "\n"
 	topicsPath := filepath.Join(updateDir, "topics.txt")
-	if err := os.WriteFile(topicsPath, []byte(topicsContent), 0644); err != nil {
+	if err := os.WriteFile(topicsPath, []byte(topicsContent), 0644); err != nil { // #nosec G306 -- update workspace topics list, regular 0644 output file
 		return fmt.Errorf("writing topics.txt: %w", err)
 	}
 
@@ -330,13 +330,13 @@ func scaffoldUpdateWorkspace(originalWorkspace, updateDir string, topics []strin
 		return fmt.Errorf("reading embedded update.sh: %w", err)
 	}
 	updateShPath := filepath.Join(updateDir, ".autonomous", "update.sh")
-	if err := os.WriteFile(updateShPath, updateShData, 0755); err != nil {
+	if err := os.WriteFile(updateShPath, updateShData, 0755); err != nil { // #nosec G306 -- update.sh is a loop script and must be 0755
 		return fmt.Errorf("writing update.sh: %w", err)
 	}
 
 	// Write status.txt
 	statusPath := filepath.Join(updateDir, "tasks", "status.txt")
-	if err := os.WriteFile(statusPath, []byte("INITIALIZED\n"), 0644); err != nil {
+	if err := os.WriteFile(statusPath, []byte("INITIALIZED\n"), 0644); err != nil { // #nosec G306 -- loop status marker, regular 0644 output file
 		return fmt.Errorf("writing status.txt: %w", err)
 	}
 
@@ -386,7 +386,7 @@ func runUpdateScriptWithTimeout(updateDir string, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "bash", scriptPath)
+	cmd := exec.CommandContext(ctx, "bash", scriptPath) // #nosec G204 -- argv-only exec of bash on the generated .autonomous/update.sh, no shell string
 	cmd.Dir = updateDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -501,7 +501,7 @@ func injectUpdatedDocs(outputDir, knowledgeDir string, topics []string) ([]strin
 	rollback := func() {
 		for _, s := range snapshots {
 			if s.existed {
-				_ = os.WriteFile(s.path, s.contents, 0644)
+				_ = os.WriteFile(s.path, s.contents, 0644) // #nosec G306 -- rollback restores a knowledge doc, regular 0644 output file
 			} else {
 				_ = os.Remove(s.path)
 			}
@@ -511,7 +511,7 @@ func injectUpdatedDocs(outputDir, knowledgeDir string, topics []string) ([]strin
 	for _, pw := range pending {
 		dstPath := filepath.Join(knowledgeDir, pw.filename)
 		snap := snapshot{path: dstPath}
-		if existing, rerr := os.ReadFile(dstPath); rerr == nil {
+		if existing, rerr := os.ReadFile(dstPath); rerr == nil { // #nosec G304 -- dstPath is knowledgeDir joined with a topic filename from the update workspace
 			snap.existed = true
 			snap.contents = existing
 		} else if !errors.Is(rerr, os.ErrNotExist) {
@@ -520,7 +520,7 @@ func injectUpdatedDocs(outputDir, knowledgeDir string, topics []string) ([]strin
 		}
 		snapshots = append(snapshots, snap)
 
-		if err := os.WriteFile(dstPath, pw.content, 0644); err != nil {
+		if err := os.WriteFile(dstPath, pw.content, 0644); err != nil { // #nosec G306 -- updated knowledge doc, regular 0644 output file
 			rollback()
 			return nil, fmt.Errorf("writing %s to knowledge dir: %w", pw.topic, err)
 		}

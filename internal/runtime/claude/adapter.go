@@ -77,7 +77,7 @@ func (c *ClaudeRuntime) CheckAuth() runtime.AuthStatus {
 		return status
 	}
 
-	if err := exec.Command(binary, "auth", "status").Run(); err != nil {
+	if err := exec.Command(binary, "auth", "status").Run(); err != nil { // #nosec G204 -- argv-only exec of the runtime's own CLI binary, no shell string
 		status.Error = err.Error()
 		return status
 	}

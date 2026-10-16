@@ -2,6 +2,7 @@ package matrixcfg
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,7 +25,7 @@ func WriteRuntime(root, runtimeName string) error {
 	}
 
 	var document yaml.Node
-	if data, err := os.ReadFile(path); err == nil {
+	if data, err := os.ReadFile(path); err == nil { // #nosec G304 -- reads .matrix.yaml/.matrix.yml at the project root
 		if err := yaml.Unmarshal(data, &document); err != nil {
 			return fmt.Errorf("parsing config %s: %w", path, err)
 		}
@@ -111,16 +112,13 @@ func writeFileAtomic(path string, data []byte, mode os.FileMode) error {
 	defer os.Remove(tmpPath)
 
 	if err := tmp.Chmod(mode); err != nil {
-		tmp.Close()
-		return err
+		return errors.Join(err, tmp.Close())
 	}
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		return err
+		return errors.Join(err, tmp.Close())
 	}
 	if err := tmp.Sync(); err != nil {
-		tmp.Close()
-		return err
+		return errors.Join(err, tmp.Close())
 	}
 	if err := tmp.Close(); err != nil {
 		return err

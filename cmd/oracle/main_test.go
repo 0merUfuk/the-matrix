@@ -25,7 +25,11 @@ oracle:
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Chdir(origDir) })
+	t.Cleanup(func() {
+		if err := os.Chdir(origDir); err != nil {
+			t.Error(err)
+		}
+	})
 
 	if err := os.Chdir(dir); err != nil {
 		t.Fatal(err)
@@ -52,7 +56,11 @@ func TestLoadConfig_NoConfigReturnsDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Chdir(origDir) })
+	t.Cleanup(func() {
+		if err := os.Chdir(origDir); err != nil {
+			t.Error(err)
+		}
+	})
 
 	if err := os.Chdir(dir); err != nil {
 		t.Fatal(err)
@@ -78,7 +86,11 @@ func TestLoadConfig_InvalidConfigReturnsDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Chdir(origDir) })
+	t.Cleanup(func() {
+		if err := os.Chdir(origDir); err != nil {
+			t.Error(err)
+		}
+	})
 
 	if err := os.Chdir(dir); err != nil {
 		t.Fatal(err)

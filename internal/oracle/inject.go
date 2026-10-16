@@ -126,7 +126,7 @@ func RunInject(opts InjectOpts) {
 
 	// Write docs
 	for _, doc := range docs {
-		if err := os.WriteFile(filepath.Join(resolvedTo, doc.Filename), []byte(doc.Content), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(resolvedTo, doc.Filename), []byte(doc.Content), 0644); err != nil { // #nosec G306 -- validated knowledge doc written under the resolved --to dir, regular 0644 output file
 			fmt.Fprintf(os.Stderr, "  %s\n\n", cli.Red(fmt.Sprintf("Error writing %s: %v", doc.Filename, err)))
 			os.Exit(1)
 		}
@@ -138,7 +138,7 @@ func RunInject(opts InjectOpts) {
 		docInfos[i] = DocInfo{Filename: d.Filename, Content: d.Content}
 	}
 	indexContent := BuildIndex(docInfos, resolvedFrom, resolvedTo)
-	if err := os.WriteFile(filepath.Join(resolvedTo, "_index.md"), []byte(indexContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(resolvedTo, "_index.md"), []byte(indexContent), 0644); err != nil { // #nosec G306 -- knowledge _index.md, regular 0644 output file
 		fmt.Fprintf(os.Stderr, "  %s\n\n", cli.Red(fmt.Sprintf("Error writing _index.md: %v", err)))
 		os.Exit(1)
 	}

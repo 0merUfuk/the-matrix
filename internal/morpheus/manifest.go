@@ -24,7 +24,7 @@ func generateManifestFiles(manifest []ManifestEntry, ctx any) ([]string, error) 
 			if err != nil {
 				return nil, fmt.Errorf("reading embedded file %s: %w", entry.TemplatePath, err)
 			}
-			if err := os.WriteFile(entry.OutputPath, data, 0755); err != nil {
+			if err := os.WriteFile(entry.OutputPath, data, 0755); err != nil { // #nosec G306 -- static manifest entries are the loop's shell scripts, which must be 0755
 				return nil, fmt.Errorf("writing %s: %w", entry.OutputPath, err)
 			}
 		} else {
@@ -61,12 +61,12 @@ func generateManifestFiles(manifest []ManifestEntry, ctx any) ([]string, error) 
 				return nil, fmt.Errorf("template render failed for %s: %w", entry.TemplatePath, err)
 			}
 
-			if err := os.WriteFile(entry.OutputPath, []byte(rendered), 0644); err != nil {
+			if err := os.WriteFile(entry.OutputPath, []byte(rendered), 0644); err != nil { // #nosec G306 -- rendered template, regular 0644 output file
 				return nil, fmt.Errorf("writing %s: %w", entry.OutputPath, err)
 			}
 
 			if strings.HasSuffix(entry.OutputPath, ".sh") {
-				_ = os.Chmod(entry.OutputPath, 0755)
+				_ = os.Chmod(entry.OutputPath, 0755) // #nosec G302 -- rendered .sh scripts must be executable (0755)
 			}
 		}
 

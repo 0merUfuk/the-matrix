@@ -88,7 +88,8 @@ func RunAnalyze(opts AnalyzeOpts) {
 	if config.IsDir(claudeDir) && !opts.Force {
 		fmt.Printf("\n  %s", cli.Yellow(".claude/ already exists. Manifest files will be overwritten;\n  existing custom files will be preserved. Continue? [y/N]: "))
 		var answer string
-		fmt.Scanln(&answer)
+		// A read error leaves answer empty, which aborts below.
+		_, _ = fmt.Scanln(&answer)
 		if strings.ToLower(strings.TrimSpace(answer)) != "y" {
 			cli.PrintDim("Aborted.")
 			return

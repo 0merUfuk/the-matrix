@@ -37,7 +37,7 @@ func cacheBasePath() (string, error) {
 
 // ensureCacheDir creates the cache directory if it doesn't exist.
 func ensureCacheDir(path string) error {
-	return os.MkdirAll(path, 0755)
+	return os.MkdirAll(path, 0755) // #nosec G301 -- 0755 cache directory per security-baseline
 }
 
 // isFresh checks whether a file's modification time is within the given TTL.
@@ -59,7 +59,7 @@ func ReadCachedIndex() (*RegistryIndex, bool) {
 	}
 	path := filepath.Join(base, indexFileName)
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- fixed index file under the registry cache dir
 	if err != nil {
 		return nil, false
 	}
@@ -91,7 +91,7 @@ func WriteCachedIndex(index *RegistryIndex) error {
 	}
 	data = append(data, '\n')
 
-	return os.WriteFile(filepath.Join(base, indexFileName), data, 0644)
+	return os.WriteFile(filepath.Join(base, indexFileName), data, 0644) // #nosec G306 -- cached public registry index, regular 0644 output file
 }
 
 // safePackNameRe matches pack names containing only safe characters:
@@ -125,7 +125,7 @@ func ReadCachedPack(packName string) ([]byte, bool) {
 	}
 	path := filepath.Join(base, packsDirName, packName, "pack.json")
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- path under the cache dir; packName passed ValidatePackName
 	if err != nil {
 		return nil, false
 	}
@@ -150,5 +150,5 @@ func WriteCachedPack(packName string, data []byte) error {
 		return fmt.Errorf("creating pack cache directory: %w", err)
 	}
 
-	return os.WriteFile(filepath.Join(packDir, "pack.json"), data, 0644)
+	return os.WriteFile(filepath.Join(packDir, "pack.json"), data, 0644) // #nosec G306 -- cached public pack metadata, regular 0644 output file
 }

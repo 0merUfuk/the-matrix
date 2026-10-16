@@ -1,7 +1,6 @@
 package export
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,17 +31,6 @@ func sampleOpts(stackName, language string) ExportOpts {
 		StackName: stackName,
 		Language:  language,
 	}
-}
-
-// createSourceDir writes valid oracle docs to a temp directory and returns the path.
-func createSourceDir(t *testing.T, docs ...string) string {
-	t.Helper()
-	dir := t.TempDir()
-	for i, name := range docs {
-		title := fmt.Sprintf("Topic %d", i+1)
-		createDocWithTitle(t, dir, name, title)
-	}
-	return dir
 }
 
 // ── agentsMDFormat ────────────────────────────────────────────────────────────

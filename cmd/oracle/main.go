@@ -143,8 +143,8 @@ func injectCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&from, "from", "", "Source directory: oracle output (e.g. output/go-internal/)")
 	cmd.Flags().StringVar(&to, "to", "", "Target directory: .claude/knowledge/ in your project")
-	cmd.MarkFlagRequired("from")
-	cmd.MarkFlagRequired("to")
+	cobra.CheckErr(cmd.MarkFlagRequired("from"))
+	cobra.CheckErr(cmd.MarkFlagRequired("to"))
 
 	return cmd
 }
@@ -180,8 +180,8 @@ func exportCmd() *cobra.Command {
 	cmd.Flags().StringVar(&format, "format", "", "Target format: agents-md, cursor, copilot, windsurf, all")
 	cmd.Flags().StringVar(&to, "to", ".", "Target project directory (default: current directory)")
 	cmd.Flags().StringVar(&language, "language", "", "Override language detection (go, javascript, python, dart, etc.)")
-	cmd.MarkFlagRequired("from")
-	cmd.MarkFlagRequired("format")
+	cobra.CheckErr(cmd.MarkFlagRequired("from"))
+	cobra.CheckErr(cmd.MarkFlagRequired("format"))
 
 	return cmd
 }
@@ -247,8 +247,8 @@ only the specified topics, and injects the results into the knowledge directory.
 	cmd.Flags().IntVar(&maxAgeMonths, "max-age-months", 6, "Staleness threshold for auto-discovery mode (months)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Print stale topics and planned actions without running research")
 	cmd.Flags().BoolVar(&autoApprove, "auto-approve", false, "Skip confirmation prompt before running")
-	cmd.MarkFlagRequired("workspace")
-	cmd.MarkFlagRequired("knowledge")
+	cobra.CheckErr(cmd.MarkFlagRequired("workspace"))
+	cobra.CheckErr(cmd.MarkFlagRequired("knowledge"))
 
 	return cmd
 }

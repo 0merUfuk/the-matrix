@@ -295,7 +295,7 @@ func TestFetchRegistryIndex_Success(t *testing.T) {
 			t.Errorf("expected User-Agent %q, got %q", expectedUA, r.Header.Get("User-Agent"))
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(data)
+		_, _ = w.Write(data)
 	}))
 	defer server.Close()
 
@@ -328,7 +328,7 @@ func TestFetchRegistryIndex_HTTPError(t *testing.T) {
 
 func TestFetchRegistryIndex_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("not json"))
+		_, _ = w.Write([]byte("not json"))
 	}))
 	defer server.Close()
 
@@ -344,7 +344,7 @@ func TestFetchPackDetail_Success(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(data)
+		_, _ = w.Write(data)
 	}))
 	defer server.Close()
 
@@ -364,7 +364,7 @@ func TestFetchPackFile_Success(t *testing.T) {
 	content := sampleDocContent("Test Doc")
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(content))
+		_, _ = w.Write([]byte(content))
 	}))
 	defer server.Close()
 
@@ -435,8 +435,12 @@ func TestCache_IndexCorrupt(t *testing.T) {
 
 	// Write corrupt data.
 	cacheDir := filepath.Join(tmpHome, ".the-matrix", "registry")
-	os.MkdirAll(cacheDir, 0755)
-	os.WriteFile(filepath.Join(cacheDir, "registry.json"), []byte("not json"), 0644)
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cacheDir, "registry.json"), []byte("not json"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cached, fresh := ReadCachedIndex()
 	if cached != nil {
@@ -509,11 +513,11 @@ func TestPull_DownloadsAndValidates(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/pack.json"):
-			w.Write(detailData)
+			_, _ = w.Write(detailData)
 		case strings.HasSuffix(r.URL.Path, "/01-project-structure.md"):
-			w.Write([]byte(doc1))
+			_, _ = w.Write([]byte(doc1))
 		case strings.HasSuffix(r.URL.Path, "/02-layered-architecture.md"):
-			w.Write([]byte(doc2))
+			_, _ = w.Write([]byte(doc2))
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -548,7 +552,9 @@ func TestPull_DownloadsAndValidates(t *testing.T) {
 		}
 
 		// Write.
-		os.MkdirAll(targetDir, 0755)
+		if err := os.MkdirAll(targetDir, 0755); err != nil {
+			t.Fatal(err)
+		}
 		if err := os.WriteFile(filepath.Join(targetDir, topic.File), []byte(content), 0644); err != nil {
 			t.Fatalf("writing %s: %v", topic.File, err)
 		}
@@ -587,9 +593,9 @@ func TestPull_ValidationFailure(t *testing.T) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/pack.json"):
 			data, _ := json.Marshal(detail)
-			w.Write(data)
+			_, _ = w.Write(data)
 		default:
-			w.Write([]byte(doc))
+			_, _ = w.Write([]byte(doc))
 		}
 	}))
 	defer server.Close()
@@ -597,8 +603,6 @@ func TestPull_ValidationFailure(t *testing.T) {
 	// Pre-cache the detail so Pull uses it.
 	cacheData, _ := json.MarshalIndent(detail, "", "  ")
 	_ = WriteCachedPack("go-chi", cacheData)
-
-	targetDir := filepath.Join(t.TempDir(), "output")
 
 	// Simulate Pull with validation — the first file should fail.
 	for _, topic := range detail.Topics {
@@ -614,8 +618,6 @@ func TestPull_ValidationFailure(t *testing.T) {
 		}
 	}
 	t.Fatal("expected validation to reject a file")
-
-	_ = targetDir // unused in the success path
 }
 
 // ─── Load Tests (Integration with Cache + Network) ───────────────────────────

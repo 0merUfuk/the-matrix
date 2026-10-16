@@ -24,10 +24,14 @@ func TestSyncOnePair_SourceNotFound(t *testing.T) {
 func TestSyncOnePair_NoMDFiles(t *testing.T) {
 	dir := t.TempDir()
 	sourceDir := filepath.Join(dir, "source")
-	os.MkdirAll(sourceDir, 0755)
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create a non-md file
-	os.WriteFile(filepath.Join(sourceDir, "readme.txt"), []byte("not md"), 0644)
+	if err := os.WriteFile(filepath.Join(sourceDir, "readme.txt"), []byte("not md"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	pair := SyncPair{
 		Name: "empty",
@@ -45,16 +49,26 @@ func TestSyncOnePair_DryRun(t *testing.T) {
 	dir := t.TempDir()
 	sourceDir := filepath.Join(dir, "source")
 	targetDir := filepath.Join(dir, "target")
-	os.MkdirAll(sourceDir, 0755)
-	os.MkdirAll(targetDir, 0755)
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create source docs
 	content := strings.Repeat("line\n", 60)
-	os.WriteFile(filepath.Join(sourceDir, "01-test.md"), []byte(content), 0644)
-	os.WriteFile(filepath.Join(sourceDir, "02-test.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(sourceDir, "01-test.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "02-test.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create one existing in target (to test new vs existing count)
-	os.WriteFile(filepath.Join(targetDir, "01-test.md"), []byte("old"), 0644)
+	if err := os.WriteFile(filepath.Join(targetDir, "01-test.md"), []byte("old"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	pair := SyncPair{
 		Name: "test-stack",
@@ -85,17 +99,29 @@ func TestNewVsExistingCount(t *testing.T) {
 	dir := t.TempDir()
 	sourceDir := filepath.Join(dir, "source")
 	targetDir := filepath.Join(dir, "target")
-	os.MkdirAll(sourceDir, 0755)
-	os.MkdirAll(targetDir, 0755)
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	content := strings.Repeat("line\n", 60)
 	// 3 source files
-	os.WriteFile(filepath.Join(sourceDir, "01-a.md"), []byte(content), 0644)
-	os.WriteFile(filepath.Join(sourceDir, "02-b.md"), []byte(content), 0644)
-	os.WriteFile(filepath.Join(sourceDir, "03-c.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(sourceDir, "01-a.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "02-b.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "03-c.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// 1 already exists in target
-	os.WriteFile(filepath.Join(targetDir, "02-b.md"), []byte("old"), 0644)
+	if err := os.WriteFile(filepath.Join(targetDir, "02-b.md"), []byte("old"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Verify counting logic via the log entry
 	entry := BuildLogEntry("test", "target/", 3, 2, 1)
