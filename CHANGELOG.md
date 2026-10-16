@@ -11,7 +11,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer](https
 - **trinity**: `CollectDashboard` exposes ecosystem state (health, knowledge freshness, self-state snapshots, sync log) as structured data for the dashboard
 
 ### Changed
+- **build**: minimum Go version is now 1.26.9 (was 1.25.8). Go 1.25 is end-of-life, and its last patch (1.25.14) still ships standard-library vulnerabilities in `net/http`, `net/textproto` and `crypto/tls` that this code calls. Those are fixed only in 1.26.9.
 - **health**: `trinity health` checks are now collected as structured data (`CollectHealth`) and rendered from it; terminal output and exit codes are unchanged
+
+### Security
+- **config**: `.neo.json` and `.trinity.json` are now created with mode 0600 instead of 0644, because they hold project paths and settings (security-baseline §3)
 
 ## [1.9.0] - 2026-08-11
 

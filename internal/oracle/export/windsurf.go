@@ -44,5 +44,5 @@ func (f *windsurfFormat) Export(docs []KnowledgeDoc, targetDir string, opts Expo
 	}
 
 	outPath := filepath.Join(targetDir, ".windsurfrules")
-	return os.WriteFile(outPath, []byte(b.String()), 0644)
+	return os.WriteFile(outPath, []byte(b.String()), 0644) // #nosec G306 -- exported Windsurf rules, regular 0644 output file
 }

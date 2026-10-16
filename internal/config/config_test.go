@@ -25,7 +25,9 @@ MODEL="claude-sonnet-4-6"
 `
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.sh")
-	os.WriteFile(path, []byte(content), 0644)
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg, err := ReadConfigSh(path)
 	if err != nil {
@@ -52,7 +54,9 @@ MAX_CYCLES=5
 `
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.sh")
-	os.WriteFile(path, []byte(content), 0644)
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg, err := ReadConfigSh(path)
 	if err != nil {
@@ -71,7 +75,9 @@ func TestReadJSON(t *testing.T) {
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "test.json")
-	os.WriteFile(path, []byte(`{"name":"my-service","port":8080}`), 0644)
+	if err := os.WriteFile(path, []byte(`{"name":"my-service","port":8080}`), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	result, err := ReadJSON[testStruct](path)
 	if err != nil {
@@ -102,10 +108,18 @@ func TestWriteJSON(t *testing.T) {
 
 func TestListMDFiles(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "01-core.md"), []byte("content"), 0644)
-	os.WriteFile(filepath.Join(dir, "02-structure.md"), []byte("content"), 0644)
-	os.WriteFile(filepath.Join(dir, "_index.md"), []byte("index"), 0644)
-	os.WriteFile(filepath.Join(dir, "readme.txt"), []byte("text"), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "01-core.md"), []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "02-structure.md"), []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "_index.md"), []byte("index"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "readme.txt"), []byte("text"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	files, err := ListMDFiles(dir)
 	if err != nil {
@@ -119,7 +133,9 @@ func TestListMDFiles(t *testing.T) {
 func TestFileExists(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "exists.txt")
-	os.WriteFile(path, []byte("x"), 0644)
+	if err := os.WriteFile(path, []byte("x"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	if !FileExists(path) {
 		t.Error("FileExists() should return true for existing file")

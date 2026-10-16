@@ -88,7 +88,7 @@ func loadConfigFile(path string) (Config, error) {
 		return cfg, nil
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- reads .matrix.yaml/.matrix.yml at the project root
 	if err != nil {
 		return cfg, fmt.Errorf("reading config %s: %w", path, err)
 	}

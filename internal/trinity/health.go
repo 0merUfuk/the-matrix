@@ -398,12 +398,6 @@ func checkTrinityLogForRuntime(theme *cli.Theme, root string, spec agentruntime.
 var ExpectedAgents = matrixassets.ExpectedAgents
 var ExpectedSkills = matrixassets.ExpectedSkills
 
-// checkAgentSkillEcosystem verifies expected agents and skills are present.
-func checkAgentSkillEcosystem(theme *cli.Theme, root string, results *Results) {
-	rt := agentruntime.Registry.Get("claude")
-	checkAgentSkillEcosystemForRuntime(theme, root, rt, results)
-}
-
 func checkAgentSkillEcosystemForRuntime(theme *cli.Theme, root string, rt agentruntime.Runtime, results *Results) {
 	spec := rt.ContextFiles()
 	capabilities := rt.Capabilities()
@@ -461,12 +455,6 @@ func checkAgentSkillEcosystemForRuntime(theme *cli.Theme, root string, rt agentr
 			results.record(theme, SectionEcosystem, cli.Warn, skillDirLabel, "missing — re-provision with neo init")
 		}
 	}
-}
-
-// printSummary renders the final pass/fail/warn summary.
-func printSummary(theme *cli.Theme, results *Results) {
-	rt := agentruntime.Registry.Get("claude")
-	printSummaryForRuntime(theme, results, rt)
 }
 
 func printSummaryForRuntime(theme *cli.Theme, results *Results, rt agentruntime.Runtime) {

@@ -12,7 +12,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -166,7 +165,7 @@ func RunSelfState(opts SelfStateOpts) error {
 	}
 
 	stateDir := filepath.Join(root, ".claude", "state")
-	if err := os.MkdirAll(stateDir, 0755); err != nil {
+	if err := os.MkdirAll(stateDir, 0755); err != nil { // #nosec G301 -- 0755 .claude/state directory per security-baseline
 		return fmt.Errorf("mkdir state dir: %w", err)
 	}
 
@@ -176,7 +175,7 @@ func RunSelfState(opts SelfStateOpts) error {
 		outPath = filepath.Join(stateDir, filename)
 	}
 
-	if err := os.WriteFile(outPath, data, 0644); err != nil {
+	if err := os.WriteFile(outPath, data, 0644); err != nil { // #nosec G306 -- state snapshot JSON, regular 0644 output file
 		return fmt.Errorf("write snapshot: %w", err)
 	}
 
@@ -318,7 +317,7 @@ var versionRe = regexp.MustCompile(`var\s+version\s*=\s*"([^"]+)"`)
 
 // extractVersion reads `var version = "..."` from a Go source file.
 func extractVersion(path string) (string, error) {
-	b, err := os.ReadFile(path)
+	b, err := os.ReadFile(path) // #nosec G304 -- reads a known context file under the project root
 	if err != nil {
 		return "", err
 	}
@@ -392,7 +391,7 @@ func countMemoryDir(dir string) (int, int, error) {
 
 // lineCount counts newline-delimited lines in a file.
 func lineCount(path string) (int, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(path) // #nosec G304 -- reads a known context file under the project root
 	if err != nil {
 		return 0, err
 	}
@@ -473,7 +472,7 @@ func collectBacklog(root string, f *fetchers, errs *[]CollectionError) BacklogBl
 // countMatchingLines reads path line-by-line and counts lines matching re.
 // If filterFn is non-nil, only lines for which filterFn returns true are counted.
 func countMatchingLines(path string, re *regexp.Regexp, filterFn func(string) bool) (int, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(path) // #nosec G304 -- reads a known context file under the project root
 	if err != nil {
 		return 0, err
 	}
@@ -513,7 +512,7 @@ func readPreviousSnapshot(root string) (string, *SelfStateV1, []CollectionError)
 		targetName = filepath.Base(t)
 	} else {
 		// Copy fallback: the pointer file *is* the snapshot. Read it.
-		data, err := os.ReadFile(pointerPath)
+		data, err := os.ReadFile(pointerPath) // #nosec G304 -- fixed state-latest pointer under .claude/state
 		if err != nil {
 			return "", nil, []CollectionError{{Section: "previous_snapshot", Field: "read", Error: err.Error()}}
 		}
@@ -534,7 +533,7 @@ func readPreviousSnapshot(root string) (string, *SelfStateV1, []CollectionError)
 
 	// Symlink case: read the target.
 	targetPath := filepath.Join(stateDir, targetName)
-	data, err := os.ReadFile(targetPath)
+	data, err := os.ReadFile(targetPath) // #nosec G304 -- snapshot file under .claude/state named by the pointer
 	if err != nil {
 		return targetName, nil, []CollectionError{{Section: "previous_snapshot", Field: "read", Error: err.Error()}}
 	}
@@ -648,13 +647,13 @@ func copySnapshotAsLatest(stateDir, targetFilename string) error {
 	finalPath := filepath.Join(stateDir, "state-latest.json")
 	tmpPath := finalPath + ".tmp"
 
-	src, err := os.Open(srcPath)
+	src, err := os.Open(srcPath) // #nosec G304 -- snapshot just written under .claude/state
 	if err != nil {
 		return fmt.Errorf("open source snapshot: %w", err)
 	}
 	defer src.Close()
 
-	dst, err := os.OpenFile(tmpPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	dst, err := os.OpenFile(tmpPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644) // #nosec G302 G304 -- state-latest.json temp file under .claude/state, regular 0644 output file
 	if err != nil {
 		return fmt.Errorf("open temp pointer: %w", err)
 	}
@@ -814,7 +813,7 @@ func gitAheadBehind(root string) (ahead, behind int, err error) {
 func runGit(root string, args ...string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "git", args...)
+	cmd := exec.CommandContext(ctx, "git", args...) // #nosec G204 -- argv-only exec of git, no shell string
 	cmd.Dir = root
 	out, err := cmd.Output()
 	if err != nil {
@@ -854,7 +853,3 @@ func countJSONArray(b []byte) (int, error) {
 	}
 	return len(arr), nil
 }
-
-// runtimeIsWindows is a hook for tests; the real implementation is the
-// straightforward runtime check.
-var runtimeIsWindows = func() bool { return runtime.GOOS == "windows" }

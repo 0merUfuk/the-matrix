@@ -23,7 +23,7 @@ type ConfigValues struct {
 // ReadJSON reads and unmarshals a JSON file into the given type.
 func ReadJSON[T any](path string) (T, error) {
 	var result T
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- generic reader; callers pass paths inside the project/workspace they resolved
 	if err != nil {
 		return result, fmt.Errorf("reading %s: %w", path, err)
 	}
@@ -43,14 +43,16 @@ func WriteJSON(path string, v any) error {
 	if err := EnsureDir(filepath.Dir(path)); err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0644)
+	// 0600: callers write project config (.neo.json, .trinity.json) holding
+	// paths and settings, per .claude/rules/security-baseline.md §3.
+	return os.WriteFile(path, data, 0600)
 }
 
 // ReadConfigSh parses KEY=VALUE lines from a config.sh file.
 // Only matches lines starting with the key (skips commented lines).
 func ReadConfigSh(path string) (ConfigValues, error) {
 	var cfg ConfigValues
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- reads the workspace's own .autonomous/config.sh
 	if err != nil {
 		return cfg, fmt.Errorf("reading %s: %w", path, err)
 	}
@@ -89,12 +91,12 @@ func IsDir(path string) bool {
 
 // EnsureDir creates the directory and all parents if they don't exist.
 func EnsureDir(path string) error {
-	return os.MkdirAll(path, 0755)
+	return os.MkdirAll(path, 0755) // #nosec G301 -- 0755 project directories per security-baseline
 }
 
 // ReadFileString reads a file and returns its content as a string.
 func ReadFileString(path string) (string, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- generic reader; callers pass paths inside the project/workspace they resolved
 	if err != nil {
 		return "", err
 	}
@@ -106,7 +108,7 @@ func WriteFileString(path, content string) error {
 	if err := EnsureDir(filepath.Dir(path)); err != nil {
 		return err
 	}
-	return os.WriteFile(path, []byte(content), 0644)
+	return os.WriteFile(path, []byte(content), 0644) // #nosec G306 -- generic writer for generated project docs, regular 0644 output file
 }
 
 // AppendFileString appends a string to a file, creating it if needed.
@@ -114,7 +116,7 @@ func AppendFileString(path, content string) error {
 	if err := EnsureDir(filepath.Dir(path)); err != nil {
 		return err
 	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644) // #nosec G302 G304 -- appends to project .gitignore / log files, regular 0644 output file
 	if err != nil {
 		return err
 	}
@@ -158,14 +160,14 @@ func CopyFile(src, dst, baseDst string) error {
 	if err != nil {
 		return err
 	}
-	data, err := os.ReadFile(src)
+	data, err := os.ReadFile(src) // #nosec G304 -- copy source is a file the caller enumerated in its own source dir
 	if err != nil {
 		return fmt.Errorf("reading %s: %w", src, err)
 	}
 	if err := EnsureDir(filepath.Dir(safeDst)); err != nil {
 		return err
 	}
-	return os.WriteFile(safeDst, data, 0644) //nolint:gosec // G703 false positive: safeDst is the output of containedPath() which performs filepath.Abs + EvalSymlinks + HasPrefix base-containment validation per .claude/rules/security-baseline.md §1
+	return os.WriteFile(safeDst, data, 0644) // #nosec G306 G703 -- safeDst comes from containedPath() (Abs + EvalSymlinks + base-containment check); copied docs are regular 0644 output files
 }
 
 // containedPath returns a cleaned, symlink-resolved absolute form of dst and
@@ -242,5 +244,5 @@ func resolveAncestorSymlinks(path string) string {
 
 // MakeExecutable sets the executable bit on a file.
 func MakeExecutable(path string) error {
-	return os.Chmod(path, 0755)
+	return os.Chmod(path, 0755) // #nosec G302 -- MakeExecutable is for generated shell scripts, which must be 0755
 }

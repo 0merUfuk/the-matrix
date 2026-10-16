@@ -80,7 +80,7 @@ func Invoke(prompt string, opts Options) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, cmdSpec.Binary, cmdSpec.Args...)
+	cmd := exec.CommandContext(ctx, cmdSpec.Binary, cmdSpec.Args...) // #nosec G204 -- argv-only exec of the runtime adapter's binary and args, no shell string
 	cmd.Dir = opts.WorkingDir
 
 	env := os.Environ()
@@ -128,7 +128,7 @@ func Invoke(prompt string, opts Options) (string, error) {
 
 // RunBash executes a bash script file. If inherit is true, stdout/stderr go to the terminal.
 func RunBash(script string, cwd string, inherit bool) error {
-	cmd := exec.Command("bash", script)
+	cmd := exec.Command("bash", script) // #nosec G204 -- argv-only exec of bash on a generated loop script, no shell string
 	cmd.Dir = cwd
 	cmd.Env = os.Environ()
 

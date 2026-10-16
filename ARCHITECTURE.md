@@ -124,7 +124,7 @@ the-matrix/
 │   ├── registry/      # Knowledge registry (pack catalog + validation)
 │   └── trinity/       # trinity implementation (no templates)
 ├── .github/workflows/ # CI: build, test, vet, security gates, release
-├── go.mod             # Single module, minimum Go 1.25.8
+├── go.mod             # Single module, minimum Go 1.26.9
 ├── Makefile           # build, test, vet, release
 └── .goreleaser.yml    # Cross-platform binary builds + Homebrew tap
 ```
@@ -312,7 +312,7 @@ make release VERSION=X.Y.Z SUMMARY="one-line release summary"
 
 | Component | Choice | Why |
 |-----------|--------|-----|
-| Language | Go 1.25.8+ | Single-binary distribution and compile-time type safety |
+| Language | Go 1.26.9+ | Single-binary distribution and compile-time type safety |
 | CLI framework | cobra | Standard Go CLI — commands, flags, help text |
 | TUI prompts | charm.land/huh v2 | Form-based interactive prompts |
 | Terminal styling | charm.land/lipgloss v2 | Consistent styled output |

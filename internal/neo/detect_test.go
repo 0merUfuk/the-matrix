@@ -798,10 +798,18 @@ func TestDetectProjectType(t *testing.T) {
 			setup: func(t *testing.T) string {
 				dir := t.TempDir()
 				_ = makeTempProject(t, map[string]string{})
-				os.MkdirAll(filepath.Join(dir, "service-a"), 0755)
-				os.MkdirAll(filepath.Join(dir, "service-b"), 0755)
-				os.WriteFile(filepath.Join(dir, "service-a", "go.mod"), []byte("module a\n"), 0644)
-				os.WriteFile(filepath.Join(dir, "service-b", "go.mod"), []byte("module b\n"), 0644)
+				if err := os.MkdirAll(filepath.Join(dir, "service-a"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.MkdirAll(filepath.Join(dir, "service-b"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "service-a", "go.mod"), []byte("module a\n"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "service-b", "go.mod"), []byte("module b\n"), 0644); err != nil {
+					t.Fatal(err)
+				}
 				return dir
 			},
 			wantType: "monorepo",
@@ -810,8 +818,12 @@ func TestDetectProjectType(t *testing.T) {
 			name: "node_modules subdir is skipped",
 			setup: func(t *testing.T) string {
 				dir := t.TempDir()
-				os.MkdirAll(filepath.Join(dir, "node_modules", "foo"), 0755)
-				os.WriteFile(filepath.Join(dir, "node_modules", "foo", "package.json"), []byte(`{"name":"foo"}`), 0644)
+				if err := os.MkdirAll(filepath.Join(dir, "node_modules", "foo"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "node_modules", "foo", "package.json"), []byte(`{"name":"foo"}`), 0644); err != nil {
+					t.Fatal(err)
+				}
 				return dir
 			},
 			wantType: "single-app",
@@ -820,10 +832,18 @@ func TestDetectProjectType(t *testing.T) {
 			name: "hidden dirs are skipped",
 			setup: func(t *testing.T) string {
 				dir := t.TempDir()
-				os.MkdirAll(filepath.Join(dir, ".hidden-svc"), 0755)
-				os.WriteFile(filepath.Join(dir, ".hidden-svc", "go.mod"), []byte("module hidden\n"), 0644)
-				os.MkdirAll(filepath.Join(dir, ".another"), 0755)
-				os.WriteFile(filepath.Join(dir, ".another", "go.mod"), []byte("module another\n"), 0644)
+				if err := os.MkdirAll(filepath.Join(dir, ".hidden-svc"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, ".hidden-svc", "go.mod"), []byte("module hidden\n"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.MkdirAll(filepath.Join(dir, ".another"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, ".another", "go.mod"), []byte("module another\n"), 0644); err != nil {
+					t.Fatal(err)
+				}
 				return dir
 			},
 			wantType: "single-app",
@@ -832,10 +852,18 @@ func TestDetectProjectType(t *testing.T) {
 			name: "vendor dir is skipped",
 			setup: func(t *testing.T) string {
 				dir := t.TempDir()
-				os.MkdirAll(filepath.Join(dir, "vendor", "foo"), 0755)
-				os.WriteFile(filepath.Join(dir, "vendor", "foo", "go.mod"), []byte("module foo\n"), 0644)
-				os.MkdirAll(filepath.Join(dir, "vendor", "bar"), 0755)
-				os.WriteFile(filepath.Join(dir, "vendor", "bar", "go.mod"), []byte("module bar\n"), 0644)
+				if err := os.MkdirAll(filepath.Join(dir, "vendor", "foo"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "vendor", "foo", "go.mod"), []byte("module foo\n"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.MkdirAll(filepath.Join(dir, "vendor", "bar"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "vendor", "bar", "go.mod"), []byte("module bar\n"), 0644); err != nil {
+					t.Fatal(err)
+				}
 				return dir
 			},
 			wantType: "single-app",
@@ -844,10 +872,18 @@ func TestDetectProjectType(t *testing.T) {
 			name: "mixed language monorepo: go + nodejs",
 			setup: func(t *testing.T) string {
 				dir := t.TempDir()
-				os.MkdirAll(filepath.Join(dir, "api"), 0755)
-				os.MkdirAll(filepath.Join(dir, "frontend"), 0755)
-				os.WriteFile(filepath.Join(dir, "api", "go.mod"), []byte("module api\n"), 0644)
-				os.WriteFile(filepath.Join(dir, "frontend", "package.json"), []byte(`{"name":"frontend"}`), 0644)
+				if err := os.MkdirAll(filepath.Join(dir, "api"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.MkdirAll(filepath.Join(dir, "frontend"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "api", "go.mod"), []byte("module api\n"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "frontend", "package.json"), []byte(`{"name":"frontend"}`), 0644); err != nil {
+					t.Fatal(err)
+				}
 				return dir
 			},
 			wantType: "monorepo",
@@ -856,8 +892,12 @@ func TestDetectProjectType(t *testing.T) {
 			name: "only one subproject is single-app",
 			setup: func(t *testing.T) string {
 				dir := t.TempDir()
-				os.MkdirAll(filepath.Join(dir, "service-a"), 0755)
-				os.WriteFile(filepath.Join(dir, "service-a", "go.mod"), []byte("module a\n"), 0644)
+				if err := os.MkdirAll(filepath.Join(dir, "service-a"), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "service-a", "go.mod"), []byte("module a\n"), 0644); err != nil {
+					t.Fatal(err)
+				}
 				return dir
 			},
 			wantType: "single-app",

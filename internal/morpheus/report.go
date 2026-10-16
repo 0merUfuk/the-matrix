@@ -402,7 +402,7 @@ func parseCycleData(cyclesDir string) []cycleData {
 			cycleMap[num] = &cycleData{Num: num}
 		}
 
-		data, err := os.ReadFile(filepath.Join(cyclesDir, e.Name()))
+		data, err := os.ReadFile(filepath.Join(cyclesDir, e.Name())) // #nosec G304 -- reads cycle files enumerated from the project's .autonomous/cycles dir
 		if err != nil {
 			continue
 		}

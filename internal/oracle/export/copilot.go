@@ -47,5 +47,5 @@ func (f *copilotFormat) Export(docs []KnowledgeDoc, targetDir string, opts Expor
 	}
 
 	outPath := filepath.Join(githubDir, "copilot-instructions.md")
-	return os.WriteFile(outPath, []byte(b.String()), 0644)
+	return os.WriteFile(outPath, []byte(b.String()), 0644) // #nosec G306 -- exported copilot instructions, regular 0644 output file
 }

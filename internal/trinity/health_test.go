@@ -17,27 +17,41 @@ func createTestEcosystem(t *testing.T) string {
 
 	// Create .claude/ directory
 	claudeDir := filepath.Join(dir, ".claude")
-	os.MkdirAll(claudeDir, 0755)
+	if err := os.MkdirAll(claudeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create CLAUDE.md
-	os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte("# CLAUDE.md\n"), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte("# CLAUDE.md\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create .claude/knowledge/ with one subdir
 	knowledgeDir := filepath.Join(claudeDir, "knowledge", "go-rules")
-	os.MkdirAll(knowledgeDir, 0755)
+	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create a valid knowledge doc (>= 50 lines)
 	created := time.Now().AddDate(0, 0, -1).Format(time.DateOnly)
 	validDoc := "**Version**: 1.0\n**Created**: " + created + "\n**Last Updated**: " + created + "\n**Authors:** Test\n\n---\n\n"
 	validDoc += strings.Repeat("Content line for testing purposes.\n", 50)
-	os.WriteFile(filepath.Join(knowledgeDir, "01-test-doc.md"), []byte(validDoc), 0644)
+	if err := os.WriteFile(filepath.Join(knowledgeDir, "01-test-doc.md"), []byte(validDoc), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create _index.md
-	os.WriteFile(filepath.Join(knowledgeDir, "_index.md"), []byte("# Index\n"), 0644)
+	if err := os.WriteFile(filepath.Join(knowledgeDir, "_index.md"), []byte("# Index\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create context files
-	os.WriteFile(filepath.Join(claudeDir, "SERVICE_CONTEXT.md"), []byte("# Context\n"), 0644)
-	os.WriteFile(filepath.Join(claudeDir, "NEXT_STEPS.md"), []byte("# Next\n"), 0644)
+	if err := os.WriteFile(filepath.Join(claudeDir, "SERVICE_CONTEXT.md"), []byte("# Context\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(claudeDir, "NEXT_STEPS.md"), []byte("# Next\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	return dir
 }
@@ -62,7 +76,9 @@ func TestCheckKnowledgeDir_ValidDocs(t *testing.T) {
 func TestCheckKnowledgeDir_EmptyDir(t *testing.T) {
 	dir := t.TempDir()
 	emptyDir := filepath.Join(dir, "empty")
-	os.MkdirAll(emptyDir, 0755)
+	if err := os.MkdirAll(emptyDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	theme := cli.GetTheme()
 
 	results := &Results{}
@@ -76,11 +92,15 @@ func TestCheckKnowledgeDir_EmptyDir(t *testing.T) {
 func TestCheckKnowledgeDir_ShortDoc(t *testing.T) {
 	dir := t.TempDir()
 	subdir := filepath.Join(dir, "short")
-	os.MkdirAll(subdir, 0755)
+	if err := os.MkdirAll(subdir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	theme := cli.GetTheme()
 
 	// Short doc (< 50 lines)
-	os.WriteFile(filepath.Join(subdir, "01-short.md"), []byte("Too short\n"), 0644)
+	if err := os.WriteFile(filepath.Join(subdir, "01-short.md"), []byte("Too short\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	results := &Results{}
 	checkKnowledgeDir(theme, subdir, "short", 6, results)
@@ -93,12 +113,16 @@ func TestCheckKnowledgeDir_ShortDoc(t *testing.T) {
 func TestCheckKnowledgeDir_NoDate(t *testing.T) {
 	dir := t.TempDir()
 	subdir := filepath.Join(dir, "nodate")
-	os.MkdirAll(subdir, 0755)
+	if err := os.MkdirAll(subdir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	theme := cli.GetTheme()
 
 	// Valid length but no date
 	content := strings.Repeat("No date frontmatter line.\n", 55)
-	os.WriteFile(filepath.Join(subdir, "01-nodate.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(subdir, "01-nodate.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	results := &Results{}
 	checkKnowledgeDir(theme, subdir, "nodate", 6, results)
@@ -122,7 +146,9 @@ func TestCheckContextFiles_AllPresent(t *testing.T) {
 
 func TestCheckContextFiles_Missing(t *testing.T) {
 	dir := t.TempDir()
-	os.MkdirAll(filepath.Join(dir, ".claude"), 0755)
+	if err := os.MkdirAll(filepath.Join(dir, ".claude"), 0755); err != nil {
+		t.Fatal(err)
+	}
 	theme := cli.GetTheme()
 
 	results := &Results{}
@@ -135,7 +161,9 @@ func TestCheckContextFiles_Missing(t *testing.T) {
 
 func TestCheckTrinityLog_Missing(t *testing.T) {
 	dir := t.TempDir()
-	os.MkdirAll(filepath.Join(dir, ".claude"), 0755)
+	if err := os.MkdirAll(filepath.Join(dir, ".claude"), 0755); err != nil {
+		t.Fatal(err)
+	}
 	theme := cli.GetTheme()
 
 	results := &Results{}

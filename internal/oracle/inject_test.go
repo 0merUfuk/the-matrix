@@ -11,14 +11,20 @@ func createValidDoc(t *testing.T, dir, filename string) {
 	t.Helper()
 	content := "**Version**: 1.0\n**Created**: 2026-03-15\n**Last Updated**: 2026-03-15\n**Authors:** Oracle CLI (test)\n\n---\n\n# Test\n\n"
 	content += strings.Repeat("Content line for testing.\n", 50)
-	os.WriteFile(filepath.Join(dir, filename), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(dir, filename), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestInjectNewVsUpdatedCount(t *testing.T) {
 	sourceDir := filepath.Join(t.TempDir(), "source")
 	targetDir := filepath.Join(t.TempDir(), "target")
-	os.MkdirAll(sourceDir, 0755)
-	os.MkdirAll(targetDir, 0755)
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Create 3 source docs
 	createValidDoc(t, sourceDir, "01-test.md")
@@ -26,7 +32,9 @@ func TestInjectNewVsUpdatedCount(t *testing.T) {
 	createValidDoc(t, sourceDir, "03-test.md")
 
 	// Pre-existing file in target
-	os.WriteFile(filepath.Join(targetDir, "02-test.md"), []byte("old content"), 0644)
+	if err := os.WriteFile(filepath.Join(targetDir, "02-test.md"), []byte("old content"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// We can't call RunInject directly (it calls os.Exit), but we can verify
 	// the file categorization logic by checking what would happen
