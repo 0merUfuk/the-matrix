@@ -97,3 +97,9 @@ func ListPresets() []string {
 	sort.Strings(names)
 	return names
 }
+
+// PresetDisplayName returns the human-readable name of a built-in preset, or
+// "" for an unknown name.
+func PresetDisplayName(name string) string {
+	return builtinPresets[name].DisplayName
+}

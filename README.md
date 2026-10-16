@@ -32,6 +32,13 @@ brew tap 0merUfuk/thematrix
 brew install neo morp oracle trinity
 ```
 
+Prefer not to use the command line? Install The Matrix app instead. It brings the four tools with it and runs in your browser:
+
+```bash
+brew install 0merUfuk/thematrix/matrix
+brew services start matrix       # keeps it running; then open http://127.0.0.1:7474
+```
+
 Then in any project:
 
 ```bash
@@ -159,6 +166,14 @@ trinity sync --from /path/to/oracle/output --to /path/to/project
 # Detect stale documents and suggest refresh
 trinity refresh --path /path/to/project
 ```
+
+### The Matrix app — for people who don't use the CLI
+
+```bash
+matrix                     # opens The Matrix in your browser
+```
+
+The Matrix app runs the same four tools behind a simple, step-by-step screen: choose a project folder, set up its AI agents (two questions instead of a wizard), see how healthy the project is and which knowledge is out of date, research best practices for the project's stack (with a pause to read the findings before the docs are written), add the finished docs for the agents, and let the agents build a goal you describe while you watch their progress. It only listens on this computer (`127.0.0.1:7474`), keeps its project list in `~/.the-matrix/projects.json`, and asks before anything that changes files or uses your agent account. Research and building run on your own Claude Code or Codex account and can take an hour or more; they keep going if you close the page, and you can stop them at any time. Closing the app stops them too.
 
 ## Agent Roster
 

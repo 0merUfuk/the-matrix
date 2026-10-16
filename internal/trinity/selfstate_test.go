@@ -162,16 +162,17 @@ func TestSelfState_StaleKnowledgeDocs(t *testing.T) {
 		t.Fatalf("mkdir knowledge dir: %v", err)
 	}
 
-	// Stale doc: Created more than 6 months ago (2025-01-01 is well over 6 months from any 2026 date).
-	staleContent := "**Version**: 1.0\n**Created**: 2025-01-01\n**Last Updated**: 2025-01-01\n\n# Stale Doc\n"
+	// Fixture dates are derived from time.Now so the 6-month staleness
+	// threshold never rots: stale = ~2 years ago, fresh = ~1 month ago.
+	staleDate := time.Now().AddDate(-2, 0, 0).Format(time.DateOnly)
+	freshDate := time.Now().AddDate(0, -1, 0).Format(time.DateOnly)
+
+	staleContent := "**Version**: 1.0\n**Created**: " + staleDate + "\n**Last Updated**: " + staleDate + "\n\n# Stale Doc\n"
 	if err := os.WriteFile(filepath.Join(knowledgeDir, "stale.md"), []byte(staleContent), 0644); err != nil {
 		t.Fatalf("write stale doc: %v", err)
 	}
 
-	// Fresh doc: Created within 6 months. MonthsAgo computes relative to
-	// time.Now(), so derive the date from it to keep the fixture from rotting.
-	created := time.Now().AddDate(0, 0, -1).Format(time.DateOnly)
-	freshContent := "**Version**: 1.0\n**Created**: " + created + "\n**Last Updated**: " + created + "\n\n# Fresh Doc\n"
+	freshContent := "**Version**: 1.0\n**Created**: " + freshDate + "\n**Last Updated**: " + freshDate + "\n\n# Fresh Doc\n"
 	if err := os.WriteFile(filepath.Join(knowledgeDir, "fresh.md"), []byte(freshContent), 0644); err != nil {
 		t.Fatalf("write fresh doc: %v", err)
 	}

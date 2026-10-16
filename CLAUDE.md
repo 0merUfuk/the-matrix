@@ -23,6 +23,7 @@ The-matrix is a CLI-driven, self-refreshing autonomous agent ecosystem for any s
 | `morp` | `cmd/morp` | v1.9.0 | Service scaffolding + autonomous development loops |
 | `oracle` | `cmd/oracle` | v1.9.0 | Researches any tech stack → best-practice knowledge docs |
 | `trinity` | `cmd/trinity` | v1.9.0 | Maintenance runtime — keeps ecosystems alive and fresh |
+| `matrix` | `cmd/matrix` | *(unreleased)* | The Matrix app — local browser UI that runs the four tools for people who do not use the CLI |
 | `sentinel` | *(future)* | — | Ecosystem health monitoring |
 
 > **Note**: All 4 tools are Go binaries in a single repo (`github.com/0merUfuk/the-matrix`). Node.js predecessors have been removed.
@@ -116,6 +117,7 @@ make build
 ```bash
 brew tap 0merUfuk/thematrix
 brew install neo morp oracle trinity
+brew install 0merUfuk/thematrix/matrix   # optional browser app; depends on the four tools
 ```
 
 ---
@@ -171,6 +173,11 @@ trinity self-state       # Write state.v1 JSON snapshot to .claude/state/
 trinity self-state --json  # Emit JSON to stdout, no persistence (~1-2s)
 trinity self-state --out <path>       # Write snapshot to a custom path
 trinity self-state --prune            # Enforce retention (keep last 12 snapshots)
+
+# matrix (The Matrix app, for non-CLI users)
+matrix                   # Open the app in the browser (127.0.0.1:7474)
+matrix --no-open         # Run without opening a browser (Homebrew service)
+matrix --path <dir>      # Add a project folder to the app's list
 ```
 
 ---
