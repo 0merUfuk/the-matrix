@@ -168,10 +168,10 @@ func TestSelfState_StaleKnowledgeDocs(t *testing.T) {
 		t.Fatalf("write stale doc: %v", err)
 	}
 
-	// Fresh doc: Created within 6 months — use a fixed recent date.
-	// MonthsAgo computes relative to time.Now(), so pick a date that is guaranteed
-	// to be < 6 months ago at test time. We use 1 month ago from May 2026.
-	freshContent := "**Version**: 1.0\n**Created**: 2026-04-15\n**Last Updated**: 2026-04-15\n\n# Fresh Doc\n"
+	// Fresh doc: Created within 6 months. MonthsAgo computes relative to
+	// time.Now(), so derive the date from it to keep the fixture from rotting.
+	created := time.Now().AddDate(0, 0, -1).Format(time.DateOnly)
+	freshContent := "**Version**: 1.0\n**Created**: " + created + "\n**Last Updated**: " + created + "\n\n# Fresh Doc\n"
 	if err := os.WriteFile(filepath.Join(knowledgeDir, "fresh.md"), []byte(freshContent), 0644); err != nil {
 		t.Fatalf("write fresh doc: %v", err)
 	}
