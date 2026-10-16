@@ -151,7 +151,7 @@ func readSnapshotHistory(stateDir string, limit int) ([]SnapshotPoint, error) {
 	var points []SnapshotPoint
 	for i := len(names) - 1; i >= 0 && len(points) < limit; i-- {
 		name := names[i]
-		data, err := os.ReadFile(filepath.Join(stateDir, name))
+		data, err := os.ReadFile(filepath.Join(stateDir, name)) // #nosec G304 -- snapshot files listed from the project's own .claude/state directory
 		if err != nil {
 			continue
 		}
@@ -187,7 +187,7 @@ var syncLogLine = regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2} \|`)
 // readSyncLog returns up to limit log entries, newest first. A missing log is
 // not an error.
 func readSyncLog(path string, limit int) ([]SyncLogEntry, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(path) // #nosec G304 -- the project's own trinity sync log
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil
 	}

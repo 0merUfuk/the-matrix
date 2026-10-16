@@ -128,7 +128,7 @@ func needSetUp(dir string, _ TaskParams) error {
 }
 
 func exists(dir, rel string) bool {
-	_, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
+	_, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel))) // #nosec G703 -- dir is a project folder that resolve() confined to $HOME; rel is a fixed relative path
 	return err == nil
 }
 
@@ -140,7 +140,7 @@ func isSetUp(dir string) bool {
 // researchReady lists stacks whose oracle output is waiting to be synced,
 // read from the project's .trinity.json.
 func researchReady(dir string) []string {
-	data, err := os.ReadFile(filepath.Join(dir, ".trinity.json"))
+	data, err := os.ReadFile(filepath.Join(dir, ".trinity.json")) // #nosec G304 G703 -- reads the project's own .trinity.json; dir is confined to $HOME by resolve()
 	if err != nil {
 		return nil
 	}

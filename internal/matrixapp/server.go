@@ -204,7 +204,7 @@ func commandPath(home string, bins map[string]toolBin) string {
 // lookPath finds a command on the app's command PATH.
 func (s *server) lookPath(name string) bool {
 	for _, d := range filepath.SplitList(s.path) {
-		if info, err := os.Stat(filepath.Join(d, name)); err == nil && !info.IsDir() && info.Mode()&0o111 != 0 {
+		if info, err := os.Stat(filepath.Join(d, name)); err == nil && !info.IsDir() && info.Mode()&0o111 != 0 { // #nosec G703 -- probes PATH entries for a fixed tool name, like exec.LookPath
 			return true
 		}
 	}
@@ -539,11 +539,11 @@ func openBrowser(url string) error {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "darwin":
-		cmd = exec.Command("open", url)
+		cmd = exec.Command("open", url) // #nosec G204 -- fixed opener with the app's own loopback URL as a single argument, no shell
 	case "windows":
-		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url) // #nosec G204 -- fixed opener with the app's own loopback URL as a single argument, no shell
 	default:
-		cmd = exec.Command("xdg-open", url)
+		cmd = exec.Command("xdg-open", url) // #nosec G204 -- fixed opener with the app's own loopback URL as a single argument, no shell
 	}
 	return cmd.Start()
 }

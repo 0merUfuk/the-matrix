@@ -98,7 +98,7 @@ func resolve(home, raw string) (string, error) {
 	if home == "" || (p != home && !strings.HasPrefix(p, home+string(os.PathSeparator))) {
 		return "", errors.New("projects must be inside your home folder")
 	}
-	if info, err := os.Stat(p); err != nil || !info.IsDir() {
+	if info, err := os.Stat(p); err != nil || !info.IsDir() { // #nosec G703 -- p was cleaned and checked to be inside $HOME just above
 		return "", fmt.Errorf("%s is not a folder", cli.PathToHome(p))
 	}
 	return p, nil

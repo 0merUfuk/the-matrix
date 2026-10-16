@@ -112,7 +112,7 @@ func cleanGoal(v string) (string, error) {
 // buildState reads the plan, the latest job's log and pending decisions.
 func (s *server) buildState(dir string) BuildState {
 	b := BuildState{Exists: exists(dir, ".autonomous/loop.sh"), Git: exists(dir, ".git"), Decisions: []string{}}
-	if raw, err := os.ReadFile(filepath.Join(dir, "tasks", "todo.md")); err == nil {
+	if raw, err := os.ReadFile(filepath.Join(dir, "tasks", "todo.md")); err == nil { // #nosec G304 G703 -- reads the loop's tasks/todo.md inside the project; dir is confined to $HOME by resolve()
 		for _, m := range todoItem.FindAllStringSubmatch(string(raw), -1) {
 			b.Total++
 			if m[1] != " " {
@@ -120,7 +120,7 @@ func (s *server) buildState(dir string) BuildState {
 			}
 		}
 	}
-	if raw, err := os.ReadFile(filepath.Join(dir, "tasks", "decisions-pending.md")); err == nil {
+	if raw, err := os.ReadFile(filepath.Join(dir, "tasks", "decisions-pending.md")); err == nil { // #nosec G304 G703 -- reads the loop's tasks/decisions-pending.md inside the project; dir is confined to $HOME
 		for _, line := range strings.Split(string(raw), "\n") {
 			if t, ok := strings.CutPrefix(line, "## "); ok && len(b.Decisions) < 10 {
 				b.Decisions = append(b.Decisions, strings.TrimSpace(t))

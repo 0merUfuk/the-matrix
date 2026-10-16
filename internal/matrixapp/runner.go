@@ -119,7 +119,7 @@ func (rn *Runner) Start(tool, action, title, display, bin string, args []string,
 	rn.trim()
 	rn.mu.Unlock()
 
-	cmd := exec.CommandContext(ctx, bin, args...)
+	cmd := exec.CommandContext(ctx, bin, args...) // #nosec G204 -- argv-only exec of a resolved matrix tool binary with validated task arguments, no shell
 	cmd.Dir = dir
 	cmd.Env = rn.env
 	if cmd.Env == nil {

@@ -103,7 +103,7 @@ func (j *Job) View(from int64, shown string) JobView {
 	dir := j.dir
 	j.mu.Unlock()
 
-	f, err := os.Open(filepath.Join(dir, jobLogName))
+	f, err := os.Open(filepath.Join(dir, jobLogName)) // #nosec G304 G703 -- log file in a job directory the app created under ~/.the-matrix/jobs
 	if err != nil {
 		return v
 	}
@@ -171,7 +171,7 @@ func newJobs(home string, env []string) *Jobs {
 	entries, _ := os.ReadDir(js.root)
 	for _, e := range entries {
 		dir := filepath.Join(js.root, e.Name())
-		raw, err := os.ReadFile(filepath.Join(dir, jobStateName))
+		raw, err := os.ReadFile(filepath.Join(dir, jobStateName)) // #nosec G304 -- state file in a job directory under ~/.the-matrix/jobs
 		if err != nil {
 			continue
 		}
@@ -182,7 +182,7 @@ func newJobs(home string, env []string) *Jobs {
 		if j.Status == "running" {
 			j.Status, j.Ended = "interrupted", time.Now()
 			if j.StopFile != "" && isDir(filepath.Dir(j.StopFile)) {
-				_ = os.WriteFile(j.StopFile, []byte("stopped by The Matrix after a restart\n"), 0o644)
+				_ = os.WriteFile(j.StopFile, []byte("stopped by The Matrix after a restart\n"), 0o644) // #nosec G306 -- stop marker the project's loop script reads; regular 0644 output per security-baseline
 			}
 			j.save()
 		}
@@ -220,7 +220,7 @@ func (js *Jobs) Start(kind, title, project, subject, stopFile string, prepare fu
 		_ = os.RemoveAll(dir)
 		return nil, err
 	}
-	logFile, err := os.OpenFile(filepath.Join(dir, jobLogName), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+	logFile, err := os.OpenFile(filepath.Join(dir, jobLogName), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600) // #nosec G304 -- log file in the job directory the app just created
 	if err != nil {
 		_ = os.RemoveAll(dir)
 		return nil, err
@@ -267,7 +267,7 @@ func (js *Jobs) run(ctx context.Context, cancel context.CancelFunc, j *Job, step
 			}
 			continue
 		}
-		cmd := exec.Command(s.bin, s.args...)
+		cmd := exec.Command(s.bin, s.args...) // #nosec G204 -- argv-only exec of a resolved matrix tool binary with app-built arguments, no shell
 		cmd.Dir = s.dir
 		cmd.Env = js.env
 		cmd.Stdout, cmd.Stderr = logFile, logFile
@@ -391,6 +391,6 @@ func (js *Jobs) prune() {
 }
 
 func isDir(p string) bool {
-	info, err := os.Stat(p)
+	info, err := os.Stat(p) // #nosec G703 -- stats paths the app derived from its own job state
 	return err == nil && info.IsDir()
 }

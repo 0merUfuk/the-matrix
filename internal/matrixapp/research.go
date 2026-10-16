@@ -68,7 +68,7 @@ type stackInfo struct {
 
 // projectStacks reads the stacks neo recorded in .neo.json.
 func projectStacks(dir string) []stackInfo {
-	raw, err := os.ReadFile(filepath.Join(dir, ".neo.json"))
+	raw, err := os.ReadFile(filepath.Join(dir, ".neo.json")) // #nosec G304 G703 -- reads the project's own .neo.json; dir is confined to $HOME by resolve()
 	if err != nil {
 		return nil
 	}
@@ -254,7 +254,7 @@ func lastAnswers(j *Job) (ResearchParams, bool) {
 	if j == nil {
 		return ResearchParams{}, false
 	}
-	raw, err := os.ReadFile(filepath.Join(j.dir, jobConfigName))
+	raw, err := os.ReadFile(filepath.Join(j.dir, jobConfigName)) // #nosec G703 -- job directory the app created under ~/.the-matrix/jobs
 	var c oracle.StackContext
 	if err != nil || json.Unmarshal(raw, &c) != nil {
 		return ResearchParams{}, false
@@ -289,7 +289,7 @@ func (s *server) researchFile(dir, stack, name string) (string, error) {
 	if info.Size() > 512<<10 {
 		return "", errors.New("this file is too large to show here")
 	}
-	raw, err := os.ReadFile(p)
+	raw, err := os.ReadFile(p) // #nosec G304 -- name is a bare .md file name, stack a slug, symlinks and large files rejected above
 	return string(raw), err
 }
 
@@ -341,7 +341,7 @@ func added(from, to string) bool {
 	}
 	for _, name := range files {
 		src, err1 := os.Stat(filepath.Join(from, name))
-		dst, err2 := os.Stat(filepath.Join(to, name))
+		dst, err2 := os.Stat(filepath.Join(to, name)) // #nosec G703 -- compares files the app listed itself in the project's knowledge folder
 		if err1 != nil || err2 != nil || dst.ModTime().Before(src.ModTime()) {
 			return false
 		}
@@ -350,7 +350,7 @@ func added(from, to string) bool {
 }
 
 func readTrim(p string) string {
-	raw, err := os.ReadFile(p)
+	raw, err := os.ReadFile(p) // #nosec G304 -- reads small marker files the app or the loop wrote in the project workspace
 	if err != nil {
 		return ""
 	}
@@ -358,8 +358,8 @@ func readTrim(p string) string {
 }
 
 func touch(p string) error {
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil { // #nosec G301 -- 0755 project directory per security-baseline
 		return err
 	}
-	return os.WriteFile(p, nil, 0o644)
+	return os.WriteFile(p, nil, 0o644) // #nosec G306 -- empty marker file the loop scripts read; regular 0644 output per security-baseline
 }
