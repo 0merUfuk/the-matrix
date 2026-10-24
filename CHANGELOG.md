@@ -6,12 +6,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer](https
 ## [Unreleased]
 
 ### Added
+- **oracle**: `oracle export --format antigravity` (and `--format all`) writes `.agents/rules/<topic>.md` workspace rules with `trigger: model_decision` frontmatter and automatic line-boundary splitting below Antigravity's 24,000-byte per-file rule cap
 - **matrix**: new `matrix` binary, The Matrix app — a local browser UI (embedded via `go:embed`, loopback-only) for people who do not use the CLI. Choose a project folder with a folder picker, set up its AI agents through a two-question form (runs `neo init --preset … --runtime …`), see health and out-of-date knowledge in plain language, run a health check, save status snapshots and add finished research. Research best practices for a stack (form → `oracle research` + research loop, findings readable at the review gate, docs added with `trinity sync`) and let the agents build a described goal (`morp loop --non-interactive` + build loop) as long jobs: no time limit, progress in plain words, stop at any time, logs and state under `~/.the-matrix/jobs/`, still there after a page reload, stopped when the app quits. Changes require confirmation; setup is only offered for projects that are not set up yet, because `neo init` overwrites `CLAUDE.md`. Homebrew formula `matrix` depends on the four tools and can run as a service
 - **neo**: `PresetDisplayName` exposes a preset's human-readable name
 - **trinity**: `CollectDashboard` exposes ecosystem state (health, knowledge freshness, self-state snapshots, sync log) as structured data for the dashboard
 
 ### Changed
-- **build**: minimum Go version is now 1.26.9 (was 1.25.8). Go 1.25 is end-of-life, and its last patch (1.25.14) still ships standard-library vulnerabilities in `net/http`, `net/textproto` and `crypto/tls` that this code calls. Those are fixed only in 1.26.9.
+- **build**: minimum Go version is now 1.26.10 (was 1.25.8) and `golang.org/x/sys` is bumped to `v0.44.0`, resolving `GO-2026-6809` (`crypto/x509` in `go1.26.9`) and `GO-2026-5024` (`golang.org/x/sys/windows` in `v0.42.0`) reported by `govulncheck`
 - **health**: `trinity health` checks are now collected as structured data (`CollectHealth`) and rendered from it; terminal output and exit codes are unchanged
 
 ### Security

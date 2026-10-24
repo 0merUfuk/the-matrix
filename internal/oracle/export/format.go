@@ -1,5 +1,5 @@
 // Package export transforms oracle knowledge docs into formats consumed by
-// other AI coding tools (Cursor, Copilot, AGENTS.md, Windsurf).
+// other AI coding tools (Antigravity, Cursor, Copilot, AGENTS.md, Windsurf).
 package export
 
 import "sort"

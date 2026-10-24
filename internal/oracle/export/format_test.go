@@ -7,7 +7,7 @@ import (
 // ── Registry / Register ───────────────────────────────────────────────────────
 
 func TestRegistryContainsAllFormats(t *testing.T) {
-	expected := []string{"agents-md", "cursor", "copilot", "windsurf"}
+	expected := []string{"agents-md", "antigravity", "cursor", "copilot", "windsurf"}
 
 	for _, name := range expected {
 		t.Run(name+" registered", func(t *testing.T) {
@@ -39,7 +39,7 @@ func TestFormatNamesContainsExpected(t *testing.T) {
 		nameSet[n] = true
 	}
 
-	expected := []string{"agents-md", "cursor", "copilot", "windsurf"}
+	expected := []string{"agents-md", "antigravity", "cursor", "copilot", "windsurf"}
 	for _, want := range expected {
 		if !nameSet[want] {
 			t.Errorf("expected format %q in FormatNames(), not found. got: %v", want, names)
@@ -65,7 +65,7 @@ func TestRegisterAndRetrieve(t *testing.T) {
 }
 
 func TestFormatInterface(t *testing.T) {
-	formats := []string{"agents-md", "cursor", "copilot", "windsurf"}
+	formats := []string{"agents-md", "antigravity", "cursor", "copilot", "windsurf"}
 
 	for _, name := range formats {
 		t.Run(name, func(t *testing.T) {

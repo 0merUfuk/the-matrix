@@ -4,7 +4,7 @@ Thanks for your interest in contributing! the-matrix is a CLI-driven autonomous 
 
 ## Prerequisites
 
-- Go 1.26.9+
+- Go 1.26.10+
 - `make` (GNU Make)
 - A GitHub account
 

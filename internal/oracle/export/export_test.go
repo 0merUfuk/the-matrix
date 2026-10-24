@@ -684,6 +684,72 @@ func TestWindsurfExport(t *testing.T) {
 	})
 }
 
+// ── antigravityFormat ─────────────────────────────────────────────────────────
+
+func TestAntigravityExport(t *testing.T) {
+	t.Run("creates .agents/rules/*.md in target dir", func(t *testing.T) {
+		target := t.TempDir()
+		f := &antigravityFormat{}
+
+		err := f.Export(sampleDocs(), target, sampleOpts("go-internal", "go"))
+		if err != nil {
+			t.Fatalf("Export() error: %v", err)
+		}
+
+		for _, topic := range []string{"01-core-principles.md", "04-error-handling.md"} {
+			outPath := filepath.Join(target, ".agents", "rules", topic)
+			content, err := os.ReadFile(outPath)
+			if err != nil {
+				t.Fatalf("reading %s: %v", outPath, err)
+			}
+			body := string(content)
+			if !strings.Contains(body, "trigger: model_decision\n") {
+				t.Errorf("%s missing trigger: model_decision frontmatter", topic)
+			}
+			if !strings.Contains(body, "patterns for go services\n") {
+				t.Errorf("%s missing language-aware description frontmatter", topic)
+			}
+			if strings.Contains(body, "**Version**") {
+				t.Errorf("%s should strip oracle frontmatter (**Version**)", topic)
+			}
+		}
+	})
+
+	t.Run("splits large documents above antigravityMaxChars", func(t *testing.T) {
+		target := t.TempDir()
+		f := &antigravityFormat{}
+
+		largeBody := "# Large Topic\n\n" + strings.Repeat("A line of best-practice guidance that is eighty characters long for testing.\n", 350)
+		docs := []KnowledgeDoc{
+			{
+				Filename: "05-large-topic.md",
+				Topic:    "05-large-topic",
+				Title:    "Large Topic",
+				Content:  largeBody,
+			},
+		}
+
+		if err := f.Export(docs, target, sampleOpts("go-internal", "")); err != nil {
+			t.Fatalf("Export() error: %v", err)
+		}
+
+		part1 := filepath.Join(target, ".agents", "rules", "05-large-topic-1.md")
+		part2 := filepath.Join(target, ".agents", "rules", "05-large-topic-2.md")
+		for _, p := range []string{part1, part2} {
+			data, err := os.ReadFile(p)
+			if err != nil {
+				t.Fatalf("expected split file %s: %v", p, err)
+			}
+			if len(data) > 24000 {
+				t.Errorf("split file %s exceeds 24,000-byte Antigravity rule limit: %d bytes", p, len(data))
+			}
+			if !strings.Contains(string(data), "description: Large Topic patterns\n") {
+				t.Errorf("split file %s missing description frontmatter", p)
+			}
+		}
+	})
+}
+
 // ── sanitizeAnchor ────────────────────────────────────────────────────────────
 
 func TestSanitizeAnchor(t *testing.T) {
@@ -825,6 +891,7 @@ func TestRunExport_ValidSourceAndFormat(t *testing.T) {
 		// All format output files should exist
 		expected := []string{
 			filepath.Join(target, "AGENTS.md"),
+			filepath.Join(target, ".agents", "rules"),
 			filepath.Join(target, ".cursor", "rules"),
 			filepath.Join(target, ".github", "copilot-instructions.md"),
 			filepath.Join(target, ".windsurfrules"),

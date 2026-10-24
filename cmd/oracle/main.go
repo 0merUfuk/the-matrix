@@ -177,7 +177,7 @@ func exportCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&from, "from", "", "Source directory: oracle output or .claude/knowledge/ dir")
-	cmd.Flags().StringVar(&format, "format", "", "Target format: agents-md, cursor, copilot, windsurf, all")
+	cmd.Flags().StringVar(&format, "format", "", "Target format: agents-md, antigravity, cursor, copilot, windsurf, all")
 	cmd.Flags().StringVar(&to, "to", ".", "Target project directory (default: current directory)")
 	cmd.Flags().StringVar(&language, "language", "", "Override language detection (go, javascript, python, dart, etc.)")
 	cobra.CheckErr(cmd.MarkFlagRequired("from"))

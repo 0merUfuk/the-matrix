@@ -120,11 +120,11 @@ the-matrix/
 │   ├── neo/           # neo implementation + embedded runtime templates
 │   ├── morpheus/      # morp implementation + shared/runtime template layers
 │   ├── oracle/        # oracle implementation + export/runtime templates
-│   │   └── export/    # Format adapter pattern: Cursor, Copilot, Windsurf, AGENTS.md
+│   │   └── export/    # Format adapter pattern: Antigravity, Cursor, Copilot, Windsurf, AGENTS.md
 │   ├── registry/      # Knowledge registry (pack catalog + validation)
 │   └── trinity/       # trinity implementation (no templates)
 ├── .github/workflows/ # CI: build, test, vet, security gates, release
-├── go.mod             # Single module, minimum Go 1.26.9
+├── go.mod             # Single module, minimum Go 1.26.10
 ├── Makefile           # build, test, vet, release
 └── .goreleaser.yml    # Cross-platform binary builds + Homebrew tap
 ```
@@ -185,6 +185,7 @@ Oracle's knowledge docs can be exported to formats consumed by all major AI codi
 | Format | Output |
 |--------|--------|
 | `agents-md` | `AGENTS.md` (consolidated, with TOC) |
+| `antigravity` | `.agents/rules/*.md` (YAML frontmatter with `trigger: model_decision`, auto-splits <24KB) |
 | `cursor` | `.cursor/rules/*.mdc` (MDC frontmatter, auto-splits >6K) |
 | `copilot` | `.github/copilot-instructions.md` |
 | `windsurf` | `.windsurfrules` |
@@ -312,7 +313,7 @@ make release VERSION=X.Y.Z SUMMARY="one-line release summary"
 
 | Component | Choice | Why |
 |-----------|--------|-----|
-| Language | Go 1.26.9+ | Single-binary distribution and compile-time type safety |
+| Language | Go 1.26.10+ | Single-binary distribution and compile-time type safety |
 | CLI framework | cobra | Standard Go CLI — commands, flags, help text |
 | TUI prompts | charm.land/huh v2 | Form-based interactive prompts |
 | Terminal styling | charm.land/lipgloss v2 | Consistent styled output |
