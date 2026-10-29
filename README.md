@@ -59,7 +59,7 @@ Binaries land in `bin/`. Add it to your `PATH` or copy the binaries elsewhere on
 
 ### With `go install`
 
-Requires Go 1.26.9+:
+Requires Go 1.26.10+:
 
 ```bash
 go install github.com/0merUfuk/the-matrix/cmd/neo@latest
