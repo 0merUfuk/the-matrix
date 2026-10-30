@@ -99,6 +99,13 @@ Use `ARCHITECTURE.md`, issues, and pull request discussion for public design con
 - [ ] Commit messages follow Conventional Commits
 - [ ] No generated/private `.claude/` files are staged
 
+## AI-Assisted Contributions
+
+AI coding assistants (Claude Code, Codex, Antigravity, etc.) are welcome tools when used thoughtfully:
+- **Human Accountability:** The submitting author must personally understand every line of code submitted and verify that tests pass locally.
+- **Transparency:** Please explicitly state in the pull request description if an AI assistant helped author the patch.
+- **Quality Over Quantity:** Do not submit automated, unverified bulk PRs, superficial cosmetic renames, or hallucinated APIs. Every PR must solve a genuine problem with reproducible verification and regression tests.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).

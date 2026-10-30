@@ -1,0 +1,48 @@
+name: Feature Request
+description: Propose a new feature, adapter, or enhancement for The Matrix
+title: "[feat]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing ideas to make The Matrix better!
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which tool does this feature apply to?
+      options:
+        - neo (orchestrator)
+        - morp (service scaffolding & loop)
+        - oracle (knowledge synthesis)
+        - trinity (maintenance runtime)
+        - matrixapp (browser UI dashboard)
+        - general / new tool
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Use Case
+      description: What problem are you trying to solve? What is painful or missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the behavior, CLI flags, configuration schema, or API you envision.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative implementations or workarounds you have evaluated.
+  - type: checkboxes
+    id: willingness
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be interested in submitting a pull request for this feature.
